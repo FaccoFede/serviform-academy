@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  progress  UserProgress[]
+  certificates Certificate[]
+}
+
+model Software {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  courses   Course[]
+  videos    VideoPill[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String?
+  softwareId  String
+  createdAt   DateTime @default(now())
+
+  software    Software @relation(fields: [softwareId], references: [id])
+  units       Unit[]
+  certificates Certificate[]
+}
+
+model Unit {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String
+  order     Int
+
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  guide     GuideReference?
+
+  progress  UserProgress[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, slug])
+}
+
+model GuideReference {
+  id        String @id @default(uuid())
+  zendeskId String
+  title     String
+  url       String
+
+  unitId    String @unique
+  unit      Unit   @relation(fields: [unitId], references: [id])
+}
+
+model VideoPill {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  youtubeId   String   @unique
+
+  softwareId  String
+  software    Software @relation(fields: [softwareId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
+
+model Certificate {
+  id        String   @id @default(uuid())
+
+  userId    String
+  courseId  String
+
+  issuedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model UserProgress {
+  id        String   @id @default(uuid())
+
+  userId    String
+  unitId    String
+
+  completed Boolean  @default(false)
+  completedAt DateTime?
+
+  user      User     @relation(fields: [userId], references: [id])
+  unit      Unit     @relation(fields: [unitId], references: [id])
+
+  @@unique([userId, unitId])
+}

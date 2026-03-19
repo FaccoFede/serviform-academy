@@ -1,0 +1,60 @@
+.hero { background: var(--coal); padding: 80px 60px; position: relative; overflow: hidden; }
+.heroBg { position: absolute; inset: 0; background: radial-gradient(ellipse 100% 80% at 50% 0%, rgba(200,16,46,.18) 0%, transparent 55%); }
+.heroContent { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; text-align: center; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 12px; border-radius: 100px;
+  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
+  font-size: 11px; font-weight: 500; font-family: var(--font-mono);
+  color: rgba(255,255,255,.6); letter-spacing: .5px; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red-mid); }
+.heroContent h1 {
+  font-family: var(--font-display); font-size: clamp(32px,4vw,52px); font-weight: 800;
+  letter-spacing: -1.2px; color: #fff; line-height: 1.1; margin-bottom: 18px;
+}
+.heroContent h1 em { font-style: normal; color: var(--red-mid); }
+.heroContent p { font-size: 16px; color: rgba(255,255,255,.5); line-height: 1.7; }
+
+.valueProps {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--border); border-top: 1px solid var(--border);
+}
+.valueProp { background: var(--white); padding: 44px 40px; transition: background .2s ease; }
+.valueProp:hover { background: var(--surface); }
+.vpIcon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--red-light); color: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px; font-size: 22px;
+}
+.vpTitle {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  letter-spacing: -.3px; color: var(--coal); margin-bottom: 10px;
+}
+.vpDesc { font-size: 14px; line-height: 1.65; color: var(--muted); }
+
+.statsBand {
+  background: var(--red); padding: 52px 60px;
+  display: grid; grid-template-columns: repeat(4,1fr);
+}
+.statItem { padding: 0 32px; }
+.statItem + .statItem { border-left: 1px solid rgba(255,255,255,.15); }
+.statNum { font-family: var(--font-mono); font-size: 44px; font-weight: 500; color: #fff; letter-spacing: -2px; line-height: 1; }
+.statLabel { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .6px; color: rgba(255,255,255,.5); margin-top: 8px; }
+
+.features { padding: 72px 60px; }
+.featuresTitle {
+  font-family: var(--font-display); font-size: 28px; font-weight: 800;
+  letter-spacing: -.6px; color: var(--coal); text-align: center;
+}
+.featureGrid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; margin-top: 40px; }
+.featureCard {
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 32px; background: var(--white); transition: all .2s ease;
+}
+.featureCard:hover { border-color: var(--red); box-shadow: 0 0 0 4px var(--red-glow); }
+.fcNum { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: .3px; margin-bottom: 16px; display: block; }
+.fcTitle { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -.3px; color: var(--coal); margin-bottom: 10px; }
+.fcDesc { font-size: 13.5px; line-height: 1.65; color: var(--muted); }

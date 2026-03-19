@@ -1,37 +1,98 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
+import Link from 'next/link'
+import { api } from '@/lib/api'
+import styles from '../AdminForm.module.css'
 
+/**
+ * Admin Videos — form per creare una nuova video pillola.
+ */
 export default function AdminVideosPage() {
-  const [title, setTitle] = useState("")
-  const [youtubeId, setYoutubeId] = useState("")
-  const [softwareId, setSoftwareId] = useState("")
-  const [description, setDescription] = useState("")
+  const [title, setTitle] = useState('')
+  const [youtubeId, setYoutubeId] = useState('')
+  const [softwareId, setSoftwareId] = useState('')
+  const [description, setDescription] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setStatus('loading')
+    setErrorMsg('')
 
-    await fetch("http://localhost:3001/videos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ title, youtubeId, softwareId, description })
-    })
-
-    alert("Video pillola creata")
+    try {
+      await api.videos.create({
+        title,
+        youtubeId,
+        softwareId,
+        description: description || undefined,
+      })
+      setStatus('success')
+      setTitle('')
+      setYoutubeId('')
+      setDescription('')
+    } catch (err) {
+      setStatus('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Errore nella creazione')
+    }
   }
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>Nuova video pillola</h1>
+    <main className={styles.main}>
+      <Link href="/admin" className={styles.back}>← Admin</Link>
+      <h1 className={styles.title}>Nuova video pillola</h1>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 500 }}>
-        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Titolo video" />
-        <input value={youtubeId} onChange={e => setYoutubeId(e.target.value)} placeholder="YouTube ID" />
-        <input value={softwareId} onChange={e => setSoftwareId(e.target.value)} placeholder="Software ID" />
-        <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descrizione" />
-        <button type="submit">Crea video pillola</button>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <label className={styles.label}>Titolo</label>
+          <input
+            className={styles.input}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Es. Introduzione al modulo 3D"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>YouTube ID</label>
+          <input
+            className={styles.input}
+            value={youtubeId}
+            onChange={(e) => setYoutubeId(e.target.value)}
+            placeholder="Es. zt4aT5oKLII"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Software ID</label>
+          <input
+            className={styles.input}
+            value={softwareId}
+            onChange={(e) => setSoftwareId(e.target.value)}
+            placeholder="UUID del software"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Descrizione</label>
+          <textarea
+            className={styles.textarea}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Breve descrizione del video..."
+          />
+        </div>
+
+        <button type="submit" className={styles.submit} disabled={status === 'loading'}>
+          {status === 'loading' ? 'Creazione...' : 'Crea video pillola'}
+        </button>
+
+        {status === 'success' && <div className={styles.success}>Video pillola creata con successo.</div>}
+        {status === 'error' && <div className={styles.error}>{errorMsg}</div>}
       </form>
     </main>
   )

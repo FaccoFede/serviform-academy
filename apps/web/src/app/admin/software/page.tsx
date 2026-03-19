@@ -1,35 +1,83 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
+import Link from 'next/link'
+import { api } from '@/lib/api'
+import styles from '../AdminForm.module.css'
 
+/**
+ * Admin Software — form per creare un nuovo software.
+ *
+ * Usa il client API centralizzato.
+ * Mostra feedback di successo/errore strutturato.
+ */
 export default function AdminSoftwarePage() {
-  const [name, setName] = useState("")
-  const [slug, setSlug] = useState("")
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setStatus('loading')
+    setErrorMsg('')
 
-    await fetch("http://localhost:3001/software", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name, slug })
-    })
-
-    alert("Software creato")
-    setName("")
-    setSlug("")
+    try {
+      await api.software.create({ name, slug })
+      setStatus('success')
+      setName('')
+      setSlug('')
+    } catch (err) {
+      setStatus('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Errore nella creazione')
+    }
   }
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>Nuovo software</h1>
+    <main className={styles.main}>
+      <Link href="/admin" className={styles.back}>
+        ← Admin
+      </Link>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 400 }}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Nome software" />
-        <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="Slug" />
-        <button type="submit">Crea software</button>
+      <h1 className={styles.title}>Nuovo software</h1>
+
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <label className={styles.label}>Nome</label>
+          <input
+            className={styles.input}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Es. EngView"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Slug</label>
+          <input
+            className={styles.input}
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="Es. engview"
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          className={styles.submit}
+          disabled={status === 'loading'}
+        >
+          {status === 'loading' ? 'Creazione...' : 'Crea software'}
+        </button>
+
+        {status === 'success' && (
+          <div className={styles.success}>Software creato con successo.</div>
+        )}
+        {status === 'error' && (
+          <div className={styles.error}>{errorMsg}</div>
+        )}
       </form>
     </main>
   )

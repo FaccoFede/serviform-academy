@@ -1,0 +1,118 @@
+.link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* ─── Card ──────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.22s var(--ease-out);
+  position: relative;
+}
+
+.card:hover {
+  border-color: transparent;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+/* Colored top border on hover */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-color, var(--border));
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* ─── Header ────────────────────────────────────── */
+.header {
+  padding: 28px 28px 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--coal);
+  line-height: 1.2;
+  margin-top: 16px;
+  margin-bottom: 10px;
+}
+
+.desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ─── Footer ────────────────────────────────────── */
+.footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+}
+
+.meta {
+  display: flex;
+  gap: 16px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+.metaItem svg {
+  opacity: 0.5;
+}
+
+/* ─── CTA ───────────────────────────────────────── */
+.ctaAvailable {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--ink);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  transition: all 0.16s ease;
+}
+
+.card:hover .ctaAvailable {
+  background: var(--red);
+}
+
+.locked {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}

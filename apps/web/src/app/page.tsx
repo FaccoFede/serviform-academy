@@ -1,65 +1,44 @@
-import Link from "next/link"
+import { api, Course } from '@/lib/api'
+import Hero from '@/components/ui/Hero'
+import CourseGrid from './CourseGrid'
 
-async function getCourses() {
-  const res = await fetch("http://localhost:3001/courses", { cache: "no-store" })
-  return res.json()
-}
-
+/**
+ * Homepage — pagina principale della piattaforma.
+ *
+ * Server Component: fa il fetch dei corsi lato server.
+ * Passa i dati al CourseGrid (Client Component) per il filtraggio interattivo.
+ *
+ * Struttura:
+ * - Hero con statistiche animate
+ * - FilterBar con chip per software
+ * - CourseGrid con card dei corsi
+ */
 export default async function HomePage() {
+  let courses: Course[] = []
 
-  const courses = await getCourses()
+  try {
+    courses = await api.courses.findAll()
+  } catch {
+    // In caso di errore API, mostra la pagina con array vuoto
+    // TODO: gestire con error boundary dedicata
+  }
 
-  return (
-
-    <main style={{ padding: "40px" }}>
-
-      <h1>Serviform Academy</h1>
-
-      <h2 style={{ marginTop: "40px" }}>
-        Corsi
-      </h2>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3,1fr)",
-        gap: "20px",
-        marginTop: "20px"
-      }}>
-
-        {courses.map((course: any) => (
-
-          <Link
-            key={course.id}
-            href={`/courses/${course.slug}`}
-            style={{
-              border: "1px solid #ddd",
-              padding: "20px",
-              borderRadius: "8px",
-              textDecoration: "none",
-              color: "black"
-            }}
-          >
-
-            <h3>{course.title}</h3>
-
-            <p>{course.software.name}</p>
-
-          </Link>
-
-        ))}
-
-      </div>
-
-      <div style={{ marginTop: "60px" }}>
-
-        <Link href="/videos">
-          Vai alle Video Pillole →
-        </Link>
-
-      </div>
-
-    </main>
-
+  // Calcolo statistiche per la hero
+  const courseCount = courses.length
+  const unitCount = courses.reduce(
+    (sum, c) => sum + (c.units?.length || 0),
+    0,
   )
 
+  return (
+    <>
+      <Hero
+        courseCount={courseCount}
+        unitCount={unitCount}
+        videoCount={0}
+      />
+
+      <CourseGrid courses={courses} />
+    </>
+  )
 }

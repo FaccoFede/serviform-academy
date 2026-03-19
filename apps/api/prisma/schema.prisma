@@ -7,104 +7,139 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Utente della piattaforma.
+/// Supporta autenticazione locale (email/password) e ruoli.
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String?
+  passwordHash String?
+  role         Role      @default(USER)
+  avatarUrl    String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
 
-  progress  UserProgress[]
+  progress     UserProgress[]
   certificates Certificate[]
 }
 
+enum Role {
+  USER
+  ADMIN
+  TEAM_ADMIN
+}
+
+/// Software Serviform (EngView, Sysform, ProjectO).
 model Software {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String
-  slug      String   @unique
-  createdAt DateTime @default(now())
+  slug      String    @unique
+  tagline   String?
+  color     String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
-  courses   Course[]
-  videos    VideoPill[]
+  courses Course[]
+  videos  VideoPill[]
 }
 
+/// Corso strutturato legato a un software.
 model Course {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
-  slug        String   @unique
+  slug        String    @unique
   description String?
+  level       String?
+  duration    String?
+  available   Boolean   @default(true)
   softwareId  String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
 
-  software    Software @relation(fields: [softwareId], references: [id])
-  units       Unit[]
+  software     Software      @relation(fields: [softwareId], references: [id])
+  units        Unit[]
   certificates Certificate[]
 }
 
+/// Unità didattica di un corso.
+/// contentBlocks contiene i blocchi di contenuto strutturato in formato JSON.
 model Unit {
-  id        String   @id @default(uuid())
-  title     String
-  slug      String
-  order     Int
+  id            String    @id @default(uuid())
+  title         String
+  slug          String
+  order         Int
+  subtitle      String?
+  duration      String?
+  unitType      UnitType  @default(LESSON)
+  contentBlocks Json?
 
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
+  course   Course @relation(fields: [courseId], references: [id])
 
-  guide     GuideReference?
+  guide    GuideReference?
+  progress UserProgress[]
 
-  progress  UserProgress[]
-
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@unique([courseId, slug])
 }
 
+enum UnitType {
+  OVERVIEW
+  LESSON
+  EXERCISE
+}
+
+/// Riferimento a una guida Zendesk, collegata 1:1 a un'unità.
 model GuideReference {
   id        String @id @default(uuid())
   zendeskId String
   title     String
   url       String
 
-  unitId    String @unique
-  unit      Unit   @relation(fields: [unitId], references: [id])
+  unitId String @unique
+  unit   Unit   @relation(fields: [unitId], references: [id])
 }
 
+/// Video pillola breve legata a un software.
 model VideoPill {
   id          String   @id @default(uuid())
   title       String
   description String?
   youtubeId   String   @unique
 
-  softwareId  String
-  software    Software @relation(fields: [softwareId], references: [id])
+  softwareId String
+  software   Software @relation(fields: [softwareId], references: [id])
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
+/// Certificato emesso a un utente per il completamento di un corso.
 model Certificate {
-  id        String   @id @default(uuid())
-
-  userId    String
+  id       String   @id @default(uuid())
+  userId   String
   courseId  String
+  issuedAt DateTime @default(now())
 
-  issuedAt  DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id])
-  course    Course   @relation(fields: [courseId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
 
   @@unique([userId, courseId])
 }
 
+/// Tracciamento del progresso di un utente su una singola unità.
 model UserProgress {
-  id        String   @id @default(uuid())
-
-  userId    String
-  unitId    String
-
-  completed Boolean  @default(false)
+  id          String    @id @default(uuid())
+  userId      String
+  unitId      String
+  completed   Boolean   @default(false)
   completedAt DateTime?
 
-  user      User     @relation(fields: [userId], references: [id])
-  unit      Unit     @relation(fields: [unitId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id])
 
   @@unique([userId, unitId])
+  @@index([userId, completed])
 }

@@ -1,79 +1,82 @@
-import Link from "next/link"
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { api } from '@/lib/api'
+import { SoftwareTag } from '@/components/ui'
+import styles from './CoursePage.module.css'
 
-type Unit = {
-  id: string
-  title: string
-  slug: string
-  order: number
-}
-
-type Course = {
-  id: string
-  title: string
-  description?: string
-  slug: string
-  software: {
-    name: string
-  }
-  units: Unit[]
-}
-
-async function getCourse(slug: string): Promise<Course | null> {
-
-  const res = await fetch(
-    `http://localhost:3001/courses/${slug}`,
-    { cache: "no-store" }
-  )
-
-  if (!res.ok) return null
-
-  return res.json()
-}
-
+/**
+ * CoursePage — dettaglio di un corso.
+ *
+ * Server Component: carica il corso per slug con le unità ordinate.
+ * Mostra: tag software, titolo, descrizione, lista unità navigabili.
+ */
 export default async function CoursePage({
-  params
+  params,
 }: {
   params: Promise<{ slug: string }>
 }) {
-
   const { slug } = await params
 
-  const course = await getCourse(slug)
-
-  if (!course) {
-    return <h1>Corso non trovato</h1>
+  let course
+  try {
+    course = await api.courses.findBySlug(slug)
+  } catch {
+    notFound()
   }
 
+  if (!course) notFound()
+
   return (
+    <main className={styles.main}>
+      <div className={styles.header}>
+        <Link href="/" className={styles.back}>
+          ← Tutti i corsi
+        </Link>
 
-    <main style={{ padding: "40px" }}>
+        <SoftwareTag slug={course.software?.slug || ''} />
+        <h1 className={styles.title}>{course.title}</h1>
+        {course.description && (
+          <p className={styles.desc}>{course.description}</p>
+        )}
+      </div>
 
-      <h1>{course.title}</h1>
+      <section className={styles.unitsSection}>
+        <h2 className={styles.unitsTitle}>Unità del corso</h2>
 
-      <p>{course.description}</p>
-
-      <h2 style={{ marginTop: "40px" }}>
-        Unità del corso
-      </h2>
-
-      <ul style={{ marginTop: "20px" }}>
-
-        {course.units.map(unit => (
-
-          <li key={unit.id} style={{ marginBottom: "10px" }}>
-
-            <Link href={`/courses/${slug}/${unit.slug}`}>
-              {unit.order}. {unit.title}
+        <div className={styles.unitList}>
+          {course.units?.map((unit) => (
+            <Link
+              key={unit.id}
+              href={`/courses/${slug}/${unit.slug}`}
+              className={styles.unitItem}
+            >
+              <span className={styles.unitOrder}>{unit.order}</span>
+              <span className={styles.unitName}>{unit.title}</span>
+              <svg
+                className={styles.unitArrow}
+                viewBox="0 0 14 14"
+                fill="none"
+                width={14}
+                height={14}
+              >
+                <path
+                  d="M5 2l5 5-5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </Link>
+          ))}
+        </div>
 
-          </li>
-
-        ))}
-
-      </ul>
-
+        {(!course.units || course.units.length === 0) && (
+          <p className={styles.empty}>
+            Nessuna unità disponibile per questo corso.
+          </p>
+        )}
+      </section>
     </main>
-
   )
-
 }

@@ -1,50 +1,21 @@
-async function getVideos() {
+import { api, VideoPill } from '@/lib/api'
+import VideosView from './VideosView'
 
-  const res = await fetch("http://localhost:3001/videos", {
-    cache: "no-store"
-  })
-
-  return res.json()
-
-}
-
+/**
+ * Pagina Video Pillole — Server Component.
+ *
+ * Fa il fetch delle video pillole dal backend
+ * e passa i dati al VideosView (Client Component)
+ * per la gestione del player modale.
+ */
 export default async function VideosPage() {
+  let videos: VideoPill[] = []
 
-  const videos = await getVideos()
+  try {
+    videos = await api.videos.findAll()
+  } catch {
+    // Fallback: pagina vuota in caso di errore API
+  }
 
-  return (
-
-    <main style={{ padding: "40px" }}>
-
-      <h1>Video Pillole</h1>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3,1fr)",
-        gap: "30px",
-        marginTop: "30px"
-      }}>
-
-        {videos.map((video: any) => (
-
-          <div key={video.id}>
-
-            <iframe
-              width="100%"
-              height="200"
-              src={`https://www.youtube.com/embed/${video.youtubeId}`}
-            />
-
-            <h3>{video.title}</h3>
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </main>
-
-  )
-
+  return <VideosView videos={videos} />
 }

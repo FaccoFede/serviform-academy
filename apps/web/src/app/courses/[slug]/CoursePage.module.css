@@ -1,0 +1,129 @@
+.main {
+  padding: 40px 60px;
+  max-width: 860px;
+}
+
+/* ─── Header ────────────────────────────────────── */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-family: var(--font-mono);
+  margin-bottom: 20px;
+  transition: color 0.15s ease;
+}
+
+.back:hover {
+  color: var(--red);
+}
+
+.header {
+  margin-bottom: 48px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--coal);
+  line-height: 1.1;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+
+.desc {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 600px;
+}
+
+/* ─── Units section ─────────────────────────────── */
+.unitsSection {
+  margin-top: 40px;
+}
+
+.unitsTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--coal);
+  margin-bottom: 20px;
+}
+
+.unitList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unitItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--white);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.16s ease;
+}
+
+.unitItem:hover {
+  border-color: var(--red);
+  box-shadow: 0 0 0 4px var(--red-glow);
+}
+
+.unitOrder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.unitItem:hover .unitOrder {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.unitName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.unitArrow {
+  color: var(--border);
+  transition: color 0.15s ease;
+}
+
+.unitItem:hover .unitArrow {
+  color: var(--red);
+}
+
+.empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--muted);
+  font-size: 15px;
+}

@@ -1,0 +1,49 @@
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — breakpoints per tablet e mobile
+═══════════════════════════════════════════════ */
+
+/* Tablet: nasconde la rail, topbar full width */
+@media (max-width: 1024px) {
+  :root { --rail-w: 0px; --sidebar-w: 240px; }
+  #rail, .rail { display: none !important; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 100%; }
+
+  /* Hero compatta */
+  .hero, [class*="hero"] { padding: 40px 24px !important; min-height: auto !important; }
+  .hero h1, [class*="heroTitle"] { font-size: 28px !important; }
+
+  /* Griglie a colonna singola */
+  .course-grid, [class*="grid"] { grid-template-columns: 1fr !important; padding: 20px 16px !important; }
+
+  /* Filter bar scrollabile */
+  [class*="filterBar"], [class*="bar"] { padding: 12px 16px !important; overflow-x: auto; }
+
+  /* Sidebar corso diventa full screen */
+  [class*="layout"] { flex-direction: column !important; }
+  [class*="sidebar"] { width: 100% !important; max-height: 40vh; border-right: none !important; border-bottom: 1px solid var(--border); }
+  [class*="content"] { min-height: 60vh; }
+
+  /* Padding generali ridotti */
+  [class*="main"], [class*="archive"], [class*="features"] { padding: 24px 16px !important; }
+
+  /* Pricing griglia verticale */
+  [class*="plans"], [class*="PricingPage_grid"] { grid-template-columns: 1fr !important; }
+  [class*="valueProps"] { grid-template-columns: 1fr !important; }
+  [class*="statsBand"] { grid-template-columns: repeat(2,1fr) !important; gap: 24px !important; }
+  [class*="featureGrid"] { grid-template-columns: 1fr !important; }
+  [class*="objectivesGrid"] { grid-template-columns: 1fr !important; }
+
+  /* Footer nav compatto */
+  [class*="footerNav"] { padding: 12px 16px !important; }
+
+  /* Video hero verticale */
+  [class*="videoHero"], [class*="VideosView_hero"] {
+    flex-direction: column !important;
+    padding: 24px !important;
+  }
+  [class*="featuredWrap"] { flex: none !important; width: 100% !important; }
+}

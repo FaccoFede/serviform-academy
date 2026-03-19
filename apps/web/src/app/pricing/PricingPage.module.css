@@ -1,0 +1,49 @@
+.main { padding: 72px 60px; }
+.header { text-align: center; margin-bottom: 56px; }
+.header h1 { font-family: var(--font-display); font-size: clamp(30px,4vw,48px); font-weight: 800; letter-spacing: -1px; color: var(--coal); margin-bottom: 14px; }
+.header p { font-size: 16px; color: var(--muted); line-height: 1.65; }
+
+.grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; max-width: 960px; margin: 0 auto; }
+.card {
+  border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--border); display: flex; flex-direction: column;
+  position: relative; transition: all .22s var(--ease-out);
+}
+.card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+.featured { border-color: var(--red); box-shadow: 0 0 0 4px var(--red-glow), var(--shadow-md); }
+.badge {
+  position: absolute; top: 20px; right: 20px;
+  background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+  padding: 3px 8px; border-radius: 100px; font-family: var(--font-mono);
+}
+.planHeader { padding: 32px 28px 24px; background: var(--white); }
+.planName { font-family: var(--font-display); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 16px; }
+.planPrice { display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px; }
+.amount { font-family: var(--font-mono); font-size: 48px; font-weight: 500; color: var(--coal); letter-spacing: -2px; }
+.currency { font-size: 20px; color: var(--muted); }
+.period { font-size: 13px; color: var(--muted); margin-left: 2px; }
+.tagline { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+.planBody { padding: 24px 28px; border-top: 1px solid var(--border); flex: 1; background: var(--surface); }
+.featureList { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.featureList li {
+  display: flex; gap: 10px; font-size: 13.5px; color: var(--ink); line-height: 1.4;
+}
+.featureList li::before {
+  content: '✓'; color: var(--red); font-weight: 700; flex-shrink: 0;
+}
+
+.planFooter { padding: 20px 28px 28px; background: var(--surface); }
+.btn {
+  width: 100%; height: 44px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; letter-spacing: -.1px;
+  transition: all .18s ease; cursor: pointer; border: none;
+  font-family: var(--font-body);
+}
+.primary { background: var(--red); color: #fff; box-shadow: 0 2px 8px rgba(200,16,46,.3); }
+.primary:hover { background: var(--red-dark); transform: translateY(-1px); }
+.secondary { background: var(--ink); color: var(--white); }
+.secondary:hover { background: var(--red); }
+.outline { border: 1.5px solid var(--border); color: var(--ink); background: var(--white); }
+.outline:hover { border-color: var(--ink); }

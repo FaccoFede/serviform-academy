@@ -1,0 +1,125 @@
+.main {
+  padding: 48px 60px;
+  max-width: 600px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-family: var(--font-mono);
+  margin-bottom: 24px;
+  transition: color 0.15s ease;
+}
+
+.back:hover {
+  color: var(--red);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--coal);
+  margin-bottom: 32px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+.input,
+.textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--white);
+  transition: border-color 0.15s ease;
+  outline: none;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-glow);
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.submit {
+  height: 42px;
+  padding: 0 24px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.3);
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.submit:hover {
+  background: var(--red-dark);
+  transform: translateY(-1px);
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #E8F5EE;
+  border: 1px solid #B7DFCA;
+  color: #2D6A4F;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.error {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--red-light);
+  border: 1px solid rgba(200, 16, 46, 0.2);
+  color: var(--red-dark);
+  font-size: 13px;
+  font-weight: 500;
+}

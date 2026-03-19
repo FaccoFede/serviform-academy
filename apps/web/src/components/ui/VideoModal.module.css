@@ -1,0 +1,75 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.box {
+  width: min(860px, 95vw);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #111;
+  animation: scaleIn 0.25s var(--ease-out) both;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ─── Video ─────────────────────────────────────── */
+.video {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+.video iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ─── Footer ────────────────────────────────────── */
+.footer {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-weight: 600;
+  color: #fff;
+  font-size: 14px;
+}
+
+.close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--red);
+  color: #fff;
+}

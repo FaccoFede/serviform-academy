@@ -1,0 +1,69 @@
+.card {
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: transparent;
+}
+
+/* ─── Thumbnail ─────────────────────────────────── */
+.thumb {
+  aspect-ratio: 16 / 9;
+  position: relative;
+  background: #111;
+  overflow: hidden;
+}
+
+.playChip {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  font-family: var(--font-mono);
+}
+
+/* ─── Body ──────────────────────────────────────── */
+.body {
+  padding: 14px 16px;
+}
+
+.software {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  font-family: var(--font-mono);
+  display: block;
+}
+
+.title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--coal);
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.date {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}

@@ -1,0 +1,147 @@
+/*
+ * ═══════════════════════════════════════════════════
+ * SERVIFORM ACADEMY — Design System Tokens
+ * ═══════════════════════════════════════════════════
+ *
+ * Token estratti dal prototipo HTML v6.3.
+ * Questo file è la single source of truth per colori,
+ * tipografia, spaziatura e effetti visivi.
+ *
+ * Font stack:
+ * - Display: Syne (titoli, heading)
+ * - Body: DM Sans (testo, UI)
+ * - Mono: DM Mono (badge, numeri, codice)
+ */
+
+/* ─── COLOR TOKENS ──────────────────────────────── */
+:root {
+  /* Brand */
+  --red:          #C8102E;
+  --red-dark:     #9E0B24;
+  --red-mid:      #E8243E;
+  --red-light:    #FDF0EF;
+  --red-glow:     rgba(200, 16, 46, 0.12);
+  --yellow:       #F6CD4D;
+
+  /* Neutrals */
+  --coal:         #111111;
+  --ink:          #1E1E1E;
+  --steel:        #2E2E2E;
+  --muted:        #6B6B6B;
+  --border:       #E4E4E4;
+  --border-dark:  #2A2A2A;
+  --surface:      #FAFAFA;
+  --white:        #FFFFFF;
+
+  /* Software brand colors */
+  --ev:           #003875;   /* EngView */
+  --ev-light:     #EEF3FA;
+  --ev-border:    #C5D5EB;
+  --sy:           #2D6A4F;   /* Sysform */
+  --sy-light:     #E8F5EE;
+  --sy-border:    #B7DFCA;
+  --po:           #067DB8;   /* ProjectO */
+  --po-light:     #E3F4FC;
+  --po-border:    #A8D8EE;
+
+  /* Level colors */
+  --level-base:       #2D6A4F;
+  --level-intermedio: #E8900A;
+  --level-avanzato:   #C8102E;
+
+  /* ─── LAYOUT TOKENS ─────────────────────────────── */
+  --topbar-h:     52px;
+  --sidebar-w:    280px;
+  --rail-w:       64px;
+
+  /* ─── BORDER RADIUS ─────────────────────────────── */
+  --r:            10px;
+  --r-lg:         16px;
+  --r-sm:         6px;
+  --r-pill:       100px;
+
+  /* ─── SHADOWS ───────────────────────────────────── */
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md:    0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg:    0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* ─── FONT FAMILIES ─────────────────────────────── */
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+
+  /* ─── TRANSITIONS ───────────────────────────────── */
+  --ease:         cubic-bezier(0.22, 0.68, 0, 1.2);
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── RESET & BASE ──────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--ink);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* ─── SCROLLBAR ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* ─── ANIMATIONS ────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+.fade-up-1 { animation-delay: 0.05s; }
+.fade-up-2 { animation-delay: 0.10s; }
+.fade-up-3 { animation-delay: 0.15s; }
+.fade-up-4 { animation-delay: 0.20s; }

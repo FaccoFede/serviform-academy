@@ -1,35 +1,12 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common'
 import { VideosService } from './videos.service'
-import { CreateVideoPillDto } from './dto/create-video-pill.dto'
 
-/**
- * Controller per le video pillole.
- *
- * Le video pillole sono contenuti brevi collegati a un software.
- * Ogni pillola ha un youtubeId per il player embedded.
- *
- * Endpoint:
- * - GET  /videos               → tutte le video pillole
- * - GET  /videos/software/:slug → video pillole filtrate per software
- * - POST /videos               → crea una nuova video pillola
- */
 @Controller('videos')
 export class VideosController {
-
-  constructor(private readonly videosService: VideosService) {}
-
-  @Post()
-  create(@Body() dto: CreateVideoPillDto) {
-    return this.videosService.create(dto)
-  }
-
-  @Get()
-  findAll() {
-    return this.videosService.findAll()
-  }
-
-  @Get('software/:slug')
-  findBySoftware(@Param('slug') slug: string) {
-    return this.videosService.findBySoftware(slug)
-  }
+  constructor(private readonly svc: VideosService) {}
+  @Get() findAll() { return this.svc.findAll() }
+  @Get('software/:slug') findBySoftware(@Param('slug') slug: string) { return this.svc.findBySoftware(slug) }
+  @Post() create(@Body() body: any) { return this.svc.create(body) }
+  @Put(':id') update(@Param('id') id: string, @Body() body: any) { return this.svc.update(id, body) }
+  @Delete(':id') remove(@Param('id') id: string) { return this.svc.remove(id) }
 }

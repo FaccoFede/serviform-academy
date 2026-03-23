@@ -1,41 +1,26 @@
-import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException } from '@nestjs/common'
 import { CoursesService } from './courses.service'
-import { CreateCourseDto } from './dto/create-course.dto'
 
-/**
- * Controller per la gestione dei corsi.
- *
- * Endpoint:
- * - GET  /courses         → lista tutti i corsi (con software associato)
- * - GET  /courses/:slug   → dettaglio corso per slug (con unità ordinate)
- * - POST /courses         → crea un nuovo corso (validato da CreateCourseDto)
- */
 @Controller('courses')
 export class CoursesController {
+  constructor(private readonly svc: CoursesService) {}
 
-  constructor(private readonly coursesService: CoursesService) {}
-
-  /** Lista tutti i corsi, ordinati per data di creazione */
   @Get()
-  async findAll() {
-    return this.coursesService.findAll()
-  }
+  findAll() { return this.svc.findAll() }
 
-  /** Dettaglio di un corso per slug, con unità didattiche ordinate */
   @Get(':slug')
   async findBySlug(@Param('slug') slug: string) {
-    const course = await this.coursesService.findBySlug(slug)
-
-    if (!course) {
-      throw new NotFoundException(`Corso con slug "${slug}" non trovato`)
-    }
-
+    const course = await this.svc.findBySlug(slug)
+    if (!course) throw new NotFoundException('Corso non trovato: ' + slug)
     return course
   }
 
-  /** Crea un nuovo corso — il body viene validato automaticamente dal ValidationPipe */
   @Post()
-  async create(@Body() dto: CreateCourseDto) {
-    return this.coursesService.create(dto)
-  }
+  create(@Body() body: any) { return this.svc.create(body) }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) { return this.svc.update(id, body) }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) { return this.svc.remove(id) }
 }

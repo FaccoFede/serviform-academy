@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Utente della piattaforma.
-/// Supporta autenticazione locale (email/password) e ruoli.
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -19,7 +17,6 @@ model User {
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   deletedAt    DateTime?
-
   progress     UserProgress[]
   certificates Certificate[]
 }
@@ -30,21 +27,19 @@ enum Role {
   TEAM_ADMIN
 }
 
-/// Software Serviform (EngView, Sysform, ProjectO).
 model Software {
-  id        String    @id @default(uuid())
-  name      String
-  slug      String    @unique
-  tagline   String?
-  color     String?
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-
-  courses Course[]
-  videos  VideoPill[]
+  id         String    @id @default(uuid())
+  name       String
+  slug       String    @unique
+  tagline    String?
+  color      String?
+  lightColor String?
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  courses    Course[]
+  videos     VideoPill[]
 }
 
-/// Corso strutturato legato a un software.
 model Course {
   id          String    @id @default(uuid())
   title       String
@@ -55,15 +50,13 @@ model Course {
   available   Boolean   @default(true)
   softwareId  String
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
-
   software     Software      @relation(fields: [softwareId], references: [id])
   units        Unit[]
   certificates Certificate[]
 }
 
-/// Unità didattica di un corso.
-/// contentBlocks contiene i blocchi di contenuto strutturato in formato JSON.
 model Unit {
   id            String    @id @default(uuid())
   title         String
@@ -72,17 +65,15 @@ model Unit {
   subtitle      String?
   duration      String?
   unitType      UnitType  @default(LESSON)
-  contentBlocks Json?
-
-  courseId  String
-  course   Course @relation(fields: [courseId], references: [id])
-
-  guide    GuideReference?
-  progress UserProgress[]
-
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-
+  content       String?   @db.Text
+  courseId       String
+  course         Course   @relation(fields: [courseId], references: [id])
+  guide          GuideReference?
+  exercises      Exercise[]
+  progress       UserProgress[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
   @@unique([courseId, slug])
 }
 
@@ -92,54 +83,92 @@ enum UnitType {
   EXERCISE
 }
 
-/// Riferimento a una guida Zendesk, collegata 1:1 a un'unità.
 model GuideReference {
   id        String @id @default(uuid())
   zendeskId String
   title     String
   url       String
-
-  unitId String @unique
-  unit   Unit   @relation(fields: [unitId], references: [id])
+  unitId    String @unique
+  unit      Unit   @relation(fields: [unitId], references: [id])
 }
 
-/// Video pillola breve legata a un software.
+model Exercise {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  htmlUrl     String?
+  evdUrl      String?
+  order       Int      @default(0)
+  unitId      String
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
 model VideoPill {
   id          String   @id @default(uuid())
   title       String
   description String?
   youtubeId   String   @unique
-
-  softwareId String
-  software   Software @relation(fields: [softwareId], references: [id])
-
-  createdAt DateTime @default(now())
+  softwareId  String
+  software    Software @relation(fields: [softwareId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
-/// Certificato emesso a un utente per il completamento di un corso.
 model Certificate {
   id       String   @id @default(uuid())
   userId   String
   courseId  String
   issuedAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
-
+  user     User     @relation(fields: [userId], references: [id])
+  course   Course   @relation(fields: [courseId], references: [id])
   @@unique([userId, courseId])
 }
 
-/// Tracciamento del progresso di un utente su una singola unità.
 model UserProgress {
   id          String    @id @default(uuid())
   userId      String
   unitId      String
   completed   Boolean   @default(false)
   completedAt DateTime?
-
-  user User @relation(fields: [userId], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
-
+  user        User      @relation(fields: [userId], references: [id])
+  unit        Unit      @relation(fields: [unitId], references: [id])
   @@unique([userId, unitId])
   @@index([userId, completed])
+}
+
+model Event {
+  id              String    @id @default(uuid())
+  title           String
+  description     String?   @db.Text
+  eventType       EventType @default(WEBINAR)
+  date            DateTime
+  endDate         DateTime?
+  location        String?
+  maxSeats        Int?
+  registrationUrl String?
+  recordingUrl    String?
+  published       Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum EventType {
+  WORKSHOP
+  WEBINAR
+  LIVE_SESSION
+}
+
+model PricingPackage {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       String?
+  priceNote   String?
+  features    String[] @default([])
+  highlighted Boolean  @default(false)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

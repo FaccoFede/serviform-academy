@@ -1,0 +1,19 @@
+.main { padding: 56px 80px; max-width: 920px; }
+.back { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: none; font-family: var(--font-mono); margin-bottom: 24px; transition: color var(--t-color); }
+.back:hover { color: var(--red); }
+.title { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--ink); margin-bottom: 10px; letter-spacing: -.5px; }
+.desc { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+.courseList { display: flex; flex-direction: column; gap: 10px; }
+.courseCard { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border: 1px solid transparent; border-radius: var(--r); background: var(--white); cursor: pointer; transition: all var(--t-elevation); text-align: left; font-family: var(--font-body); color: var(--muted); box-shadow: var(--shadow-sm); }
+.courseCard:hover { box-shadow: var(--shadow-md); border-color: var(--border); transform: translateY(-2px); }
+.courseCardLeft { display: flex; align-items: center; gap: 14px; }
+.courseCard h3 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.courseCard p { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+.colorDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.empty { color: var(--muted); font-size: 14px; padding: 60px 0; text-align: center; }
+.courseHeader { padding: 18px 80px; border-bottom: 1px solid var(--border); background: var(--white); display: flex; align-items: center; gap: 28px; }
+.backBtn { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); border: none; background: none; cursor: pointer; font-family: var(--font-mono); transition: color var(--t-color); }
+.backBtn:hover { color: var(--red); }
+.courseInfo { display: flex; align-items: center; gap: 10px; }
+.courseName { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--ink); }
+.courseSw { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }

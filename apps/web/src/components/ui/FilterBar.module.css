@@ -1,20 +1,7 @@
 .bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 60px;
+  position: sticky; top: var(--topbar-h); z-index: 50;
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
-  background: var(--white);
-  position: sticky;
-  top: var(--topbar-h);
-  z-index: 50;
-}
-
-.label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--muted);
-  margin-right: 4px;
+  padding: 16px 80px;
+  display: flex; gap: 8px;
 }

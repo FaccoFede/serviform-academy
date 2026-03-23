@@ -1,75 +1,17 @@
 .overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 500;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.2s ease both;
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
 }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.box {
-  width: min(860px, 95vw);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  background: #111;
-  animation: scaleIn 0.25s var(--ease-out) both;
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.96); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-/* ─── Video ─────────────────────────────────────── */
-.video {
-  aspect-ratio: 16 / 9;
-  width: 100%;
-}
-
-.video iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* ─── Footer ────────────────────────────────────── */
-.footer {
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.title {
-  font-weight: 600;
-  color: #fff;
-  font-size: 14px;
-}
-
+.wrap { width: 100%; max-width: 900px; position: relative; }
 .close {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: all 0.15s ease;
-  border: none;
-  cursor: pointer;
+  position: absolute; top: -40px; right: 0;
+  width: 32px; height: 32px; border-radius: 8px;
+  border: none; background: rgba(255,255,255,0.1);
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background var(--t-color);
 }
-
-.close:hover {
-  background: var(--red);
-  color: #fff;
-}
+.close:hover { background: var(--red); }
+.iframe { width: 100%; aspect-ratio: 16/9; border-radius: var(--r); border: none; }
+.title { color: #fff; font-size: 16px; font-weight: 700; margin-top: 16px; }

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: serviform
+      POSTGRES_PASSWORD: serviform_dev
+      POSTGRES_DB: serviform_academy
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://serviform:serviform_dev@postgres:5432/serviform_academy
+      JWT_SECRET: serviform-academy-jwt-secret-change-in-production
+      CORS_ORIGIN: http://localhost:3000
+      PORT: 3001
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

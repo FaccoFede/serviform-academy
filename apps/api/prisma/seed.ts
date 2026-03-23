@@ -1,242 +1,17 @@
 import { PrismaClient } from '@prisma/client'
-import * as bcrypt from 'bcrypt'
-
-/**
- * Seed completo — popola il database con tutti i dati del prototipo HTML v6.3.
- *
- * Include:
- * - 3 software con colori e tagline
- * - 5 corsi con livello, durata, disponibilità
- * - 11 unità con contentBlocks JSON strutturati
- * - 9 video pillole con YouTube ID reali
- * - 12 guide Zendesk con URL reali
- * - 1 utente admin di default
- */
 
 const prisma = new PrismaClient()
 
-// ─── Zendesk guides ─────────────────────────────
-const ZD_GUIDES = [
-  { zendeskId: '29828766274194', title: 'Fase: Creazione e modifica', url: 'https://support.serviform.com/hc/it/articles/29828766274194' },
-  { zendeskId: '29837509141010', title: 'Passo: Creazione e modifica', url: 'https://support.serviform.com/hc/it/articles/29837509141010' },
-  { zendeskId: '29838651936146', title: 'Azioni: Tipologie e creazione', url: 'https://support.serviform.com/hc/it/articles/29838651936146' },
-  { zendeskId: '29735425893138', title: 'Selezionare superficie di base', url: 'https://support.serviform.com/hc/it/articles/29735425893138' },
-  { zendeskId: '29854715707154', title: 'Azioni: Inserisci vista', url: 'https://support.serviform.com/hc/it/articles/29854715707154' },
-  { zendeskId: '29889268773522', title: 'Inserimento di un oggetto 3D', url: 'https://support.serviform.com/hc/it/articles/29889268773522' },
-  { zendeskId: '29897017185938', title: 'Proprietà oggetto 3D: Allineamento', url: 'https://support.serviform.com/hc/it/articles/29897017185938' },
-  { zendeskId: '29912348857618', title: 'Array di ripetizione', url: 'https://support.serviform.com/hc/it/articles/29912348857618' },
-  { zendeskId: '29951617666194', title: 'Quote 3D', url: 'https://support.serviform.com/hc/it/articles/29951617666194' },
-  { zendeskId: '29680466199058', title: 'Opzioni di rappresentazione 3D', url: 'https://support.serviform.com/hc/it/articles/29680466199058' },
-  { zendeskId: '29155102352402', title: 'Esportazione di un modello 3D', url: 'https://support.serviform.com/hc/it/articles/29155102352402' },
-  { zendeskId: '29155072637458', title: 'Formati di esportazione avanzati', url: 'https://support.serviform.com/hc/it/articles/29155072637458' },
-]
-
-// ─── Unit content blocks ────────────────────────
-const UNIT_CONTENT: Record<string, { subtitle: string; duration: string; unitType: string; contentBlocks: object[] }> = {
-  'panoramica': {
-    subtitle: 'Obiettivi, struttura e prerequisiti del corso',
-    duration: '5 min',
-    unitType: 'OVERVIEW',
-    contentBlocks: [
-      { type: 'text', title: 'Introduzione', content: 'Il modulo 3D di EngView consente di trasformare un disegno strutturale realizzato nell\'ambiente 2D in un modello tridimensionale interattivo, permettendo di analizzare il comportamento della struttura durante le diverse fasi di montaggio.' },
-      { type: 'objectives', items: [
-        'Generare il modello 3D a partire da un disegno strutturale 2D',
-        'Comprendere e gestire la sequenza di animazione (Fasi, Passi, Azioni)',
-        'Creare una simulazione del montaggio della struttura',
-        'Applicare azioni di piega alle superfici del modello',
-        'Inserire oggetti 3D e configurarne proprietà e dimensioni',
-        'Inserire quote tridimensionali per verifiche dimensionali',
-        'Esportare il modello 3D in formato HTML condivisibile',
-      ]},
-    ],
-  },
-  'struttura-ambiente-3d': {
-    subtitle: 'Fasi, Passi e Azioni — i tre livelli della sequenza di animazione',
-    duration: '15 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'L\'area tabellare', content: 'L\'ambiente 3D contiene un\'area tabellare che gestisce la sequenza di animazione del modello. Questa area permette di controllare ogni movimento della struttura durante la simulazione ed è il fulcro del lavoro tridimensionale.' },
-      { type: 'list', title: 'I tre livelli principali', items: [
-        '<strong>Fasi</strong> — i momenti principali del montaggio (es. Messa in volume, Chiusura fondo, Chiusura coperchio)',
-        '<strong>Passi</strong> — momenti temporali all\'interno di una fase che permettono di separare le azioni',
-        '<strong>Azioni</strong> — i processi applicati alle superfici del modello tridimensionale',
-      ]},
-      { type: 'callout', variant: 'red', title: 'NOTA — Esportazione e Assembly', content: 'Creare più fasi è fondamentale: per l\'Esportazione si definisce da quale fase a quale fase esportare; per l\'Assembly display viene richiesto di indicare la fase nella quale visualizzare il componente 3D.' },
-      { type: 'image', caption: 'Diagramma: Sequenza → Fasi → Passi → Azioni' },
-    ],
-  },
-  'ricostruzione-sequenza': {
-    subtitle: 'Eliminare la sequenza automatica e ricostruirla passo per passo',
-    duration: '20 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Perché farlo manualmente', content: 'Eliminare la sequenza generata automaticamente e ricostruirla a mano consolida la comprensione dei tre livelli e permette un controllo preciso della simulazione di montaggio.' },
-      { type: 'steps', items: [
-        'Eliminare la fase esistente generata automaticamente',
-        'Creare una nuova fase e assegnarle un nome descrittivo',
-        'Creare i passi all\'interno della fase',
-        'Applicare le azioni di piega alle superfici desiderate',
-      ]},
-      { type: 'list', title: 'Esempio di sequenza per una scatola standard', items: [
-        'Fase 1 → Messa in volume',
-        'Fase 2 → Chiusura fondo',
-        'Fase 3 → Chiusura coperchio',
-      ]},
-    ],
-  },
-  'azioni-piega': {
-    subtitle: 'Angoli assoluti e sequenze di movimento superfici',
-    duration: '25 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Le azioni di piega', content: 'Le azioni definiscono i movimenti applicati alle superfici durante l\'animazione. L\'azione principale nel packaging è la piega, che simula il ripiegamento fisico di un pannello del cartone.' },
-      { type: 'callout', variant: 'blue', title: 'CONCETTO — Angolo assoluto', content: 'L\'angolo impostato è un valore ASSOLUTO: definisce la posizione finale della superficie, non lo spostamento relativo. Un valore di 90° porterà sempre la superficie a 90° indipendentemente dalla posizione di partenza.' },
-      { type: 'text', title: 'Costruire l\'animazione', content: 'È possibile applicare pieghe a diverse superfici in passi differenti per simulare correttamente il montaggio. Ogni passo può contenere più azioni che avvengono simultaneamente.' },
-    ],
-  },
-  'superficie-base': {
-    subtitle: 'Identificare e impostare il piano di riferimento del modello',
-    duration: '15 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'La superficie di base', content: 'La superficie di base è il pannello di riferimento del modello 3D — il punto fisso attorno al quale vengono costruite tutte le pieghe e i movimenti dell\'animazione.' },
-      { type: 'callout', variant: 'amber', title: 'IMPORTANTE', content: 'Scegliere correttamente la superficie di base è fondamentale. Una scelta errata comprometterà l\'intera sequenza di animazione e renderà difficile la correzione successiva.' },
-      { type: 'props', items: [
-        { name: 'Funzione', value: 'Piano di riferimento fisso' },
-        { name: 'Impatto', value: 'Tutta la sequenza di animazione' },
-        { name: 'Modificabile', value: 'Sì, ma con cautela' },
-        { name: 'Consiglio', value: 'Usare il pannello più grande' },
-      ]},
-    ],
-  },
-  'inserisci-vista': {
-    subtitle: 'Aggiungere viste del modello alla sequenza di animazione',
-    duration: '20 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Cos\'è una vista', content: 'L\'azione \'Inserisci Vista\' permette di aggiungere alla sequenza di animazione una fotografia istantanea della posizione corrente del modello. Ogni fase può contenere una o più viste.' },
-      { type: 'steps', items: [
-        'Posizionare il modello nella configurazione desiderata',
-        'Selezionare il passo nella sequenza dove inserire la vista',
-        'Usare il comando \'Inserisci Vista\' dal menu azioni',
-        'Rinominare la vista con un nome descrittivo',
-      ]},
-      { type: 'callout', variant: 'blue', title: 'BEST PRACTICE', content: 'Nominare le viste in modo descrittivo (es. \'Volume aperto\', \'Fondo chiuso\') facilita la navigazione e la modifica successiva della sequenza.' },
-    ],
-  },
-  'oggetto-3d': {
-    subtitle: 'Aggiungere prodotti e oggetti nella simulazione',
-    duration: '25 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Oggetti 3D nel packaging', content: 'EngView permette di inserire oggetti tridimensionali nella simulazione per rappresentare il prodotto contenuto nella confezione. Questo rende la visualizzazione più realistica e comunicativa.' },
-      { type: 'steps', items: [
-        'Accedere al menu Inserisci → Oggetto 3D',
-        'Selezionare il tipo di oggetto dalla libreria (parallelepipedo, cilindro, oggetto personalizzato)',
-        'Posizionare l\'oggetto nel modello',
-        'Configurare dimensioni e proprietà nell\'apposito pannello',
-      ]},
-      { type: 'callout', variant: 'red', title: 'NOTA — Fase di visualizzazione', content: 'Al momento dell\'inserimento viene chiesto di specificare da quale fase l\'oggetto deve essere visibile. Questo è fondamentale per una corretta animazione.' },
-    ],
-  },
-  'allineamento-3d': {
-    subtitle: 'Configurare posizione, rotazione e ancoraggio degli oggetti',
-    duration: '20 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Il pannello proprietà', content: 'Ogni oggetto 3D inserito nel modello ha un pannello proprietà che ne gestisce il posizionamento esatto, la rotazione nei tre assi e l\'allineamento rispetto alle superfici della confezione.' },
-      { type: 'props', items: [
-        { name: 'Posizione X/Y/Z', value: 'Coordinate assolute nel modello' },
-        { name: 'Rotazione', value: 'Angoli sui tre assi' },
-        { name: 'Allineamento', value: 'Rispetto a faccia o bordo' },
-        { name: 'Scala', value: 'Dimensioni in mm' },
-      ]},
-      { type: 'callout', variant: 'blue', title: 'TIP — Allineamento automatico', content: 'Usa l\'allineamento automatico per ancorare l\'oggetto a una faccia specifica della confezione. L\'oggetto si sposterà automaticamente con le pieghe dell\'animazione.' },
-    ],
-  },
-  'array-ripetizione': {
-    subtitle: 'Duplicare oggetti per display e confezioni multiple',
-    duration: '20 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Array di ripetizione', content: 'La funzione Array di ripetizione permette di duplicare un oggetto 3D secondo un pattern regolare. È particolarmente utile per simulare display con più prodotti o confezioni con ripetizioni geometriche.' },
-      { type: 'steps', items: [
-        'Selezionare l\'oggetto 3D da duplicare',
-        'Accedere alla funzione Array dal menu contestuale',
-        'Impostare numero di righe, colonne e livelli',
-        'Definire la spaziatura tra gli elementi',
-        'Confermare e verificare il risultato nella vista 3D',
-      ]},
-    ],
-  },
-  'quote-3d': {
-    subtitle: 'Misurare le dimensioni reali comprensive dello spessore materiale',
-    duration: '15 min',
-    unitType: 'LESSON',
-    contentBlocks: [
-      { type: 'text', title: 'Quote tridimensionali', content: 'Le quote 3D permettono di verificare le dimensioni effettive del modello, includendo lo spessore del materiale. A differenza delle quote 2D, queste misurano la geometria reale della confezione montata.' },
-      { type: 'callout', variant: 'blue', title: 'DIFFERENZA — Quote 2D vs 3D', content: 'Le quote 2D misurano il disegno piano. Le quote 3D misurano la struttura montata, considerando pieghe e spessore. La differenza può essere significativa su materiali spessi.' },
-    ],
-  },
-  'esercitazione-finale': {
-    subtitle: 'Workflow completo dal 2D al modello 3D esportabile',
-    duration: '30 min',
-    unitType: 'EXERCISE',
-    contentBlocks: [
-      { type: 'text', title: 'Esercitazione pratica', content: 'In questa esercitazione metterai in pratica tutto ciò che hai appreso, seguendo il workflow completo dalla struttura 2D alla simulazione 3D esportabile.' },
-      { type: 'checklist', items: [
-        'Aprire un disegno strutturale 2D esistente',
-        'Generare il modello 3D dal disegno',
-        'Eliminare la sequenza automatica',
-        'Selezionare la superficie di base corretta',
-        'Ricreare le fasi: Messa in volume, Chiusura fondo, Chiusura coperchio',
-        'Applicare le azioni di piega a ciascuna fase',
-        'Inserire un oggetto 3D prodotto nella confezione',
-        'Configurare l\'allineamento dell\'oggetto',
-        'Aggiungere quote 3D di verifica',
-        'Esportare il modello in formato HTML',
-        'Verificare l\'esportazione nel browser',
-      ]},
-    ],
-  },
-}
-
 async function main() {
-  console.log('🌱 Seeding database (completo)...')
+  console.log('🌱 Seeding Serviform Academy v2...')
 
-  // ─── Admin user ────────────────────────────────
-  const adminHash = await bcrypt.hash('admin2026!', 12)
-  await prisma.user.upsert({
-    where: { email: 'admin@serviform.com' },
-    update: {},
-    create: {
-      email: 'admin@serviform.com',
-      name: 'Admin Serviform',
-      passwordHash: adminHash,
-      role: 'ADMIN',
-    },
-  })
-  console.log('  ✓ Utente admin creato (admin@serviform.com)')
+  // Software with updated colors (Sysform = RED)
+  const engview = await prisma.software.upsert({ where: { slug: 'engview' }, update: { tagline: 'Progettazione strutturale packaging 2D e 3D', color: '#003875', lightColor: '#EEF3FA' }, create: { name: 'EngView', slug: 'engview', tagline: 'Progettazione strutturale packaging 2D e 3D', color: '#003875', lightColor: '#EEF3FA' } })
+  const sysform = await prisma.software.upsert({ where: { slug: 'sysform' }, update: { tagline: 'Gestione e ottimizzazione della produzione', color: '#C8102E', lightColor: '#FDF0EF' }, create: { name: 'Sysform', slug: 'sysform', tagline: 'Gestione e ottimizzazione della produzione', color: '#C8102E', lightColor: '#FDF0EF' } })
+  const projecto = await prisma.software.upsert({ where: { slug: 'projecto' }, update: { tagline: 'Project management e workflow creativo', color: '#067DB8', lightColor: '#E3F4FC' }, create: { name: 'ProjectO', slug: 'projecto', tagline: 'Project management e workflow creativo', color: '#067DB8', lightColor: '#E3F4FC' } })
+  console.log('  ✓ Software (Sysform now RED)')
 
-  // ─── Software ──────────────────────────────────
-  const engview = await prisma.software.upsert({
-    where: { slug: 'engview' },
-    update: { tagline: 'Progettazione strutturale packaging 2D e 3D', color: '#003875' },
-    create: { name: 'EngView', slug: 'engview', tagline: 'Progettazione strutturale packaging 2D e 3D', color: '#003875' },
-  })
-  const sysform = await prisma.software.upsert({
-    where: { slug: 'sysform' },
-    update: { tagline: 'Gestione e ottimizzazione della produzione', color: '#2D6A4F' },
-    create: { name: 'Sysform', slug: 'sysform', tagline: 'Gestione e ottimizzazione della produzione', color: '#2D6A4F' },
-  })
-  const projecto = await prisma.software.upsert({
-    where: { slug: 'projecto' },
-    update: { tagline: 'Project management e workflow creativo', color: '#067DB8' },
-    create: { name: 'ProjectO', slug: 'projecto', tagline: 'Project management e workflow creativo', color: '#067DB8' },
-  })
-  console.log('  ✓ Software creati con metadata')
-
-  // ─── Courses ───────────────────────────────────
+  // Courses
   const coursesData = [
     { title: 'Modulo 3D', slug: 'engview-3d', description: 'Trasforma i disegni strutturali 2D in modelli tridimensionali interattivi e simula il montaggio del packaging.', softwareId: engview.id, level: 'Intermedio', duration: '3h 30m', available: true },
     { title: 'Modulo 2D', slug: 'engview-2d', description: 'Crea e gestisci disegni strutturali per packaging con gli strumenti di progettazione 2D.', softwareId: engview.id, level: 'Base', duration: '2h 00m', available: false },
@@ -244,101 +19,112 @@ async function main() {
     { title: 'Sysform Introduzione', slug: 'sysform-base', description: 'Panoramica completa del sistema Sysform per la gestione del processo produttivo.', softwareId: sysform.id, level: 'Base', duration: '2h 00m', available: false },
     { title: 'ProjectO Primi passi', slug: 'projecto-start', description: 'Configura il tuo spazio di lavoro e gestisci i primi progetti con ProjectO.', softwareId: projecto.id, level: 'Base', duration: '1h 30m', available: false },
   ]
-
   for (const c of coursesData) {
     await prisma.course.upsert({ where: { slug: c.slug }, update: { level: c.level, duration: c.duration, available: c.available }, create: c })
   }
-  console.log('  ✓ Corsi creati con livello/durata/disponibilità')
+  console.log('  ✓ Corsi')
 
-  // ─── Units con content blocks ──────────────────
+  // Units with rich HTML content
   const engview3d = await prisma.course.findUnique({ where: { slug: 'engview-3d' } })
   if (engview3d) {
-    const unitSlugs = Object.keys(UNIT_CONTENT)
-    for (let i = 0; i < unitSlugs.length; i++) {
-      const slug = unitSlugs[i]
-      const content = UNIT_CONTENT[slug]
-      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-        .replace('3d', '3D').replace('Panoramica', 'Panoramica del Modulo')
+    const units = [
+      { title: 'Panoramica del Modulo', slug: 'panoramica', order: 1, subtitle: 'Obiettivi, struttura e prerequisiti', duration: '5 min', unitType: 'OVERVIEW', content: '<h3>Introduzione</h3><p>Il modulo 3D di EngView consente di trasformare un disegno strutturale realizzato nell\'ambiente 2D in un modello tridimensionale interattivo.</p><h3>Cosa imparerai</h3><ul><li>Generare il modello 3D a partire da un disegno strutturale 2D</li><li>Comprendere la sequenza di animazione (Fasi, Passi, Azioni)</li><li>Creare una simulazione del montaggio</li><li>Applicare azioni di piega alle superfici</li><li>Inserire oggetti 3D e configurarne proprietà</li><li>Esportare il modello 3D in formato HTML</li></ul>' },
+      { title: 'Struttura dell\'ambiente 3D', slug: 'struttura-ambiente-3d', order: 2, subtitle: 'Fasi, Passi e Azioni', duration: '15 min', unitType: 'LESSON', content: '<h3>L\'area tabellare</h3><p>L\'ambiente 3D contiene un\'area tabellare che gestisce la sequenza di animazione del modello.</p><h3>I tre livelli principali</h3><ul><li><strong>Fasi</strong> — i momenti principali del montaggio</li><li><strong>Passi</strong> — momenti temporali all\'interno di una fase</li><li><strong>Azioni</strong> — i processi applicati alle superfici</li></ul><div class="callout callout-red"><strong>NOTA</strong>: Creare più fasi è fondamentale per l\'esportazione e l\'Assembly display.</div>' },
+      { title: 'Ricostruzione manuale della sequenza', slug: 'ricostruzione-sequenza', order: 3, subtitle: 'Eliminare e ricostruire passo per passo', duration: '20 min', unitType: 'LESSON', content: '<h3>Perché farlo manualmente</h3><p>Eliminare la sequenza generata automaticamente e ricostruirla a mano consolida la comprensione dei tre livelli.</p><h3>Procedura</h3><ol><li>Eliminare la fase esistente generata automaticamente</li><li>Creare una nuova fase con nome descrittivo</li><li>Creare i passi all\'interno della fase</li><li>Applicare le azioni di piega</li></ol>' },
+      { title: 'Applicazione delle azioni di piega', slug: 'azioni-piega', order: 4, subtitle: 'Angoli assoluti e sequenze di movimento', duration: '25 min', unitType: 'LESSON', content: '<h3>Le azioni di piega</h3><p>Le azioni definiscono i movimenti applicati alle superfici durante l\'animazione.</p><div class="callout callout-blue"><strong>CONCETTO — Angolo assoluto</strong>: L\'angolo impostato è un valore ASSOLUTO: definisce la posizione finale della superficie.</div>' },
+      { title: 'Selezione della superficie di base', slug: 'superficie-base', order: 5, subtitle: 'Il piano di riferimento del modello', duration: '15 min', unitType: 'LESSON', content: '<h3>La superficie di base</h3><p>La superficie di base è il pannello di riferimento del modello 3D.</p><div class="callout callout-amber"><strong>IMPORTANTE</strong>: Scegliere correttamente la superficie di base è fondamentale. Una scelta errata comprometterà l\'intera sequenza.</div>' },
+      { title: 'Inserimento oggetti 3D', slug: 'oggetto-3d', order: 6, subtitle: 'Aggiungere prodotti nella simulazione', duration: '25 min', unitType: 'LESSON', content: '<h3>Oggetti 3D nel packaging</h3><p>EngView permette di inserire oggetti tridimensionali nella simulazione per rappresentare il prodotto contenuto nella confezione.</p><ol><li>Accedere al menu Inserisci → Oggetto 3D</li><li>Selezionare il tipo dalla libreria</li><li>Posizionare l\'oggetto nel modello</li><li>Configurare dimensioni e proprietà</li></ol>' },
+      { title: 'Proprietà e allineamento', slug: 'allineamento-3d', order: 7, subtitle: 'Posizione, rotazione e ancoraggio', duration: '20 min', unitType: 'LESSON', content: '<h3>Il pannello proprietà</h3><p>Ogni oggetto 3D ha un pannello che ne gestisce posizionamento, rotazione e allineamento.</p>' },
+      { title: 'Array di ripetizione', slug: 'array-ripetizione', order: 8, subtitle: 'Duplicare oggetti per display multipli', duration: '20 min', unitType: 'LESSON', content: '<h3>Array di ripetizione</h3><p>Permette di duplicare un oggetto 3D secondo un pattern regolare per simulare display con più prodotti.</p>' },
+      { title: 'Quote 3D', slug: 'quote-3d', order: 9, subtitle: 'Verifica dimensionale con spessore', duration: '15 min', unitType: 'LESSON', content: '<h3>Quote tridimensionali</h3><p>Le quote 3D verificano le dimensioni effettive del modello includendo lo spessore del materiale.</p>' },
+      { title: 'Opzioni di rappresentazione', slug: 'rappresentazione', order: 10, subtitle: 'Sfondo, illuminazione e HDR', duration: '15 min', unitType: 'LESSON', content: '<h3>Personalizzazione visiva</h3><p>EngView offre diverse opzioni per personalizzare l\'aspetto del modello 3D: sfondi, illuminazione, file HDR per presentazioni professionali.</p>' },
+      { title: 'Esercitazione finale', slug: 'esercitazione-finale', order: 11, subtitle: 'Workflow completo dal 2D al 3D', duration: '30 min', unitType: 'EXERCISE', content: '<h3>Esercitazione pratica</h3><p>Metti in pratica tutto ciò che hai appreso seguendo il workflow completo dalla struttura 2D alla simulazione 3D esportabile.</p><p>Completa le esercitazioni qui sotto per ottenere l\'attestato di partecipazione al modulo.</p>' },
+    ]
 
-      // Titoli corretti dal prototipo
-      const TITLES: Record<string, string> = {
-        'panoramica': 'Panoramica del Modulo',
-        'struttura-ambiente-3d': "Struttura dell'ambiente 3D",
-        'ricostruzione-sequenza': 'Ricostruzione manuale della sequenza',
-        'azioni-piega': 'Applicazione delle azioni di piega',
-        'superficie-base': 'Selezione della superficie di base',
-        'inserisci-vista': 'Azione Inserisci Vista',
-        'oggetto-3d': 'Inserimento di un oggetto 3D',
-        'allineamento-3d': 'Proprietà oggetto 3D: Allineamento',
-        'array-ripetizione': 'Array di ripetizione',
-        'quote-3d': 'Quote 3D e verifica dimensionale',
-        'esercitazione-finale': 'Esercitazione finale',
-      }
+    const ZD = [
+      null,
+      { zendeskId: '29828766274194', title: 'Fase: Creazione e modifica', url: 'https://support.serviform.com/hc/it/articles/29828766274194' },
+      { zendeskId: '29837509141010', title: 'Passo: Creazione e modifica', url: 'https://support.serviform.com/hc/it/articles/29837509141010' },
+      { zendeskId: '29838651936146', title: 'Azioni: Tipologie e creazione', url: 'https://support.serviform.com/hc/it/articles/29838651936146' },
+      { zendeskId: '29735425893138', title: 'Selezionare superficie di base', url: 'https://support.serviform.com/hc/it/articles/29735425893138' },
+      { zendeskId: '29889268773522', title: 'Inserimento di un oggetto 3D', url: 'https://support.serviform.com/hc/it/articles/29889268773522' },
+      { zendeskId: '29897017185938', title: 'Proprietà oggetto 3D: Allineamento', url: 'https://support.serviform.com/hc/it/articles/29897017185938' },
+      { zendeskId: '29912348857618', title: 'Array di ripetizione', url: 'https://support.serviform.com/hc/it/articles/29912348857618' },
+      { zendeskId: '29951617666194', title: 'Quote 3D', url: 'https://support.serviform.com/hc/it/articles/29951617666194' },
+      { zendeskId: '29680466199058', title: 'Opzioni di rappresentazione 3D', url: 'https://support.serviform.com/hc/it/articles/29680466199058' },
+      null,
+    ]
 
-      const existing = await prisma.unit.findFirst({
-        where: { courseId: engview3d.id, slug },
-      })
-
-      const unitData = {
-        title: TITLES[slug] || title,
-        slug,
-        order: i + 1,
-        subtitle: content.subtitle,
-        duration: content.duration,
-        unitType: content.unitType as any,
-        contentBlocks: content.contentBlocks,
-        courseId: engview3d.id,
-      }
-
+    for (let i = 0; i < units.length; i++) {
+      const u = units[i]
+      const existing = await prisma.unit.findFirst({ where: { courseId: engview3d.id, slug: u.slug } })
       let unitId: string
       if (existing) {
-        await prisma.unit.update({
-          where: { id: existing.id },
-          data: {
-            subtitle: content.subtitle,
-            duration: content.duration,
-            unitType: content.unitType as any,
-            contentBlocks: content.contentBlocks,
-          },
-        })
+        await prisma.unit.update({ where: { id: existing.id }, data: { subtitle: u.subtitle, duration: u.duration, unitType: u.unitType as any, content: u.content } })
         unitId = existing.id
       } else {
-        const created = await prisma.unit.create({ data: unitData })
+        const created = await prisma.unit.create({ data: { ...u, courseId: engview3d.id } as any })
         unitId = created.id
       }
-
-      // Guide Zendesk (unità 2-10, indici 0-8)
-      if (i >= 1 && i <= 9 && ZD_GUIDES[i - 1]) {
-        const guide = ZD_GUIDES[i - 1]
+      if (ZD[i]) {
         const existingGuide = await prisma.guideReference.findUnique({ where: { unitId } })
-        if (!existingGuide) {
-          await prisma.guideReference.create({ data: { ...guide, unitId } })
-        }
+        if (!existingGuide) await prisma.guideReference.create({ data: { ...ZD[i]!, unitId } })
       }
     }
-    console.log('  ✓ Unità con content blocks e guide Zendesk')
+    console.log('  ✓ Unità con contenuto HTML e guide Zendesk')
+
+    // Exercises for the final unit
+    const exUnit = await prisma.unit.findFirst({ where: { courseId: engview3d.id, slug: 'esercitazione-finale' } })
+    if (exUnit) {
+      const exercises = [
+        { title: 'Astuccio con chiusura a incastro', description: 'Crea il modello 3D di un astuccio con chiusura a incastro, simula il montaggio completo e esporta in HTML.', order: 1, unitId: exUnit.id },
+        { title: 'Scatola con fondo automatico', description: 'Realizza una scatola con fondo automatico (auto-lock bottom), gestisci le fasi di piega e inserisci il prodotto.', order: 2, unitId: exUnit.id },
+        { title: 'Display espositore con ripetizione', description: 'Progetta un display espositore con array di prodotti ripetuti e personalizza la rappresentazione visiva.', order: 3, unitId: exUnit.id },
+      ]
+      for (const ex of exercises) {
+        const existing = await prisma.exercise.findFirst({ where: { unitId: exUnit.id, title: ex.title } })
+        if (!existing) await prisma.exercise.create({ data: ex })
+      }
+      console.log('  ✓ Esercitazioni')
+    }
   }
 
-  // ─── Video Pillole ─────────────────────────────
+  // Video pills
   const pills = [
-    { title: 'Introduzione al modulo 3D di EngView', youtubeId: 'zt4aT5oKLII', description: 'Trasforma un disegno 2D in modello 3D interattivo.', softwareId: engview.id },
-    { title: 'Fasi, Passi e Azioni nella sequenza 3D', youtubeId: 'kqFPxe_E7WI', description: "Struttura gerarchica dell'animazione e organizzazione delle fasi di montaggio.", softwareId: engview.id },
-    { title: 'Azioni di piega nel modulo 3D', youtubeId: '8qhtL4Rv0gI', description: 'Angoli assoluti e sequenze di piegatura realistiche.', softwareId: engview.id },
-    { title: 'Inserire oggetti 3D nella scatola', youtubeId: 'pQlUjW3xhes', description: 'Inserimento e configurazione di oggetti prodotto nella simulazione.', softwareId: engview.id },
-    { title: 'Array di ripetizione per prodotti multipli', youtubeId: '1ybZCklt4Bg', description: 'Duplica oggetti 3D per simulare display e confezioni con più pezzi.', softwareId: engview.id },
-    { title: 'Quote 3D e verifica dimensionale', youtubeId: 'bd2mps58Flo', description: 'Misura le dimensioni reali comprensive dello spessore del materiale.', softwareId: engview.id },
-    { title: 'Opzioni di rappresentazione visiva', youtubeId: 'N1K1haAkC_M', description: 'Sfondo, illuminazione e file HDR per una presentazione professionale.', softwareId: engview.id },
-    { title: 'Esportazione HTML del modello 3D', youtubeId: 'BF8az5d9418', description: 'Condividi la simulazione senza necessità di EngView installato.', softwareId: engview.id },
-    { title: 'Workflow completo: dal 2D al modello 3D', youtubeId: '-69Uk74NXtU', description: 'Esercitazione guidata end-to-end dalla struttura 2D alla simulazione esportabile.', softwareId: engview.id },
+    { title: 'Introduzione al modulo 3D', youtubeId: 'zt4aT5oKLII', description: 'Trasforma un disegno 2D in modello 3D interattivo.', softwareId: engview.id },
+    { title: 'Fasi, Passi e Azioni', youtubeId: 'kqFPxe_E7WI', description: 'Struttura gerarchica dell\'animazione.', softwareId: engview.id },
+    { title: 'Azioni di piega nel 3D', youtubeId: '8qhtL4Rv0gI', description: 'Angoli assoluti e piegature realistiche.', softwareId: engview.id },
+    { title: 'Inserire oggetti 3D', youtubeId: 'pQlUjW3xhes', description: 'Inserimento oggetti prodotto nella simulazione.', softwareId: engview.id },
+    { title: 'Array di ripetizione', youtubeId: '1ybZCklt4Bg', description: 'Duplica oggetti per display multipli.', softwareId: engview.id },
+    { title: 'Quote 3D e verifica', youtubeId: 'bd2mps58Flo', description: 'Misura dimensioni con spessore materiale.', softwareId: engview.id },
+    { title: 'Rappresentazione visiva', youtubeId: 'N1K1haAkC_M', description: 'Sfondo, illuminazione e HDR.', softwareId: engview.id },
+    { title: 'Esportazione HTML', youtubeId: 'BF8az5d9418', description: 'Condividi senza EngView installato.', softwareId: engview.id },
+    { title: 'Workflow completo 2D→3D', youtubeId: '-69Uk74NXtU', description: 'Esercitazione end-to-end.', softwareId: engview.id },
   ]
-  for (const p of pills) {
-    await prisma.videoPill.upsert({ where: { youtubeId: p.youtubeId }, update: {}, create: p })
-  }
+  for (const p of pills) { await prisma.videoPill.upsert({ where: { youtubeId: p.youtubeId }, update: {}, create: p }) }
   console.log('  ✓ Video pillole')
 
-  console.log('✅ Seed completo!')
+  // Pricing packages
+  const packages = [
+    { name: 'Modulo Singolo', slug: 'modulo-singolo', description: 'Accesso a un modulo specifico in autonomia', price: '€ 149', priceNote: 'per modulo', features: ['Accesso completo al modulo scelto', 'Esercitazioni con file .evd', 'Guide Zendesk collegate', 'Attestato di partecipazione'], order: 1 },
+    { name: 'Modulo con Formatore', slug: 'modulo-formatore', description: 'Modulo + sessione live con formatore dedicato', price: '€ 449', priceNote: 'per modulo + 4h formatore', features: ['Tutto del Modulo Singolo', 'Sessione live con formatore', '4 ore di formazione dedicata', 'Supporto post-sessione'], highlighted: true, order: 2 },
+    { name: 'Corso Completo', slug: 'corso-completo', description: 'Tutti i moduli di un software', price: '€ 349', priceNote: 'per software', features: ['Tutti i moduli del software scelto', 'Esercitazioni complete', 'Attestato per ogni modulo', 'Attestato corso completo'], order: 3 },
+    { name: 'Consulenza Oraria', slug: 'consulenza-oraria', description: 'Ore di consulenza one-to-one', price: '€ 120', priceNote: 'per ora', features: ['Formatore dedicato', 'Analisi sui tuoi file', 'Troubleshooting personalizzato', 'Report di sessione'], order: 4 },
+    { name: 'Enterprise', slug: 'enterprise', description: 'Pacchetto personalizzato per team e aziende', price: 'Su misura', features: ['Tutti i corsi per il team', 'Formazione personalizzata', 'Dashboard progresso team', 'Account manager dedicato', 'SLA garantito'], order: 5 },
+  ]
+  for (const pkg of packages) { await prisma.pricingPackage.upsert({ where: { slug: pkg.slug }, update: { ...pkg }, create: pkg }) }
+  console.log('  ✓ Pacchetti listino')
+
+  // Events
+  const events = [
+    { title: 'Workshop: Modulo 3D EngView', description: 'Workshop pratico di 4 ore sul modulo 3D di EngView. Dalla struttura 2D alla simulazione esportabile.', eventType: 'WORKSHOP' as any, date: new Date('2026-04-15T09:00:00Z'), endDate: new Date('2026-04-15T13:00:00Z'), location: 'Online (Zoom)', maxSeats: 20 },
+    { title: 'Webinar: Novità EngView 2026', description: 'Presentazione delle nuove funzionalità di EngView rilasciate nel 2026.', eventType: 'WEBINAR' as any, date: new Date('2026-04-22T14:00:00Z'), endDate: new Date('2026-04-22T15:00:00Z'), location: 'Online', maxSeats: 100 },
+    { title: 'Sessione live: Q&A Sysform', description: 'Sessione di domande e risposte aperta su Sysform con il team di formazione.', eventType: 'LIVE_SESSION' as any, date: new Date('2026-05-06T10:00:00Z'), location: 'Online', maxSeats: 50 },
+  ]
+  for (const ev of events) { await prisma.event.create({ data: ev }).catch(() => {}) }
+  console.log('  ✓ Eventi')
+
+  console.log('✅ Seed v2 completo!')
 }
 
-main()
-  .catch((e) => { console.error('❌ Errore:', e); process.exit(1) })
-  .finally(() => prisma.$disconnect())
+main().catch(e => { console.error('❌', e); process.exit(1) }).finally(() => prisma.$disconnect())

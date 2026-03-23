@@ -1,100 +1,51 @@
 'use client'
-
-import { useState } from 'react'
-import Link from 'next/link'
+import AdminCrud from '@/components/features/AdminCrud'
 import { api } from '@/lib/api'
-import styles from '../AdminForm.module.css'
 
 /**
- * Admin Courses — form per creare un nuovo corso.
+ * Admin Corsi — gestione completa dei moduli di formazione.
+ *
+ * Il campo "Software" usa loadOptions per caricare dinamicamente
+ * la lista dei software dal backend (dropdown con nomi, non UUID).
  */
 export default function AdminCoursesPage() {
-  const [title, setTitle] = useState('')
-  const [slug, setSlug] = useState('')
-  const [description, setDescription] = useState('')
-  const [softwareId, setSoftwareId] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setStatus('loading')
-    setErrorMsg('')
-
-    try {
-      await api.courses.create({
-        title,
-        slug,
-        description: description || undefined,
-        softwareId,
-      })
-      setStatus('success')
-      setTitle('')
-      setSlug('')
-      setDescription('')
-      setSoftwareId('')
-    } catch (err) {
-      setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Errore nella creazione')
-    }
-  }
-
   return (
-    <main className={styles.main}>
-      <Link href="/admin" className={styles.back}>← Admin</Link>
-      <h1 className={styles.title}>Nuovo corso</h1>
-
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.field}>
-          <label className={styles.label}>Titolo</label>
-          <input
-            className={styles.input}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Es. Modulo 3D"
-            required
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Slug</label>
-          <input
-            className={styles.input}
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="Es. engview-3d"
-            required
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Descrizione</label>
-          <textarea
-            className={styles.textarea}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Descrizione del corso..."
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Software ID</label>
-          <input
-            className={styles.input}
-            value={softwareId}
-            onChange={(e) => setSoftwareId(e.target.value)}
-            placeholder="UUID del software"
-            required
-          />
-        </div>
-
-        <button type="submit" className={styles.submit} disabled={status === 'loading'}>
-          {status === 'loading' ? 'Creazione...' : 'Crea corso'}
-        </button>
-
-        {status === 'success' && <div className={styles.success}>Corso creato con successo.</div>}
-        {status === 'error' && <div className={styles.error}>{errorMsg}</div>}
-      </form>
-    </main>
+    <AdminCrud
+      title="Moduli / Corsi"
+      columns={[
+        { key: 'title', label: 'Titolo' },
+        { key: 'slug', label: 'Slug' },
+        { key: 'level', label: 'Livello' },
+        { key: 'duration', label: 'Durata' },
+        { key: 'available', label: 'Attivo', render: (v: any) => v ? 'Sì' : 'No' },
+        { key: 'software', label: 'Software', render: (_: any, row: any) => row.software?.name || '—' },
+      ]}
+      fetchItems={api.courses.findAll}
+      onSave={(data) => api.courses.create(data)}
+      onUpdate={(id, data) => api.courses.update(id, data)}
+      onDelete={(id) => api.courses.remove(id)}
+      formFields={[
+        { key: 'title', label: 'Titolo modulo', type: 'text', required: true, placeholder: 'Es. Modulo 3D' },
+        { key: 'slug', label: 'Slug (URL)', type: 'text', required: true, placeholder: 'Es. engview-3d' },
+        { key: 'description', label: 'Descrizione', type: 'textarea', placeholder: 'Descrizione del modulo...' },
+        {
+          key: 'softwareId', label: 'Software', type: 'select', required: true,
+          loadOptions: async () => {
+            const list = await api.software.findAll()
+            return list.map((s: any) => ({ value: s.id, label: s.name }))
+          },
+        },
+        { key: 'level', label: 'Livello', type: 'select', options: [
+          { value: 'Base', label: 'Base' },
+          { value: 'Intermedio', label: 'Intermedio' },
+          { value: 'Avanzato', label: 'Avanzato' },
+        ]},
+        { key: 'duration', label: 'Durata stimata', type: 'text', placeholder: 'Es. 3h 30m' },
+        { key: 'available', label: 'Disponibile', type: 'select', options: [
+          { value: 'true', label: 'Sì — visibile agli utenti' },
+          { value: 'false', label: 'No — nascosto (in lavorazione)' },
+        ]},
+      ]}
+    />
   )
 }

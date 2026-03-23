@@ -1,114 +1,55 @@
-/* ─── Topbar ────────────────────────────────────── */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+.bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   height: var(--topbar-h);
-  background: rgba(17, 17, 17, 0.97);
-  backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.98);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-dark);
-  display: flex;
-  align-items: center;
-  padding: 0 20px 0 16px;
-  gap: 0;
+  display: flex; align-items: center;
+  padding: 0 24px 0 20px;
+}
+.logo {
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 14px; flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+.logo:hover { transform: scale(1.06); }
+.brand {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+  letter-spacing: -0.3px; color: #fff;
+  margin-right: 40px; text-decoration: none;
+}
+.brand span { color: var(--muted); font-weight: 600; }
+.nav { display: flex; gap: 4px; flex: 1; }
+
+.link, .active {
+  padding: 8px 16px; border-radius: 8px;
+  font-size: 14px; letter-spacing: -0.1px;
+  text-decoration: none; background: transparent; position: relative;
+  transition: color var(--t-color);
+}
+.link { font-weight: 600; color: rgba(255,255,255,0.35); }
+.link:hover { color: rgba(255,255,255,0.8); }
+.active { font-weight: 700; color: #fff; }
+.active::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 16px; right: 16px;
+  height: 2px; background: var(--red); border-radius: 1px;
 }
 
-/* ─── Logo ──────────────────────────────────────── */
-.logoMark {
-  width: 32px;
-  height: 32px;
-  background: var(--red);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
-  flex-shrink: 0;
-  transition: transform 0.18s ease;
+.right { display: flex; align-items: center; gap: 16px; }
+.support {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.3); text-decoration: none;
+  transition: color var(--t-color);
 }
-
-.logoMark:hover {
-  transform: scale(1.05);
-}
-
-.brandName {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  color: #fff;
-  margin-right: 32px;
-  text-decoration: none;
-}
-
-.brandName span {
-  color: var(--red-mid);
-}
-
-/* ─── Navigation ────────────────────────────────── */
-.nav {
-  display: flex;
-  gap: 4px;
-  flex: 1;
-}
-
-.navLink {
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
-  transition: all 0.18s ease;
-  letter-spacing: -0.1px;
-  text-decoration: none;
-}
-
-.navLink:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.navLinkActive {
-  color: #fff;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* ─── Right section ─────────────────────────────── */
-.right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pill {
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--font-mono);
-  color: rgba(255, 255, 255, 0.3);
-  letter-spacing: 0.2px;
-}
-
+.support:hover { color: rgba(255,255,255,0.7); }
 .cta {
-  height: 34px;
-  padding: 0 18px;
-  background: var(--red);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.1px;
-  transition: all 0.18s ease;
-  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.3);
-  display: flex;
-  align-items: center;
-  text-decoration: none;
+  height: 36px; padding: 0 20px;
+  background: var(--red); color: #fff;
+  border-radius: 9px; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; text-decoration: none;
+  transition: all var(--t-color);
+  box-shadow: 0 2px 10px rgba(230,51,41,0.25);
 }
-
-.cta:hover {
-  background: var(--red-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(200, 16, 46, 0.4);
-}
+.cta:hover { background: var(--red-dark); transform: translateY(-1px); }

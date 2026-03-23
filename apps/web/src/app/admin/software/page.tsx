@@ -1,84 +1,27 @@
 'use client'
-
-import { useState } from 'react'
-import Link from 'next/link'
+import AdminCrud from '@/components/features/AdminCrud'
 import { api } from '@/lib/api'
-import styles from '../AdminForm.module.css'
 
-/**
- * Admin Software — form per creare un nuovo software.
- *
- * Usa il client API centralizzato.
- * Mostra feedback di successo/errore strutturato.
- */
 export default function AdminSoftwarePage() {
-  const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setStatus('loading')
-    setErrorMsg('')
-
-    try {
-      await api.software.create({ name, slug })
-      setStatus('success')
-      setName('')
-      setSlug('')
-    } catch (err) {
-      setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Errore nella creazione')
-    }
-  }
-
   return (
-    <main className={styles.main}>
-      <Link href="/admin" className={styles.back}>
-        ← Admin
-      </Link>
-
-      <h1 className={styles.title}>Nuovo software</h1>
-
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.field}>
-          <label className={styles.label}>Nome</label>
-          <input
-            className={styles.input}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Es. EngView"
-            required
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Slug</label>
-          <input
-            className={styles.input}
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="Es. engview"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className={styles.submit}
-          disabled={status === 'loading'}
-        >
-          {status === 'loading' ? 'Creazione...' : 'Crea software'}
-        </button>
-
-        {status === 'success' && (
-          <div className={styles.success}>Software creato con successo.</div>
-        )}
-        {status === 'error' && (
-          <div className={styles.error}>{errorMsg}</div>
-        )}
-      </form>
-    </main>
+    <AdminCrud
+      title="Software"
+      columns={[
+        { key: 'name', label: 'Nome' },
+        { key: 'slug', label: 'Slug' },
+        { key: 'color', label: 'Colore', render: (v) => v ? <span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:12,height:12,borderRadius:4,background:v,display:'inline-block'}} />{v}</span> : '-' },
+        { key: 'tagline', label: 'Tagline' },
+      ]}
+      fetchItems={api.software.findAll}
+      onSave={(data) => api.software.create(data)}
+      onUpdate={(id, data) => api.software.update(id, data)}
+      formFields={[
+        { key: 'name', label: 'Nome', type: 'text', required: true },
+        { key: 'slug', label: 'Slug', type: 'text', required: true },
+        { key: 'tagline', label: 'Tagline', type: 'text' },
+        { key: 'color', label: 'Colore (hex)', type: 'text', placeholder: '#003875' },
+        { key: 'lightColor', label: 'Colore light (hex)', type: 'text', placeholder: '#EEF3FA' },
+      ]}
+    />
   )
 }

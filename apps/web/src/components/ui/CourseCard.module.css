@@ -1,118 +1,61 @@
-.link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
+/* CourseCard — serviform.com style: no border default, hover reveals border + shadow
+   Rosso SOLO sulla CTA. Il bordo superiore animato usa il colore software, non il rosso. */
 
-/* ─── Card ──────────────────────────────────────── */
 .card {
+  --sw-color: var(--muted);
   background: var(--white);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--r-lg);
-  overflow: hidden;
+  padding: 36px;
+  display: flex; flex-direction: column; gap: 14px;
   cursor: pointer;
-  transition: all 0.22s var(--ease-out);
-  position: relative;
+  transition: border-color var(--t-elevation), box-shadow var(--t-elevation), transform var(--t-elevation);
+  text-decoration: none; color: inherit;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
-
+.topLine {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--sw-color);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform var(--t-slide);
+}
 .card:hover {
-  border-color: transparent;
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-3px);
+  border-color: var(--border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
 }
+.card:hover .topLine { transform: scaleX(1); }
 
-/* Colored top border on hover */
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--card-color, var(--border));
-  opacity: 0;
-  transition: opacity 0.22s ease;
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 6px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  width: fit-content;
 }
-
-.card:hover::before {
-  opacity: 1;
-}
-
-/* ─── Header ────────────────────────────────────── */
-.header {
-  padding: 28px 28px 20px;
-}
-
 .title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  color: var(--coal);
-  line-height: 1.2;
-  margin-top: 16px;
-  margin-bottom: 10px;
+  font-family: var(--font-display); font-size: 21px; font-weight: 700;
+  letter-spacing: -0.5px; color: var(--ink); line-height: 1.2;
 }
-
-.desc {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-/* ─── Footer ────────────────────────────────────── */
-.footer {
-  padding: 16px 28px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface);
-}
-
+.desc { font-size: 14px; color: var(--muted); line-height: 1.65; flex: 1; }
 .meta {
-  display: flex;
-  gap: 16px;
+  display: flex; align-items: center; gap: 16px;
+  padding-top: 16px; border-top: 1px solid var(--border);
 }
-
 .metaItem {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  font-family: var(--font-mono);
+  font-size: 12px; font-family: var(--font-mono);
+  font-weight: 500; color: var(--muted);
 }
-
-.metaItem svg {
-  opacity: 0.5;
+.cta {
+  margin-left: auto;
+  font-size: 13px; font-weight: 700; color: var(--red);
+  display: flex; align-items: center; gap: 6px;
 }
-
-/* ─── CTA ───────────────────────────────────────── */
-.ctaAvailable {
-  height: 30px;
-  padding: 0 14px;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  background: var(--ink);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  transition: all 0.16s ease;
-}
-
-.card:hover .ctaAvailable {
-  background: var(--red);
-}
-
+.arrow { transition: transform 200ms ease; display: inline-block; }
+.card:hover .arrow { transform: translateX(4px); }
 .locked {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-  font-family: var(--font-mono);
+  margin-left: auto;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  background: var(--surface); padding: 3px 12px; border-radius: 100px;
 }

@@ -1,0 +1,21 @@
+.main { padding: 64px 80px; max-width: 1020px; }
+.header { margin-bottom: 60px; }
+.header h1 { font-family: var(--font-display); font-size: 38px; font-weight: 700; letter-spacing: -1.2px; color: var(--ink); margin-bottom: 14px; }
+.header p { font-size: 16px; color: var(--muted); line-height: 1.75; }
+.section { margin-bottom: 60px; }
+.sectionTitle { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 28px; letter-spacing: -.5px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.card { border: 1px solid transparent; border-radius: var(--r-lg); padding: 32px; background: var(--white); transition: all var(--t-elevation); box-shadow: var(--shadow-sm); }
+.card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); border-color: var(--border); }
+.cardPast { opacity: .6; }
+.cardType { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 14px; }
+.cardTitle { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 10px; line-height: 1.2; letter-spacing: -.4px; }
+.cardDesc { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+.cardDate { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 10px; }
+.cardSeats { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+.cardActions { display: flex; gap: 10px; margin-top: 20px; }
+.btnPrimary { padding: 10px 22px; background: var(--red); color: #fff; border-radius: 9px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all var(--t-color); }
+.btnPrimary:hover { background: var(--red-dark); }
+.btnSecondary { padding: 10px 22px; border: 1px solid var(--border); color: var(--ink); border-radius: 9px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all var(--t-color); }
+.btnSecondary:hover { border-color: var(--ink); }
+.empty { text-align: center; padding: 100px 0; color: var(--muted); font-size: 15px; }

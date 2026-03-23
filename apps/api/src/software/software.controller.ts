@@ -1,29 +1,11 @@
-import { Controller, Get, Post, Body } from '@nestjs/common'
+import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common'
 import { SoftwareService } from './software.service'
-import { CreateSoftwareDto } from './dto/create-software.dto'
 
-/**
- * Controller per la gestione dei software.
- *
- * I software rappresentano i prodotti Serviform:
- * EngView, Sysform, ProjectO.
- *
- * Endpoint:
- * - GET  /software   → lista tutti i software
- * - POST /software   → crea un nuovo software
- */
 @Controller('software')
 export class SoftwareController {
-
-  constructor(private readonly softwareService: SoftwareService) {}
-
-  @Get()
-  findAll() {
-    return this.softwareService.findAll()
-  }
-
-  @Post()
-  create(@Body() dto: CreateSoftwareDto) {
-    return this.softwareService.create(dto)
-  }
+  constructor(private readonly svc: SoftwareService) {}
+  @Get() findAll() { return this.svc.findAll() }
+  @Get(':slug') findBySlug(@Param('slug') slug: string) { return this.svc.findBySlug(slug) }
+  @Post() create(@Body() body: any) { return this.svc.create(body) }
+  @Put(':id') update(@Param('id') id: string, @Body() body: any) { return this.svc.update(id, body) }
 }

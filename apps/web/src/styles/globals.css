@@ -1,20 +1,18 @@
 /* ═══════════════════════════════════════════════════════════
-   serviform academy. — design system.
+   serviform academy. — design system base
    
-   Gerarchia colori come serviform.com:
-   · Nero #000      → autorità, immersione (hero, topbar, sezioni impatto)
-   · Bianco #FFF    → chiarezza, respiro (contenuto, card, body)
-   · Rosso #E63329  → SOLO azione e identità (CTA, hover link, progress)
-   · Grigio #9D9D9C → struttura, gerarchia (testi secondari, meta)
-   · Grigio #4E4D4D → leggibilità (paragrafi body)
-   · Oro #F6CD4D    → premium, rarissimo (attestati, badge)
+   Gerarchia colori da serviform.com:
+   · Nero #000      → autorità (topbar, hero)
+   · Bianco #FFF    → chiarezza (contenuto)
+   · Rosso #E63329  → SOLO azione (CTA, link hover, progress)
+   · Grigio #9D9D9C → struttura (testi secondari)
+   · Grigio #4E4D4D → leggibilità (body text)
    
    Font: Bergen Sans (proprietario Serviform)
-   · SemiBold 600 = body default (NON usare Regular 400)
+   · SemiBold 600 = body (brand kit: NON usare Regular 400)
    · Bold 700 = titoli, CTA
 ═══════════════════════════════════════════════════════════ */
 
-/* ─── Bergen Sans @font-face ──────────────────────────── */
 @font-face {
   font-family: 'Bergen Sans';
   src: url('/fonts/BergenSans-SemiBold.otf') format('opentype');
@@ -44,125 +42,54 @@
   font-display: swap;
 }
 
-/* ─── Design Tokens ───────────────────────────────────── */
 :root {
-  /* Font — Bergen Sans per display e body, DM Mono per badge */
   --font-display: 'Bergen Sans', system-ui, sans-serif;
   --font-body:    'Bergen Sans', system-ui, sans-serif;
-  --font-mono:    'DM Mono', 'Fira Code', monospace;
+  --font-mono:    var(--font-mono-next, 'monospace');
 
-  /* Rosso Serviform — SOLO per azione (CTA, hover, progress bar)
-     Mai come sfondo di sezioni, mai come decorazione, mai come bordo statico */
+  /* Colori — gerarchia identica a serviform.com */
   --red:          #E63329;
   --red-dark:     #B22A22;
-  --red-light:    #FFF1F0;        /* Solo per hover-state background leggero */
-  --red-glow:     rgba(230, 51, 41, 0.10);
-
-  /* Gerarchia grigi — come serviform.com */
-  --coal:         #000000;        /* Nero puro: topbar, hero, sezioni scure */
-  --ink:          #1E1E1E;        /* Quasi nero: titoli su bianco */
-  --muted-dark:   #4E4D4D;        /* Grigio scuro brand: testo body */
-  --muted:        #9D9D9C;        /* Grigio logo Serviform: testi secondari, meta, label */
-  --border:       #E8E8E8;        /* Bordo sottile — quasi invisibile */
-  --border-dark:  rgba(255, 255, 255, 0.06);  /* Bordo su sfondo scuro */
-  --surface:      #FAFAFA;        /* Sfondo pagina */
+  --red-light:    #FFF1F0;
+  --coal:         #000000;
+  --ink:          #1E1E1E;
+  --body:         #4E4D4D;
+  --muted:        #9D9D9C;
+  --border:       #E8E8E8;
+  --surface:      #FAFAFA;
   --white:        #FFFFFF;
-
-  /* Oro accento — SOLO per elementi premium (attestati, badge completamento) */
   --gold:         #F6CD4D;
-  --gold-light:   #FFFBEB;
-  --gold-dark:    #92400E;
-
-  /* Software — colori ufficiali dai loghi SVG */
-  --ev:           #003875;        /* EngView */
-  --ev-light:     #EEF3FA;
-  --sy:           #E63329;        /* Sysform = rosso Serviform */
-  --sy-light:     #FFF1F0;
-  --po:           #067DB8;        /* ProjectO */
-  --po-light:     #E3F4FC;
 
   /* Layout */
-  --topbar-h:     56px;
-  --sidebar-w:    280px;
-  --rail-w:       64px;
-
-  /* Bordi — sottili, quasi invisibili come serviform.com */
-  --r:            12px;
-  --r-lg:         16px;
-
-  /* Ombre — appaiono SOLO al hover, mai di default */
-  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-md:    0 4px 20px rgba(0, 0, 0, 0.07);
-  --shadow-lg:    0 8px 40px rgba(0, 0, 0, 0.09);
-
-  /* Transizioni — tempi dall'analisi UX */
-  --t-color:      180ms ease;         /* hover colore */
-  --t-elevation:  250ms ease-out;     /* hover ombra/scale */
-  --t-slide:      300ms cubic-bezier(0.16, 1, 0.3, 1);  /* animazioni di slide */
-  --t-fill:       500ms ease-out;     /* progress bar fill */
-  --t-fade:       600ms ease-out;     /* fade-in scroll */
+  --topbar-h: 56px;
+  --r: 12px;
+  --r-lg: 16px;
 }
 
-/* ─── Reset ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 body {
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 15px;
   line-height: 1.7;
-  color: var(--muted-dark);
+  color: var(--body);
   background: var(--white);
 }
 
-h1, h2, h3 {
+h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.5px;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
-a { color: inherit; }
+a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
 button { cursor: pointer; font-family: var(--font-body); }
-
-/* ─── Animazioni ──────────────────────────────────────── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.fade-up   { animation: fadeUp var(--t-fade) both; }
-.fade-up-1 { animation-delay: 0.1s; }
-.fade-up-2 { animation-delay: 0.2s; }
-.fade-up-3 { animation-delay: 0.35s; }
-
-/* ─── Scrollbar minimalista ───────────────────────────── */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-/* ─── Callout per contenuto unità ─────────────────────── */
-.callout {
-  border-radius: var(--r);
-  padding: 18px 22px;
-  margin: 24px 0;
-  font-size: 14px;
-  line-height: 1.7;
-}
-.callout strong {
-  display: block;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 8px;
-}
-.callout-red { background: var(--red-light); border-left: 3px solid var(--red); color: #7C1626; }
-.callout-red strong { color: var(--red); }
-.callout-blue { background: var(--po-light); border-left: 3px solid var(--po); color: #0C4A6E; }
-.callout-blue strong { color: var(--po); }
-.callout-amber { background: var(--gold-light); border-left: 3px solid var(--gold); color: #78350F; }
-.callout-amber strong { color: var(--gold-dark); }

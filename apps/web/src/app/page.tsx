@@ -1,44 +1,105 @@
-import { api, Course } from '@/lib/api'
-import Hero from '@/components/ui/Hero'
-import CourseGrid from './CourseGrid'
+import Link from 'next/link'
+import { apiFetch } from '@/lib/api'
 
 /**
- * Homepage — pagina principale della piattaforma.
+ * Homepage — pagina pubblica.
  *
- * Server Component: fa il fetch dei corsi lato server.
- * Passa i dati al CourseGrid (Client Component) per il filtraggio interattivo.
+ * Stato Task 1:
+ * - videopillole RIMOSSE dalla navigazione
+ * - pricing/consulting NON presenti (mai stati nel repo originale)
+ * - API URL centralizzato via lib/api.ts
  *
- * Struttura:
- * - Hero con statistiche animate
- * - FilterBar con chip per software
- * - CourseGrid con card dei corsi
+ * Evoluzione prevista (Task 4):
+ * - questa diventerà la vera homepage pubblica/prefiltro
+ * - verrà affiancata da una dashboard post-login separata
+ * - verranno aggiunte statistiche, CTA commerciali, preview bloccate
  */
-export default async function HomePage() {
-  let courses: Course[] = []
 
+type Course = {
+  id: string
+  title: string
+  slug: string
+  description?: string
+  software: { name: string; slug: string }
+}
+
+async function getCourses(): Promise<Course[]> {
   try {
-    courses = await api.courses.findAll()
+    return await apiFetch<Course[]>('/courses')
   } catch {
-    // In caso di errore API, mostra la pagina con array vuoto
-    // TODO: gestire con error boundary dedicata
+    return []
   }
+}
 
-  // Calcolo statistiche per la hero
-  const courseCount = courses.length
-  const unitCount = courses.reduce(
-    (sum, c) => sum + (c.units?.length || 0),
-    0,
-  )
+export default async function HomePage() {
+  const courses = await getCourses()
 
   return (
-    <>
-      <Hero
-        courseCount={courseCount}
-        unitCount={unitCount}
-        videoCount={0}
-      />
+    <div style={{ padding: '48px 80px', maxWidth: 1100 }}>
+      <h1 style={{ fontSize: 36, letterSpacing: '-1.2px', marginBottom: 8 }}>
+        serviform academy.
+      </h1>
+      <p style={{ color: 'var(--muted)', fontSize: 16, marginBottom: 48 }}>
+        piattaforma di formazione per EngView, Sysform, ProjectO e ServiformA.
+      </p>
 
-      <CourseGrid courses={courses} />
-    </>
+      <h2 style={{ fontSize: 22, marginBottom: 24 }}>moduli disponibili</h2>
+
+      {courses.length === 0 ? (
+        <p style={{ color: 'var(--muted)', padding: '60px 0', textAlign: 'center' }}>
+          nessun modulo disponibile al momento.
+        </p>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: 20,
+          }}
+        >
+          {courses.map((course) => (
+            <Link
+              key={course.id}
+              href={`/courses/${course.slug}`}
+              style={{
+                padding: 28,
+                borderRadius: 'var(--r-lg)',
+                border: '1px solid var(--border)',
+                transition: 'box-shadow 250ms ease, transform 250ms ease',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.6px',
+                  color: 'var(--muted)',
+                }}
+              >
+                {course.software.name}
+              </span>
+              <h3
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  marginTop: 8,
+                  color: 'var(--ink)',
+                }}
+              >
+                {course.title}
+              </h3>
+              {course.description && (
+                <p style={{ fontSize: 14, color: 'var(--muted)', marginTop: 8 }}>
+                  {course.description}
+                </p>
+              )}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* RIMOSSO: link "Vai alle Video Pillole →" (doc 02_scope: videopillole fuori scope) */}
+    </div>
   )
 }

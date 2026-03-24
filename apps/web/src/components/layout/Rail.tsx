@@ -3,31 +3,63 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import styles from './Rail.module.css'
 
+// SCOPE CLEANUP: rimosse video pillole, consulenza, eventi, listino.
+// Rail ridotta a: Moduli (corsi) + separatore + Zendesk assistenza.
 const ITEMS = [
-  { href: '/', label: 'Moduli', icon: <svg viewBox="0 0 18 18" fill="none"><path d="M3 3h5v5H3zM10 3h5v5h-5zM3 10h5v5H3zM10 10h5v5h-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg> },
-  { href: '/videos', label: 'Video Pillole', icon: <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.3"/><path d="M7.5 6.5l5 2.5-5 2.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg> },
-  { href: '/consulting', label: 'Consulenza', icon: <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> },
-  { href: '/events', label: 'Eventi', icon: <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/><path d="M2 8h14M6 2v4M12 2v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> },
-  { href: '/pricing', label: 'Listino', icon: <svg viewBox="0 0 18 18" fill="none"><path d="M9 2v14M5.5 5H11a2 2 0 010 4H6M6.5 9H12a2 2 0 010 4H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  {
+    href: '/',
+    label: 'Moduli',
+    icon: (
+      <svg viewBox="0 0 18 18" fill="none">
+        <path
+          d="M3 3h5v5H3zM10 3h5v5h-5zM3 10h5v5H3zM10 10h5v5h-5z"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
 ]
 
 export default function Rail() {
   const pathname = usePathname()
+
   function isActive(href: string) {
     if (href === '/') return pathname === '/' || pathname.startsWith('/courses')
     return pathname.startsWith(href)
   }
+
   return (
     <nav className={styles.rail}>
-      {ITEMS.map(item => (
-        <Link key={item.href} href={item.href} className={isActive(item.href) ? styles.btnActive : styles.btn} data-tip={item.label}>
+      {ITEMS.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={isActive(item.href) ? styles.btnActive : styles.btn}
+          data-tip={item.label}
+        >
           {item.icon}
         </Link>
       ))}
       <div className={styles.spacer} />
       <div className={styles.divider} />
-      <a href="https://support.serviform.com" target="_blank" rel="noopener" className={styles.btn} data-tip="Assistenza Zendesk">
-        <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.3"/><path d="M7 7.5a2 2 0 114 0c0 1-1 1.5-2 2M9 13v.01" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+      <a
+        href="https://support.serviform.com"
+        target="_blank"
+        rel="noopener"
+        className={styles.btn}
+        data-tip="Assistenza Zendesk"
+      >
+        <svg viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.3" />
+          <path
+            d="M7 7.5a2 2 0 114 0c0 1-1 1.5-2 2M9 13v.01"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </svg>
       </a>
     </nav>
   )

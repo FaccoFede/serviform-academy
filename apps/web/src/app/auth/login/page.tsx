@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import styles from '../AuthPage.module.css'
 
+// NOTA: il redirect post-login è temporaneamente verso '/' (homepage).
+// Al Task 3 (Dashboard utente) verrà cambiato in '/dashboard'.
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,6 +23,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
+      // TODO Task 3: cambiare in router.push('/dashboard')
       router.push('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore di login')
@@ -31,15 +35,35 @@ export default function LoginPage() {
   return (
     <main className={styles.main}>
       <div className={styles.card}>
-        <div className={styles.logo}>Serviform <span>Academy</span></div>
+        <div className={styles.logo}>
+          Serviform <span>Academy</span>
+        </div>
         <h1 className={styles.title}>Accedi</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
-          <input className={styles.input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input className={styles.input} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+          <input
+            className={styles.input}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className={styles.input}
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           {error && <div className={styles.error}>{error}</div>}
-          <button className={styles.submit} type="submit" disabled={loading}>{loading ? 'Accesso...' : 'Accedi'}</button>
+          <button className={styles.submit} type="submit" disabled={loading}>
+            {loading ? 'Accesso...' : 'Accedi'}
+          </button>
         </form>
-        <p className={styles.link}>Non hai un account? <Link href="/auth/register">Registrati</Link></p>
+        <p className={styles.link}>
+          Non hai un account? <Link href="/auth/register">Registrati</Link>
+        </p>
       </div>
     </main>
   )

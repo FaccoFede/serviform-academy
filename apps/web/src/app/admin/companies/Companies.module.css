@@ -1,0 +1,53 @@
+/* CSS condiviso per le pagine admin con tabelle */
+.hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; }
+.back { font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: none; font-family: var(--font-mono); display: block; margin-bottom: 8px; transition: color var(--t-color); }
+.back:hover { color: var(--red); }
+.search { display: block; width: 280px; padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: var(--font-body); font-weight: 600; color: var(--ink); outline: none; margin-bottom: 16px; transition: border-color var(--t-color); }
+.search:focus { border-color: var(--ink); }
+.loading { font-size: 14px; color: var(--muted); padding: 32px 0; }
+
+/* Tabella */
+.tableWrap { border: 1px solid var(--border); border-radius: var(--r); overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table thead tr { background: var(--surface); border-bottom: 1px solid var(--border); }
+.table th { padding: 11px 16px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-family: var(--font-mono); white-space: nowrap; }
+.table td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--muted-dark); vertical-align: middle; }
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover { background: var(--surface); }
+.tdBold { font-weight: 700; color: var(--ink) !important; }
+.inf { font-size: 16px; color: var(--muted); }
+.empty { text-align: center; color: var(--muted); padding: 44px 0 !important; font-size: 14px; }
+
+/* Azioni */
+.actions { display: flex; gap: 8px; white-space: nowrap; }
+.btnPrimary { height: 36px; padding: 0 18px; background: var(--ink); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: background var(--t-color); white-space: nowrap; }
+.btnPrimary:hover { background: var(--red); }
+.btnPrimary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btnSec { height: 36px; padding: 0 18px; background: var(--white); color: var(--ink); border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all var(--t-color); }
+.btnSec:hover { border-color: var(--ink); }
+.btnEdit { height: 28px; padding: 0 10px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all var(--t-color); }
+.btnEdit:hover { border-color: var(--ink); }
+.btnDel { height: 28px; padding: 0 10px; background: var(--white); color: var(--muted); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all var(--t-color); }
+.btnDel:hover { color: var(--red); border-color: var(--red); background: var(--red-light); }
+
+/* Messaggi */
+.msg { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
+.msg button { background: none; border: none; cursor: pointer; font-size: 15px; opacity: 0.5; }
+.msgOk { background: #ECFDF5; color: #065F46; border-left: 3px solid #059669; }
+.msgErr { background: var(--red-light); color: #7C1626; border-left: 3px solid var(--red); }
+
+/* Modale */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.modal { background: var(--white); border-radius: var(--r-lg); width: 100%; max-width: 500px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); }
+.modalHdr { display: flex; align-items: center; justify-content: space-between; padding: 22px 26px 18px; border-bottom: 1px solid var(--border); }
+.modalHdr h2 { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.modalHdr button { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; }
+.modalBody { padding: 22px 26px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.modalFtr { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 18px 26px; border-top: 1px solid var(--border); }
+.label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-family: var(--font-mono); margin-top: 12px; display: block; }
+.label:first-child { margin-top: 0; }
+.input { padding: 9px 13px; border: 1px solid var(--border); border-radius: 8px; font-size: 13.5px; font-family: var(--font-body); font-weight: 600; color: var(--ink); background: var(--white); outline: none; width: 100%; transition: border-color var(--t-color); }
+.input:focus { border-color: var(--ink); }
+.input:disabled { background: var(--surface); color: var(--muted); cursor: not-allowed; }
+.textarea { padding: 9px 13px; border: 1px solid var(--border); border-radius: 8px; font-size: 13.5px; font-family: var(--font-body); font-weight: 600; color: var(--ink); background: var(--white); outline: none; width: 100%; resize: vertical; line-height: 1.6; transition: border-color var(--t-color); }
+.textarea:focus { border-color: var(--ink); }

@@ -1,27 +1,45 @@
+/**
+ * lib/api.ts — Client HTTP per Serviform Academy.
+ *
+ * La funzione request() inietta automaticamente il Bearer token
+ * da localStorage (sa_token) su ogni chiamata.
+ * Non è necessario passare manualmente l'Authorization header.
+ */
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
+function getToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('sa_token')
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  // Propaga il token JWT se presente in localStorage (client-side only)
-  const token = typeof window !== 'undefined' ? localStorage.getItem('sa_token') : null
-  const authHeader = token ? { Authorization: 'Bearer ' + token } : {}
+  const token = getToken()
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string>),
+  }
+
+  // Inietta il token se presente — sovrascrivibile passando Authorization in options.headers
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = 'Bearer ' + token
+  }
 
   const res = await fetch(BASE_URL + path, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader,
-      ...options?.headers,
-    },
+    headers,
   })
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Errore di rete' }))
     throw new Error(err.message || 'Errore ' + res.status)
   }
+
   return res.json()
 }
 
-// ─── Tipi base ────────────────────────────────────────────────────────────────
+// ── Tipi ──────────────────────────────────────────────────────────────────────
 
 export interface Software {
   id: string
@@ -39,7 +57,9 @@ export interface Course {
   description?: string
   level?: string
   duration?: string
+  objective?: string
   available: boolean
+  publishState?: string
   software?: Software
   units?: Unit[]
 }
@@ -54,50 +74,40 @@ export interface Unit {
   unitType: 'OVERVIEW' | 'LESSON' | 'EXERCISE'
   content?: string
   courseId: string
+  guide?: { id: string; title: string; url: string; zendeskId: string }
+  exercises?: any[]
 }
 
-// ─── Client API ───────────────────────────────────────────────────────────────
-// SCOPE CLEANUP:
-// - rimosso api.pricing (fuori scope Academy)
-// - rimosso api.videos (videopillole fuori scope attivo)
-// - rimosso api.sync   (legato a video pill import)
-// - rimosso api.events (fuori scope attivo, da rivalutare)
-// Mantenuti: software, courses, units, guides, progress, certificates, auth, exercises
+// ── API client ────────────────────────────────────────────────────────────────
 
 export const api = {
   software: {
     findAll: () => request<Software[]>('/software'),
     findBySlug: (slug: string) => request<Software>('/software/' + slug),
     create: (data: any) => request('/software', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) =>
-      request('/software/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/software/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   },
 
   courses: {
     findAll: () => request<Course[]>('/courses', { cache: 'no-store' }),
     findBySlug: (slug: string) => request<Course>('/courses/' + slug, { cache: 'no-store' }),
     create: (data: any) => request('/courses', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) =>
-      request('/courses/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/courses/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/courses/' + id, { method: 'DELETE' }),
   },
 
   units: {
-    findBySlug: (cs: string, us: string) =>
-      request<Unit>('/units/' + cs + '/' + us, { cache: 'no-store' }),
-    findByCourse: (courseId: string) =>
-      request<Unit[]>('/units/course/' + courseId),
+    findBySlug: (cs: string, us: string) => request<Unit>('/units/' + cs + '/' + us, { cache: 'no-store' }),
+    findByCourse: (courseId: string) => request<Unit[]>('/units/course/' + courseId),
     create: (data: any) => request('/units', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) =>
-      request('/units/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/units/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/units/' + id, { method: 'DELETE' }),
   },
 
   exercises: {
     findByUnit: (unitId: string) => request<any[]>('/exercises/unit/' + unitId),
     create: (data: any) => request('/exercises', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) =>
-      request('/exercises/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/exercises/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/exercises/' + id, { method: 'DELETE' }),
   },
 
@@ -106,13 +116,58 @@ export const api = {
     create: (data: any) => request('/guides', { method: 'POST', body: JSON.stringify(data) }),
   },
 
+  companies: {
+    findAll: () => request<any[]>('/companies'),
+    findById: (id: string) => request<any>('/companies/' + id),
+    create: (data: any) => request('/companies', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/companies/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/companies/' + id, { method: 'DELETE' }),
+  },
+
+  users: {
+    findAll: () => request<any[]>('/users'),
+    findById: (id: string) => request<any>('/users/' + id),
+    create: (data: any) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/users/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/users/' + id, { method: 'DELETE' }),
+  },
+
+  assignments: {
+    findByCompany: (companyId: string) => request<any[]>('/assignments/company/' + companyId),
+    assignToCompany: (companyId: string, courseId: string, data: any) =>
+      request(`/assignments/company/${companyId}/course/${courseId}`, { method: 'POST', body: JSON.stringify(data) }),
+    updateCompany: (id: string, data: any) =>
+      request('/assignments/company/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    removeCompany: (id: string) =>
+      request('/assignments/company/' + id, { method: 'DELETE' }),
+    findByUser: (userId: string) => request<any[]>('/assignments/user/' + userId),
+    assignToUser: (userId: string, courseId: string, data: any) =>
+      request(`/assignments/user/${userId}/course/${courseId}`, { method: 'POST', body: JSON.stringify(data) }),
+    removeUser: (id: string) =>
+      request('/assignments/user/' + id, { method: 'DELETE' }),
+  },
+
+  announcements: {
+    findPublished: () => request<any[]>('/announcements'),
+    findAll: () => request<any[]>('/announcements/admin/all'),
+    create: (data: any) => request('/announcements', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/announcements/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/announcements/' + id, { method: 'DELETE' }),
+  },
+
   progress: {
     complete: (unitId: string) =>
-      // NOTA: userId rimosso dal body — il backend deve dedurlo dal JWT (regola critica doc 06)
       request('/progress/complete', { method: 'POST', body: JSON.stringify({ unitId }) }),
+    viewed: (unitId: string) =>
+      request('/progress/viewed', { method: 'POST', body: JSON.stringify({ unitId }) }),
     getCourseProgress: (courseSlug: string) =>
-      // NOTA: userId rimosso dal path — il backend lo deduce dal token
       request<any>('/progress/course/' + courseSlug),
+    getCompletedUnits: (courseSlug: string) =>
+      request<string[]>(`/progress/course/${courseSlug}/completed-units`),
+    getLastViewed: () =>
+      request<any>('/progress/last-viewed'),
+    getAll: () =>
+      request<any[]>('/progress/all'),
   },
 
   certificates: {
@@ -124,11 +179,10 @@ export const api = {
     login: (email: string, password: string) =>
       request<any>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     register: (email: string, password: string, name?: string) =>
-      request<any>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, name }),
-      }),
-    profile: (token: string) =>
-      request<any>('/auth/profile', { headers: { Authorization: 'Bearer ' + token } }),
+      request<any>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
+    profile: () =>
+      request<any>('/auth/profile'),
+    promoteAdmin: () =>
+      request<any>('/auth/promote-admin', { method: 'POST' }),
   },
 }

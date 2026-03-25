@@ -1,43 +1,16 @@
 .main { padding: 52px 80px; max-width: 1000px; }
-
-.pageHeader { margin-bottom: 48px; }
+.pageHeader { margin-bottom: 44px; }
 .title { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.8px; color: var(--ink); margin-bottom: 8px; }
 .desc { font-size: 15px; color: var(--muted); }
-
-.groups { display: flex; flex-direction: column; gap: 40px; }
-
+.groups { display: flex; flex-direction: column; gap: 36px; }
 .group {}
-.groupTitle {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-}
-
+.groupTitle { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-
-.card {
-  display: flex; align-items: flex-start; gap: 16px;
-  padding: 22px; border: 1px solid transparent; border-radius: var(--r);
-  background: var(--white); text-decoration: none; color: inherit;
-  transition: all var(--t-elevation); box-shadow: var(--shadow-sm);
-}
+.card { display: flex; align-items: flex-start; gap: 16px; padding: 22px; border: 1px solid transparent; border-radius: var(--r); background: var(--white); text-decoration: none; color: inherit; transition: all var(--t-elevation); box-shadow: var(--shadow-sm); }
 .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--border); }
 .cardIcon { color: var(--muted); flex-shrink: 0; margin-top: 2px; transition: color var(--t-color); }
 .card:hover .cardIcon { color: var(--red); }
 .cardTitle { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
 .cardDesc { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-@media (max-width: 1024px) {
-  .main { padding: 40px; }
-  .grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 768px) {
-  .main { padding: 24px 20px; }
-  .grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 1024px) { .main { padding: 40px; } .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .main { padding: 24px 20px; } .grid { grid-template-columns: 1fr; } }

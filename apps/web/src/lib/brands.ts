@@ -7,8 +7,6 @@ export interface SoftwareBrand {
   border: string
 }
 
-// AGGIORNAMENTO: aggiunta ServiformA come quarta famiglia software ufficiale.
-// Famiglie definitive: EngView, Sysform, ProjectO, ServiformA.
 export const SOFTWARE_BRANDS: Record<string, SoftwareBrand> = {
   engview: {
     key: 'engview',
@@ -34,8 +32,6 @@ export const SOFTWARE_BRANDS: Record<string, SoftwareBrand> = {
     light: '#E3F4FC',
     border: '#A8D8EE',
   },
-  // Quarta famiglia — aggiunta ufficiale da DOCX e specifiche architetturali.
-  // Il filtro catalogo la mostra solo se esistono corsi con softwareSlug = 'serviformA'.
   serviformA: {
     key: 'serviformA',
     name: 'ServiformA',
@@ -61,6 +57,6 @@ export function getBrand(slug: string): SoftwareBrand {
 
 export const LEVEL_COLORS: Record<string, string> = {
   Base: '#067DB8',
-  Intermedio: '#F6CD4D',
+  Intermedio: '#D97706',
   Avanzato: '#E63329',
 }

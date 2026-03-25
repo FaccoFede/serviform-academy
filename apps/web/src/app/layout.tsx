@@ -1,43 +1,26 @@
 import type { Metadata } from 'next'
 import { DM_Mono } from 'next/font/google'
-import Topbar from '@/components/layout/Topbar'
+import ClientShell from '@/components/layout/ClientShell'
 import '@/styles/globals.css'
-
-/**
- * Root Layout.
- *
- * Font:
- * - Bergen Sans: caricato via @font-face in globals.css (font proprietario Serviform)
- * - DM Mono: caricato via next/font/google (per badge e dati tecnici)
- *
- * Bergen Sans SemiBold (600) = body default
- * Bergen Sans Bold (700) = titoli e CTA
- * Regular (400) NON va usato — indicazione del brand kit.
- */
+import '@/styles/responsive.css'
 
 const dmMono = DM_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
-  variable: '--font-mono-next',
+  variable: '--font-mono',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'serviform academy.',
-  description:
-    'Piattaforma di formazione per EngView, Sysform, ProjectO e ServiformA.',
+  title: 'Serviform Academy',
+  description: 'Piattaforma di formazione B2B per EngView, Sysform, ProjectO e ServiformA.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it" className={dmMono.variable}>
       <body>
-        <Topbar />
-        <main style={{ paddingTop: 'var(--topbar-h)' }}>{children}</main>
+        <ClientShell>{children}</ClientShell>
       </body>
     </html>
   )

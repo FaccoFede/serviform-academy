@@ -1,23 +1,23 @@
-import { Controller, Post, Body } from '@nestjs/common'
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common'
 import { CertificatesService } from './certificates.service'
 import { IssueCertificateDto } from './dto/issue-certificate.dto'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 
 /**
- * Controller per l'emissione dei certificati.
- *
- * Il certificato viene emesso solo dopo aver verificato
- * che l'utente ha completato tutte le unità del corso.
- *
- * Endpoint:
- * - POST /certificates/issue → emetti un certificato
+ * CertificatesController — richiede autenticazione JWT.
+ * userId viene sempre dal token, non dal body.
  */
 @Controller('certificates')
+@UseGuards(JwtAuthGuard)
 export class CertificatesController {
-
   constructor(private readonly certificatesService: CertificatesService) {}
 
+  /**
+   * POST /certificates/issue
+   * Emette un certificato per l'utente autenticato se ha completato il corso.
+   */
   @Post('issue')
-  issue(@Body() dto: IssueCertificateDto) {
-    return this.certificatesService.issue(dto.userId, dto.courseSlug)
+  issue(@Request() req: any, @Body() dto: IssueCertificateDto) {
+    return this.certificatesService.issue(req.user.id, dto.courseSlug)
   }
 }

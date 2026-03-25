@@ -7,6 +7,10 @@ import { JwtStrategy } from './strategies/jwt.strategy'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { RolesGuard } from './guards/roles.guard'
 
+/**
+ * AuthModule — esporta JwtAuthGuard e RolesGuard per tutti i moduli che li usano.
+ * I moduli che applicano @UseGuards(JwtAuthGuard, RolesGuard) DEVONO importare AuthModule.
+ */
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -17,6 +21,6 @@ import { RolesGuard } from './guards/roles.guard'
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtAuthGuard, RolesGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}

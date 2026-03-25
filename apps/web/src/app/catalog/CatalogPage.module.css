@@ -1,0 +1,392 @@
+/* Catalogo corsi — marketplace separato dalla home */
+
+.page {
+  min-height: calc(100vh - var(--topbar-h));
+}
+
+/* ── Header ────────────────────────────────────── */
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 0 32px;
+}
+
+.headerInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 80px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.breadcrumbLink {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--t-color);
+}
+.breadcrumbLink:hover { color: var(--red); }
+
+.breadcrumbSep { opacity: 0.4; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* ── Body (sidebar + griglia) ───────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 80px;
+  align-items: start;
+}
+
+/* ── Sidebar filtri ─────────────────────────────── */
+.filters {
+  padding: 32px 32px 32px 0;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: calc(var(--topbar-h) + 24px);
+  max-height: calc(100vh - var(--topbar-h) - 48px);
+  overflow-y: auto;
+}
+
+.filterGroup {
+  margin-bottom: 28px;
+}
+
+.filterLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  margin-bottom: 10px;
+}
+
+.filterOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filterOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted-dark);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all var(--t-color);
+  text-align: left;
+}
+.filterOption:hover { background: var(--surface); }
+.filterOptionActive {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.filterDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.clearAll {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: opacity var(--t-color);
+}
+.clearAll:hover { opacity: 0.7; }
+
+/* ── Ricerca ────────────────────────────────────── */
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  color: var(--muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 32px 9px 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--white);
+  outline: none;
+  transition: border-color var(--t-color);
+}
+.searchInput:focus { border-color: var(--ink); }
+.searchInput::placeholder { color: var(--muted); font-weight: 600; }
+
+.searchClear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+/* ── Griglia risultati ──────────────────────────── */
+.grid {
+  padding: 32px 0 64px 32px;
+}
+
+.gridHeader {
+  margin-bottom: 20px;
+}
+
+.resultsCount {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ── Card corso ─────────────────────────────────── */
+.card {
+  --sw-color: var(--muted);
+  --sw-light: var(--surface);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  background: var(--white);
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--t-elevation);
+}
+.card:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.cardLocked {
+  opacity: 0.85;
+}
+.cardLocked:hover {
+  transform: translateY(-2px);
+}
+
+.cardAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--sw-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-slide);
+}
+.card:hover .cardAccent { transform: scaleX(1); }
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTag {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* Badge stato */
+.stateBadgeActive {
+  font-size: 10px;
+  font-weight: 700;
+  color: #059669;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.stateBadgeLocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.stateBadgePreview {
+  font-size: 10px;
+  font-weight: 700;
+  color: #067DB8;
+  font-family: var(--font-mono);
+  background: #E3F4FC;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.cardDesc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardMeta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.cardCta {
+  margin-top: 4px;
+}
+
+.ctaText {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.ctaLocked {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ctaPreview {
+  font-size: 13px;
+  font-weight: 700;
+  color: #067DB8;
+}
+
+/* ── Empty ──────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 0;
+  color: var(--muted);
+  text-align: center;
+}
+.empty p { font-size: 15px; }
+.empty button {
+  padding: 10px 24px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 1100px) {
+  .body { grid-template-columns: 220px 1fr; padding: 0 40px; }
+  .headerInner { padding: 0 40px; }
+}
+
+@media (max-width: 900px) {
+  .body { grid-template-columns: 1fr; padding: 0 20px; }
+  .headerInner { padding: 0 20px; }
+  .filters {
+    position: static;
+    padding: 24px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 32px;
+  }
+  .grid { padding: 24px 0 48px; }
+}

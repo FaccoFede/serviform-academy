@@ -1,0 +1,580 @@
+/* ═══════════════════════════════════════════════════
+   Home pubblica — landing commerciale Serviform Academy
+   Non è il catalogo. È la pagina di valore/conversione.
+═══════════════════════════════════════════════════ */
+
+.page {
+  width: 100%;
+}
+
+/* ── Layout helpers ──────────────────────────────── */
+.sectionInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 80px;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 44px;
+  gap: 24px;
+}
+
+.sectionEyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--red);
+  font-family: var(--font-mono);
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.sectionSub {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.seeAllLink {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--red);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity var(--t-color);
+}
+.seeAllLink:hover { opacity: 0.7; }
+
+/* ── 1. HERO ─────────────────────────────────────── */
+.hero {
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  padding: 0 0 0;
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(230, 51, 41, 0.12) 0%, transparent 60%);
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 80px 0;
+}
+
+.heroContent {
+  max-width: 700px;
+  padding-bottom: 80px;
+}
+
+.heroEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.5px;
+  margin-bottom: 32px;
+}
+
+.heroDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5.5vw, 72px);
+  font-weight: 700;
+  letter-spacing: -2.5px;
+  color: #fff;
+  line-height: 1.0;
+  margin-bottom: 24px;
+}
+.heroTitle em {
+  font-style: normal;
+  color: var(--red);
+}
+
+.heroSub {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.7;
+  margin-bottom: 40px;
+  max-width: 540px;
+}
+
+.heroCtas {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 28px;
+  background: var(--red);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all var(--t-elevation);
+  box-shadow: 0 4px 20px rgba(230, 51, 41, 0.3);
+  white-space: nowrap;
+}
+.ctaPrimary:hover {
+  background: var(--red-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(230, 51, 41, 0.4);
+}
+
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 28px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--t-color);
+  white-space: nowrap;
+}
+.ctaSecondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+/* Stats bar — bordo inferiore del hero */
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 0;
+}
+
+.heroStat {
+  padding: 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+.heroStat:last-child { border-right: none; }
+
+.heroStatNum {
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.heroStatLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.28);
+  text-transform: uppercase;
+}
+
+/* ── 2. FAMIGLIE SOFTWARE ────────────────────────── */
+.familiesSection {
+  padding: 96px 0;
+  background: var(--white);
+}
+
+.familiesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.familyCard {
+  --f-color: var(--muted);
+  --f-light: var(--surface);
+  --f-border: var(--border);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--white);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: all var(--t-elevation);
+  box-shadow: var(--shadow-sm);
+}
+
+.familyCard:hover {
+  border-color: var(--f-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.familyAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--f-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-slide);
+}
+.familyCard:hover .familyAccent { transform: scaleX(1); }
+
+.familyBadge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.familyTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.familyTagline {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.familyFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.familyCount {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.familyArrow {
+  font-size: 16px;
+  color: var(--f-color);
+  transition: transform var(--t-color);
+}
+.familyCard:hover .familyArrow { transform: translateX(4px); }
+
+/* ── 3. TEASER CORSI ─────────────────────────────── */
+.teaserSection {
+  padding: 96px 0;
+  background: var(--surface);
+}
+
+.teaserGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.teaserCard {
+  --f-color: var(--muted);
+  --f-light: var(--surface);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.teaserTopLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--f-color);
+}
+
+.teaserTag {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.teaserTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.teaserDesc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+  /* Preview blur effect — suggerisce contenuto bloccato */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.teaserMeta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.teaserLock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface);
+  padding: 5px 12px;
+  border-radius: 100px;
+  align-self: flex-start;
+}
+
+/* ── 4. COME FUNZIONA ────────────────────────────── */
+.howSection {
+  padding: 96px 0;
+  background: var(--white);
+}
+
+.howGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+.howStep {
+  padding: 44px 44px 44px 0;
+  border-right: 1px solid var(--border);
+  padding-right: 44px;
+}
+.howStep:last-child {
+  border-right: none;
+  padding-right: 0;
+  padding-left: 44px;
+}
+.howStep:nth-child(2) {
+  padding-left: 44px;
+}
+
+.howNum {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 500;
+  color: var(--border);
+  letter-spacing: -3px;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+
+.howTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.howDesc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── 5. CTA FINALE ───────────────────────────────── */
+.ctaSection {
+  padding: 96px 0;
+  background: var(--surface);
+}
+
+.ctaBox {
+  position: relative;
+  background: var(--ink);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  padding: 72px 80px;
+}
+
+.ctaBg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(230, 51, 41, 0.15) 0%, transparent 60%);
+}
+
+.ctaContent {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+}
+
+.ctaTitle {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 46px);
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: #fff;
+  line-height: 1.08;
+  margin-bottom: 18px;
+}
+
+.ctaSub {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+.ctaSecondaryLight {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 28px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--t-color);
+  white-space: nowrap;
+}
+.ctaSecondaryLight:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 1200px) {
+  .sectionInner { padding: 0 48px; }
+  .heroInner { padding: 80px 48px 0; }
+  .ctaBox { padding: 56px 48px; }
+}
+
+@media (max-width: 1024px) {
+  .familiesGrid { grid-template-columns: repeat(2, 1fr); }
+  .teaserGrid { grid-template-columns: repeat(2, 1fr); }
+  .heroStats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .sectionInner { padding: 0 20px; }
+  .heroInner { padding: 60px 20px 0; }
+
+  .familiesSection,
+  .teaserSection,
+  .howSection,
+  .ctaSection { padding: 64px 0; }
+
+  .familiesGrid { grid-template-columns: 1fr; }
+  .teaserGrid { grid-template-columns: 1fr; }
+  .howGrid { grid-template-columns: 1fr; gap: 32px; }
+  .howStep,
+  .howStep:nth-child(2),
+  .howStep:last-child { padding: 0; border: none; }
+
+  .heroStats { grid-template-columns: repeat(2, 1fr); }
+  .heroStatNum { font-size: 32px; }
+
+  .sectionHeaderRow { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+  .ctaBox { padding: 40px 24px; border-radius: var(--r); }
+  .ctaTitle { font-size: 26px; }
+
+  .heroCtas { flex-direction: column; align-items: flex-start; }
+  .ctaPrimary, .ctaSecondary { width: 100%; justify-content: center; }
+}

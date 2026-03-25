@@ -1,19 +1,15 @@
-import { IsString, IsUUID, Matches } from 'class-validator'
+import { IsString, Matches } from 'class-validator'
 
 /**
  * DTO per l'emissione di un certificato.
  *
- * Il certificato viene emesso solo se l'utente ha completato
- * tutte le unità del corso (validazione nel service).
+ * userId RIMOSSO — viene dedotto dal JWT nel controller.
+ * Inviare userId dal client permetterebbe di emettere certificati per altri utenti.
  */
 export class IssueCertificateDto {
-
-  @IsUUID('4', { message: 'userId deve essere un UUID valido' })
-  userId: string
-
   @IsString()
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'courseSlug deve essere un slug valido',
+    message: 'courseSlug deve essere un slug valido (es. engview-3d)',
   })
   courseSlug: string
 }

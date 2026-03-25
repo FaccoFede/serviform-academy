@@ -1,20 +1,42 @@
+/* ── Tablet (≤ 1024px) ─────────────────────────────── */
 @media (max-width: 1024px) {
-  :root { --rail-w: 0px; --sidebar-w: 240px; }
-  .rail, [class*="rail"] { display: none !important; }
+  :root {
+    --rail-w: 0px;
+    --sidebar-w: 240px;
+  }
+  nav[class*="rail"] { display: none !important; }
 }
+
+/* ── Mobile (≤ 768px) ──────────────────────────────── */
 @media (max-width: 768px) {
   :root { --sidebar-w: 100%; }
-  [class*="hero"] { padding: 48px 24px !important; min-height: auto !important; }
-  [class*="hero"] h1 { font-size: 28px !important; }
-  [class*="grid"] { grid-template-columns: 1fr !important; }
-  [class*="main"], [class*="archive"], [class*="section"] { padding-left: 20px !important; padding-right: 20px !important; }
-  [class*="tabs"] { padding-left: 20px !important; padding-right: 20px !important; overflow-x: auto; }
-  [class*="featured"] { flex-direction: column !important; }
-  [class*="featuredThumb"] { flex: none !important; width: 100% !important; }
-  [class*="layout"] { flex-direction: column !important; }
-  [class*="sidebar"] { width: 100% !important; max-height: 40vh; border-right: none !important; border-bottom: 1px solid var(--border); }
-  [class*="stats"] { flex-wrap: wrap; gap: 16px; }
-  [class*="stat"] { padding: 0 16px !important; }
-  [class*="services"] { grid-template-columns: 1fr !important; }
-  [class*="bar"] { padding-left: 16px !important; padding-right: 16px !important; }
+
+  section[class*="hero"] {
+    padding: 56px 20px !important;
+    min-height: auto !important;
+  }
+
+  div[class*="familiesGrid"],
+  div[class*="teaserGrid"],
+  div[class*="howGrid"],
+  div[class*="kpiRow"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  main[class*="layout"] { flex-direction: column !important; }
+
+  aside[class*="sidebar"] {
+    width: 100% !important;
+    max-height: 40vh;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 480px) {
+  div[class*="familiesGrid"],
+  div[class*="teaserGrid"],
+  div[class*="kpiRow"] {
+    grid-template-columns: 1fr !important;
+  }
 }

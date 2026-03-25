@@ -1,0 +1,115 @@
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Sidebar aziende ─────────────────────────────────────── */
+.sidebar {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--white);
+  overflow: hidden;
+}
+
+.sidebarTitle {
+  padding: 12px 16px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.companyBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--t-color);
+  font-family: var(--font-body);
+}
+.companyBtn:last-child { border-bottom: none; }
+.companyBtn:hover { background: var(--surface); }
+.companyBtnActive { background: var(--red-light) !important; }
+
+.companyName {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.companyBtnActive .companyName { color: var(--red); }
+
+.companyCount {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.empty {
+  padding: 20px 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.empty a { color: var(--red); font-weight: 700; text-decoration: none; }
+
+/* ── Contenuto ───────────────────────────────────────────── */
+.placeholder {
+  padding: 80px 40px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--r);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.contentHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.contentTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--ink);
+}
+
+.contentSub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Select accesso inline ───────────────────────────────── */
+.accessSelect {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--white);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--t-color);
+}
+.accessSelect:focus { border-color: var(--ink); }
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+}

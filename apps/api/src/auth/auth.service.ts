@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
@@ -10,7 +10,6 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  /** Registra un nuovo utente con email e password */
   async register(email: string, password: string, name?: string) {
     const existing = await this.prisma.user.findUnique({ where: { email } })
     if (existing) throw new ConflictException('Email già registrata')
@@ -23,7 +22,6 @@ export class AuthService {
     return this.buildTokenResponse(user)
   }
 
-  /** Login con email e password, restituisce JWT */
   async login(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } })
     if (!user || !user.passwordHash) {
@@ -41,15 +39,27 @@ export class AuthService {
     return this.buildTokenResponse(user)
   }
 
-  /** Restituisce il profilo dell'utente corrente */
   async getProfile(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, role: true, avatarUrl: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        membership: {
+          include: {
+            company: { select: { id: true, name: true, slug: true } },
+          },
+        },
+      },
     })
   }
 
-  /** Verifica un token JWT e restituisce il payload */
   async validateToken(payload: { sub: string; email: string }) {
     return this.prisma.user.findUnique({
       where: { id: payload.sub },
@@ -57,7 +67,41 @@ export class AuthService {
     })
   }
 
-  private buildTokenResponse(user: { id: string; email: string; role: string; name?: string | null }) {
+  /**
+   * Promuove l'utente corrente ad ADMIN.
+   * Funziona SOLO se non esiste ancora nessun utente ADMIN.
+   * Dopo il primo admin, questo metodo lancia ForbiddenException.
+   */
+  async promoteToFirstAdmin(userId: string) {
+    // Controlla se esiste già un ADMIN
+    const existingAdmin = await this.prisma.user.findFirst({
+      where: { role: 'ADMIN', deletedAt: null },
+    })
+
+    if (existingAdmin) {
+      throw new ForbiddenException(
+        'Un amministratore esiste già. Contatta l\'admin per ottenere i permessi.',
+      )
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role: 'ADMIN' },
+    })
+
+    // Restituisce un nuovo token con il ruolo aggiornato
+    return {
+      message: 'Utente promosso ad ADMIN con successo.',
+      ...this.buildTokenResponse(user),
+    }
+  }
+
+  private buildTokenResponse(user: {
+    id: string
+    email: string
+    role: string
+    name?: string | null
+  }) {
     const payload = { sub: user.id, email: user.email, role: user.role }
     return {
       accessToken: this.jwt.sign(payload),

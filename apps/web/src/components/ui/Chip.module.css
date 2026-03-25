@@ -1,19 +1,40 @@
 .chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 100px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 100px;
   border: 1px solid var(--border);
-  font-size: 13px; font-weight: 600;
-  color: var(--muted-dark); background: var(--white);
-  cursor: pointer; transition: all var(--t-color);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-dark);
+  background: var(--white);
+  cursor: pointer;
+  transition: all var(--t-color);
   font-family: var(--font-body);
 }
 .chip:hover { border-color: var(--muted); }
-.chipActive {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 100px;
+
+/* FIX: era .chipActive ma Chip.tsx applica styles.active */
+.active {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 100px;
   border: 1px solid var(--ink);
-  font-size: 13px; font-weight: 700;
-  color: #fff; background: var(--ink);
-  cursor: pointer; font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all var(--t-color);
 }
-.dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── UTENTI ───────────────────────────────────────────────────────────────────
-
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -21,13 +19,10 @@ model User {
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   deletedAt    DateTime?
-
-  progress       UserProgress[]
-  certificates   Certificate[]
-  membership     CompanyMembership?
-  courseOverrides UserCourseAssignment[]
-  unitFeedback   UnitFeedback[]
-  courseFeedback CourseFeedback[]
+  progress     UserProgress[]
+  certificates Certificate[]
+  membership   CompanyMembership?
+  userAssignments UserCourseAssignment[]
 }
 
 enum Role {
@@ -36,7 +31,96 @@ enum Role {
   TEAM_ADMIN
 }
 
-// ─── SOFTWARE ─────────────────────────────────────────────────────────────────
+model Company {
+  id                  String    @id @default(uuid())
+  name                String
+  slug                String    @unique
+  contractType        String?
+  assistanceExpiresAt DateTime?
+  notes               String?   @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+  members             CompanyMembership[]
+  interests           CompanyInterest[]
+  courseAssignments   CompanyCourseAssignment[]
+}
+
+model CompanyMembership {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  companyId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  company   Company  @relation(fields: [companyId], references: [id])
+}
+
+model CompanyInterest {
+  id         String   @id @default(uuid())
+  companyId  String
+  softwareId String
+  company    Company  @relation(fields: [companyId], references: [id])
+  software   Software @relation(fields: [softwareId], references: [id])
+  @@unique([companyId, softwareId])
+}
+
+model CompanyCourseAssignment {
+  id         String     @id @default(uuid())
+  companyId  String
+  courseId   String
+  accessType String  @default("ACTIVE")
+  startsAt   DateTime   @default(now())
+  expiresAt  DateTime?
+  notes      String?
+  createdBy  String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  company    Company    @relation(fields: [companyId], references: [id])
+  course     Course     @relation(fields: [courseId], references: [id])
+  @@unique([companyId, courseId])
+}
+
+model UserCourseAssignment {
+  id         String     @id @default(uuid())
+  userId     String
+  courseId   String
+  accessType String  @default("ACTIVE")
+  startsAt   DateTime   @default(now())
+  expiresAt  DateTime?
+  notes      String?
+  createdBy  String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  user       User       @relation(fields: [userId], references: [id])
+  course     Course     @relation(fields: [courseId], references: [id])
+  @@unique([userId, courseId])
+}
+
+enum AccessType {
+  ACTIVE
+  LOCKED
+  HIDDEN
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  body        String   @db.Text
+  type        AnnouncementType @default(NEWS)
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum AnnouncementType {
+  NEWS
+  NEW_COURSE
+  WEBINAR
+  MAINTENANCE
+}
 
 model Software {
   id         String    @id @default(uuid())
@@ -47,52 +131,37 @@ model Software {
   lightColor String?
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
-
-  courses           Course[]
-  companyInterests  CompanyInterest[]
+  courses    Course[]
+  interests  CompanyInterest[]
+  videos     VideoPill[]
 }
-
-// ─── CORSI ────────────────────────────────────────────────────────────────────
 
 model Course {
-  id          String      @id @default(uuid())
-  title       String
-  slug        String      @unique
-  description String?
-  level       String?
-  duration    String?
-  objective   String?     // obiettivo pratico del corso (doc §9)
-
-  // Visibilità base: stato di pubblicazione del corso (indipendente dalle assegnazioni)
-  // HIDDEN         → non compare mai nel catalogo
-  // VISIBLE_LOCKED → visibile ma non fruibile senza assegnazione
-  // PUBLISHED      → visibile e fruibile se assegnato
-  publishState CoursePublishState @default(PUBLISHED)
-
-  // DEPRECATO: mantenuto per retrocompatibilità durante la migrazione.
-  // Non usare come driver di accesso. Usare CoursePublishState + assegnazioni.
-  available   Boolean   @default(true)
-
-  softwareId  String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  software            Software               @relation(fields: [softwareId], references: [id])
-  units               Unit[]
-  certificates        Certificate[]
-  companyAssignments  CompanyCourseAssignment[]
-  userAssignments     UserCourseAssignment[]
-  courseFeedback      CourseFeedback[]
+  id           String    @id @default(uuid())
+  title        String
+  slug         String    @unique
+  description  String?
+  objective    String?
+  level        String?
+  duration     String?
+  available    Boolean   @default(true)
+  publishState PublishState @default(PUBLISHED)
+  softwareId   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  software           Software      @relation(fields: [softwareId], references: [id])
+  units              Unit[]
+  certificates       Certificate[]
+  companyAssignments CompanyCourseAssignment[]
+  userAssignments    UserCourseAssignment[]
 }
 
-enum CoursePublishState {
-  HIDDEN          // non compare nel catalogo
-  VISIBLE_LOCKED  // compare ma bloccato (visibile, non fruibile)
-  PUBLISHED       // visibile e fruibile se assegnato
+enum PublishState {
+  HIDDEN
+  VISIBLE_LOCKED
+  PUBLISHED
 }
-
-// ─── UNITÀ ────────────────────────────────────────────────────────────────────
 
 model Unit {
   id        String   @id @default(uuid())
@@ -103,19 +172,15 @@ model Unit {
   duration  String?
   unitType  UnitType @default(LESSON)
   content   String?  @db.Text
-  videoUrl  String?  // URL video corso (embed protetto, no YouTube diretto)
+  videoUrl  String?
   courseId  String
-
-  course     Course          @relation(fields: [courseId], references: [id])
-  guide      GuideReference?
-  exercises  Exercise[]
-  progress   UserProgress[]
-  feedback   UnitFeedback[]
-
+  course    Course   @relation(fields: [courseId], references: [id])
+  guide     GuideReference?
+  exercises Exercise[]
+  progress  UserProgress[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
-
   @@unique([courseId, slug])
 }
 
@@ -124,8 +189,6 @@ enum UnitType {
   LESSON
   EXERCISE
 }
-
-// ─── CONTENUTI SUPPORTO ───────────────────────────────────────────────────────
 
 model GuideReference {
   id        String @id @default(uuid())
@@ -148,99 +211,15 @@ model Exercise {
   createdAt   DateTime @default(now())
 }
 
-// ─── AZIENDE (dominio B2B) ────────────────────────────────────────────────────
-
-model Company {
-  id                  String    @id @default(uuid())
-  name                String
-  slug                String    @unique
-  contractType        String?   // es. "Standard", "Enterprise", "Trial"
-  assistanceExpiresAt DateTime? // scadenza contratto assistenza
-  notes               String?   @db.Text
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  deletedAt           DateTime?
-
-  members          CompanyMembership[]
-  courseAssignments CompanyCourseAssignment[]
-  interests        CompanyInterest[]
-}
-
-// Punti di interesse dell'azienda (quali software usa)
-model CompanyInterest {
-  id         String   @id @default(uuid())
-  companyId  String
-  softwareId String
-  company    Company  @relation(fields: [companyId], references: [id])
-  software   Software @relation(fields: [softwareId], references: [id])
-
-  @@unique([companyId, softwareId])
-}
-
-// Appartenenza utente a un'azienda
-model CompanyMembership {
-  id        String   @id @default(uuid())
-  userId    String   @unique  // un utente appartiene a una sola azienda
-  companyId String
-  role      String   @default("member") // "member" | "admin"
-  joinedAt  DateTime @default(now())
-
-  user    User    @relation(fields: [userId], references: [id])
-  company Company @relation(fields: [companyId], references: [id])
-}
-
-// ─── ASSEGNAZIONI CORSI ───────────────────────────────────────────────────────
-
-// Assegnazione corso a livello azienda
-model CompanyCourseAssignment {
-  id           String           @id @default(uuid())
-  companyId    String
-  courseId     String
-  accessType   CourseAccessType @default(ACTIVE)
-  startsAt     DateTime         @default(now())
-  expiresAt    DateTime?        // null = accesso illimitato (∞)
-  notes        String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  createdBy    String?          // userId admin che ha creato l'assegnazione
-
-  company Company @relation(fields: [companyId], references: [id])
-  course  Course  @relation(fields: [courseId], references: [id])
-
-  @@unique([companyId, courseId])
-  @@index([companyId])
-  @@index([expiresAt])
-}
-
-// Override assegnazione a livello singolo utente
-// Prevale sulla policy aziendale (regola più specifica vince)
-model UserCourseAssignment {
-  id           String           @id @default(uuid())
-  userId       String
-  courseId     String
-  accessType   CourseAccessType @default(ACTIVE)
-  startsAt     DateTime         @default(now())
-  expiresAt    DateTime?        // null = accesso illimitato (∞)
-  notes        String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  createdBy    String?
-
-  user   User   @relation(fields: [userId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
-
+model Certificate {
+  id       String   @id @default(uuid())
+  userId   String
+  courseId String
+  issuedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  course   Course   @relation(fields: [courseId], references: [id])
   @@unique([userId, courseId])
-  @@index([userId])
-  @@index([expiresAt])
 }
-
-enum CourseAccessType {
-  ACTIVE   // accesso pieno
-  LOCKED   // visibile ma bloccato
-  HIDDEN   // non visibile
-}
-
-// ─── PROGRESSO ────────────────────────────────────────────────────────────────
 
 model UserProgress {
   id          String    @id @default(uuid())
@@ -248,113 +227,12 @@ model UserProgress {
   unitId      String
   completed   Boolean   @default(false)
   completedAt DateTime?
-  viewedAt    DateTime? // ultimo accesso all'unità (per "continua da dove eri")
-
-  user User @relation(fields: [userId], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
-
+  viewedAt    DateTime?
+  user        User      @relation(fields: [userId], references: [id])
+  unit        Unit      @relation(fields: [unitId], references: [id])
   @@unique([userId, unitId])
   @@index([userId, completed])
 }
-
-// ─── FEEDBACK ────────────────────────────────────────────────────────────────
-
-// Feedback per singola unità (utile / non utile)
-model UnitFeedback {
-  id        String   @id @default(uuid())
-  userId    String
-  unitId    String
-  useful    Boolean
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
-
-  @@unique([userId, unitId])
-}
-
-// Feedback a fine corso (rating 1-5 stelle)
-model CourseFeedback {
-  id        String   @id @default(uuid())
-  userId    String
-  courseId  String
-  rating    Int      // 1-5
-  comment   String?
-  createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
-
-  @@unique([userId, courseId])
-}
-
-// ─── CERTIFICATI ─────────────────────────────────────────────────────────────
-
-model Certificate {
-  id       String   @id @default(uuid())
-  userId   String
-  courseId String
-  issuedAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
-
-  @@unique([userId, courseId])
-}
-
-// ─── ANNUNCI ─────────────────────────────────────────────────────────────────
-
-model Announcement {
-  id          String    @id @default(uuid())
-  title       String
-  body        String    @db.Text
-  type        AnnouncementType @default(NEWS)
-  published   Boolean   @default(false)
-  publishedAt DateTime?
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdBy   String?
-}
-
-enum AnnouncementType {
-  NEWS        // novità generali
-  NEW_COURSE  // nuovo corso disponibile
-  WEBINAR     // webinar/evento
-  MAINTENANCE // manutenzione
-}
-
-// ─── IMPORT CSV ───────────────────────────────────────────────────────────────
-
-model CsvImportJob {
-  id         String          @id @default(uuid())
-  type       CsvImportType
-  status     CsvImportStatus @default(PENDING)
-  filename   String
-  totalRows  Int             @default(0)
-  imported   Int             @default(0)
-  failed     Int             @default(0)
-  errors     Json?           // array di { row, message }
-  createdAt  DateTime        @default(now())
-  completedAt DateTime?
-  createdBy  String?
-}
-
-enum CsvImportType {
-  COMPANIES
-  USERS
-}
-
-enum CsvImportStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-// ─── VIDEO PILL (isolato, fuori scope attivo) ─────────────────────────────────
-// Mantenuto per retrocompatibilità con i dati esistenti.
-// Non esposto in navigazione né nei moduli attivi.
 
 model VideoPill {
   id          String   @id @default(uuid())
@@ -362,28 +240,9 @@ model VideoPill {
   description String?
   youtubeId   String   @unique
   softwareId  String
+  software    Software @relation(fields: [softwareId], references: [id])
   createdAt   DateTime @default(now())
 }
-
-// ─── PRICING (isolato, fuori scope) ───────────────────────────────────────────
-// Mantenuto per non perdere dati storici. Non esposto nei moduli attivi.
-
-model PricingPackage {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
-  price       String?
-  priceNote   String?
-  features    String[] @default([])
-  highlighted Boolean  @default(false)
-  order       Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// ─── EVENTI (isolato, fuori scope attivo) ────────────────────────────────────
 
 model Event {
   id              String    @id @default(uuid())
@@ -405,4 +264,19 @@ enum EventType {
   WORKSHOP
   WEBINAR
   LIVE_SESSION
+}
+
+model PricingPackage {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       String?
+  priceNote   String?
+  features    String[] @default([])
+  highlighted Boolean  @default(false)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

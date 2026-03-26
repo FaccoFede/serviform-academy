@@ -5,113 +5,37 @@ import { PrismaService } from '../prisma/prisma.service'
 export class AssignmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // ── Azienda ──────────────────────────────────────────────────────────────────
-
-  async assignCourseToCompany(
-    companyId: string,
-    courseId: string,
-    data: { accessType?: string; startsAt?: string; expiresAt?: string | null; notes?: string },
-    createdBy: string,
-  ) {
-    const existing = await this.prisma.companyCourseAssignment.findUnique({
-      where: { companyId_courseId: { companyId, courseId } },
-    })
-    if (existing) throw new ConflictException('Assegnazione già esistente per questa azienda')
-
-    return this.prisma.companyCourseAssignment.create({
-      data: {
-        companyId,
-        courseId,
-        accessType: (data.accessType as any) ?? 'ACTIVE',
-        startsAt: data.startsAt ? new Date(data.startsAt) : new Date(),
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
-        notes: data.notes,
-        createdBy,
-      },
-      include: {
-        course: { select: { title: true, slug: true } },
-        company: { select: { name: true } },
-      },
-    })
+  findByCompany(companyId: string) {
+    return this.prisma.companyCourseAssignment.findMany({ where: { companyId }, include: { course: { include: { software: true } } }, orderBy: { createdAt: 'desc' } })
   }
 
-  async updateCompanyAssignment(id: string, data: {
-    accessType?: string
-    expiresAt?: string | null
-    notes?: string
-  }) {
-    return this.prisma.companyCourseAssignment.update({
-      where: { id },
-      data: {
-        ...(data.accessType ? { accessType: data.accessType as any } : {}),
-        expiresAt: data.expiresAt !== undefined
-          ? (data.expiresAt ? new Date(data.expiresAt) : null)
-          : undefined,
-        notes: data.notes,
-        updatedAt: new Date(),
-      },
-    })
+  async assignToCompany(companyId: string, courseId: string, data: any, createdBy: string) {
+    const existing = await this.prisma.companyCourseAssignment.findUnique({ where: { companyId_courseId: { companyId, courseId } } })
+    if (existing) throw new ConflictException('Assegnazione già esistente')
+    return this.prisma.companyCourseAssignment.create({ data: { companyId, courseId, accessType: data.accessType ?? 'ACTIVE', startsAt: data.startsAt ? new Date(data.startsAt) : new Date(), expiresAt: data.expiresAt ? new Date(data.expiresAt) : null, notes: data.notes, createdBy }, include: { course: { select: { title: true, slug: true } } } })
   }
 
-  async removeCompanyAssignment(id: string) {
+  async updateCompany(id: string, data: any) {
+    return this.prisma.companyCourseAssignment.update({ where: { id }, data: { ...(data.accessType ? { accessType: data.accessType } : {}), expiresAt: data.expiresAt !== undefined ? (data.expiresAt ? new Date(data.expiresAt) : null) : undefined, notes: data.notes, updatedAt: new Date() } })
+  }
+
+  async removeCompany(id: string) {
     const a = await this.prisma.companyCourseAssignment.findUnique({ where: { id } })
     if (!a) throw new NotFoundException('Assegnazione non trovata')
     return this.prisma.companyCourseAssignment.delete({ where: { id } })
   }
 
-  findCompanyAssignments(companyId: string) {
-    return this.prisma.companyCourseAssignment.findMany({
-      where: { companyId },
-      include: { course: { include: { software: true } } },
-      orderBy: { createdAt: 'desc' },
-    })
+  findByUser(userId: string) {
+    return this.prisma.userCourseAssignment.findMany({ where: { userId }, include: { course: { include: { software: true } } }, orderBy: { createdAt: 'desc' } })
   }
 
-  // ── Utente (override) ────────────────────────────────────────────────────────
-
-  async assignCourseToUser(
-    userId: string,
-    courseId: string,
-    data: { accessType?: string; startsAt?: string; expiresAt?: string | null; notes?: string },
-    createdBy: string,
-  ) {
-    return this.prisma.userCourseAssignment.upsert({
-      where: { userId_courseId: { userId, courseId } },
-      update: {
-        accessType: (data.accessType as any) ?? 'ACTIVE',
-        expiresAt: data.expiresAt !== undefined
-          ? (data.expiresAt ? new Date(data.expiresAt) : null)
-          : undefined,
-        notes: data.notes,
-        updatedAt: new Date(),
-      },
-      create: {
-        userId,
-        courseId,
-        accessType: (data.accessType as any) ?? 'ACTIVE',
-        startsAt: data.startsAt ? new Date(data.startsAt) : new Date(),
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
-        notes: data.notes,
-        createdBy,
-      },
-      include: {
-        course: { select: { title: true, slug: true } },
-        user: { select: { email: true, name: true } },
-      },
-    })
+  async assignToUser(userId: string, courseId: string, data: any, createdBy: string) {
+    return this.prisma.userCourseAssignment.upsert({ where: { userId_courseId: { userId, courseId } }, update: { accessType: data.accessType ?? 'ACTIVE', expiresAt: data.expiresAt ? new Date(data.expiresAt) : null, notes: data.notes, updatedAt: new Date() }, create: { userId, courseId, accessType: data.accessType ?? 'ACTIVE', startsAt: data.startsAt ? new Date(data.startsAt) : new Date(), expiresAt: data.expiresAt ? new Date(data.expiresAt) : null, notes: data.notes, createdBy } })
   }
 
-  async removeUserAssignment(id: string) {
+  async removeUser(id: string) {
     const a = await this.prisma.userCourseAssignment.findUnique({ where: { id } })
     if (!a) throw new NotFoundException('Assegnazione non trovata')
     return this.prisma.userCourseAssignment.delete({ where: { id } })
-  }
-
-  findUserAssignments(userId: string) {
-    return this.prisma.userCourseAssignment.findMany({
-      where: { userId },
-      include: { course: { include: { software: true } } },
-      orderBy: { createdAt: 'desc' },
-    })
   }
 }

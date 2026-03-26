@@ -1,7 +1,5 @@
 .shell {
   padding-top: var(--topbar-h);
-  padding-left: var(--rail-w);
   min-height: 100vh;
   box-sizing: border-box;
-  width: 100%;
 }

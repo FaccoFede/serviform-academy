@@ -1,17 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 
-export interface CourseProgressItem {
-  courseId: string
-  courseTitle: string
-  courseSlug: string
-  softwareName: string | null
-  softwareSlug: string | null
-  softwareColor: string | null
-  total: number
-  completed: number
-  percent: number
-}
+// Filtro condiviso: esclude OVERVIEW dal conteggio progress
+// Le unità OVERVIEW sono introduttive — l'utente non le "completa"
+const LESSON_FILTER = { deletedAt: null, unitType: { not: 'OVERVIEW' as const } }
 
 @Injectable()
 export class ProgressService {
@@ -34,95 +26,73 @@ export class ProgressService {
   }
 
   async getCourseProgress(userId: string, courseSlug: string) {
+    // Conta solo unità LESSON/EXERCISE (non OVERVIEW)
     const units = await this.prisma.unit.findMany({
-      where: { course: { slug: courseSlug }, deletedAt: null },
+      where: { course: { slug: courseSlug }, ...LESSON_FILTER },
       select: { id: true },
     })
-
     const total = units.length
     if (total === 0) return { total: 0, completed: 0, percent: 0 }
-
     const completed = await this.prisma.userProgress.count({
       where: { userId, completed: true, unitId: { in: units.map(u => u.id) } },
     })
-
     return { total, completed, percent: Math.round((completed / total) * 100) }
   }
 
-  /**
-   * Restituisce l'array degli unitId completati per un corso.
-   * Usato dal frontend per pre-popolare il ProgressContext al caricamento.
-   * Senza questo, il Set in memoria si azzera ad ogni navigazione tra pagine.
-   */
   async getCompletedUnitIds(userId: string, courseSlug: string): Promise<string[]> {
     const units = await this.prisma.unit.findMany({
-      where: { course: { slug: courseSlug }, deletedAt: null },
+      where: { course: { slug: courseSlug }, ...LESSON_FILTER },
       select: { id: true },
     })
-
-    const unitIds = units.map(u => u.id)
-
-    const completed = await this.prisma.userProgress.findMany({
-      where: { userId, completed: true, unitId: { in: unitIds } },
+    const rows = await this.prisma.userProgress.findMany({
+      where: { userId, completed: true, unitId: { in: units.map(u => u.id) } },
       select: { unitId: true },
     })
-
-    return completed.map(p => p.unitId)
+    return rows.map(r => r.unitId)
   }
 
   async getLastViewed(userId: string) {
-    const progress = await this.prisma.userProgress.findFirst({
+    const p = await this.prisma.userProgress.findFirst({
       where: { userId, viewedAt: { not: null } },
       orderBy: { viewedAt: 'desc' },
-      include: {
-        unit: {
-          include: { course: { include: { software: true } } },
-        },
-      },
+      include: { unit: { include: { course: { include: { software: true } } } } },
     })
-
-    if (!progress) return null
-
+    if (!p) return null
     return {
-      unitId: progress.unitId,
-      unitTitle: progress.unit.title,
-      unitSlug: progress.unit.slug,
-      courseId: progress.unit.courseId,
-      courseTitle: progress.unit.course.title,
-      courseSlug: progress.unit.course.slug,
-      softwareName: progress.unit.course.software?.name ?? null,
-      softwareSlug: progress.unit.course.software?.slug ?? null,
-      viewedAt: progress.viewedAt,
+      unitId: p.unitId,
+      unitTitle: p.unit.title,
+      unitSlug: p.unit.slug,
+      courseTitle: p.unit.course.title,
+      courseSlug: p.unit.course.slug,
+      softwareName: p.unit.course.software?.name ?? null,
+      softwareSlug: p.unit.course.software?.slug ?? null,
+      viewedAt: p.viewedAt,
     }
   }
 
-  async getAllCourseProgressForUser(userId: string): Promise<CourseProgressItem[]> {
+  async getAllCourseProgressForUser(userId: string) {
     const viewed = await this.prisma.userProgress.findMany({
       where: { userId, viewedAt: { not: null } },
       include: { unit: { select: { courseId: true } } },
     })
-
     const courseIds = [...new Set(viewed.map(p => p.unit.courseId))]
-    if (courseIds.length === 0) return []
+    if (!courseIds.length) return []
 
     const courses = await this.prisma.course.findMany({
       where: { id: { in: courseIds }, deletedAt: null },
       include: {
         software: true,
-        units: { where: { deletedAt: null }, select: { id: true } },
+        // Solo unità LESSON/EXERCISE per il conteggio
+        units: { where: LESSON_FILTER, select: { id: true } },
       },
     })
 
-    const results: CourseProgressItem[] = []
-
+    const results: any[] = []
     for (const course of courses) {
-      const total = course.units.length
       const unitIds = course.units.map(u => u.id)
-
       const completed = await this.prisma.userProgress.count({
         where: { userId, completed: true, unitId: { in: unitIds } },
       })
-
       results.push({
         courseId: course.id,
         courseTitle: course.title,
@@ -130,12 +100,11 @@ export class ProgressService {
         softwareName: course.software?.name ?? null,
         softwareSlug: course.software?.slug ?? null,
         softwareColor: course.software?.color ?? null,
-        total,
+        total: unitIds.length,
         completed,
-        percent: total === 0 ? 0 : Math.round((completed / total) * 100),
+        percent: unitIds.length === 0 ? 0 : Math.round((completed / unitIds.length) * 100),
       })
     }
-
     return results
   }
 }

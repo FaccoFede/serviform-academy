@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common'
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
@@ -26,22 +26,12 @@ export class AuthController {
 
   /**
    * POST /auth/promote-admin
-   * Endpoint bootstrap: promuove l'utente autenticato ad ADMIN.
-   *
-   * Funziona SOLO se non esiste ancora nessun utente ADMIN nel sistema.
-   * Dopo che il primo ADMIN è stato creato, questo endpoint restituisce 403
-   * per chiunque, rendendo impossibile promozioni non autorizzate.
-   *
-   * Utilizzo:
-   *   1. Registrati normalmente con /auth/register
-   *   2. Fai login con /auth/login per ottenere il token
-   *   3. Chiama POST /auth/promote-admin con il token nel header Authorization
-   *
-   * Dopo aver creato il primo admin, usa il pannello admin per creare altri utenti.
+   * Promuove l'utente corrente ad ADMIN SOLO se non esiste ancora nessun ADMIN.
+   * Dopo il primo admin, risponde 403 per chiunque.
    */
   @UseGuards(JwtAuthGuard)
   @Post('promote-admin')
-  async promoteAdmin(@Request() req: any) {
+  promoteAdmin(@Request() req: any) {
     return this.authService.promoteToFirstAdmin(req.user.id)
   }
 }

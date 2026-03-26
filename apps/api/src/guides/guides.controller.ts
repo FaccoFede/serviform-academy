@@ -1,27 +1,34 @@
-import { Controller, Post, Body, Get, Param, NotFoundException, UseGuards } from '@nestjs/common'
+import { Controller, Post, Body, Get, Param, NotFoundException } from '@nestjs/common'
 import { GuidesService } from './guides.service'
 import { CreateGuideDto } from './dto/create-guide.dto'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
 
+/**
+ * Controller per le guide di riferimento Zendesk.
+ *
+ * Ogni guida è collegata a una singola unità (relazione 1:1).
+ *
+ * Endpoint:
+ * - POST /guides            → crea una nuova guida
+ * - GET  /guides/unit/:unitId → ottieni la guida di un'unità
+ */
 @Controller('guides')
 export class GuidesController {
+
   constructor(private readonly guidesService: GuidesService) {}
 
-  /** GET pubblico — usato dalla pagina unità per mostrare il link Zendesk */
+  @Post()
+  async create(@Body() dto: CreateGuideDto) {
+    return this.guidesService.create(dto)
+  }
+
   @Get('unit/:unitId')
   async findByUnit(@Param('unitId') unitId: string) {
     const guide = await this.guidesService.findByUnit(unitId)
-    if (!guide) throw new NotFoundException(`Nessuna guida per l'unità ${unitId}`)
-    return guide
-  }
 
-  /** POST admin — creazione guide da pannello */
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'TEAM_ADMIN')
-  create(@Body() dto: CreateGuideDto) {
-    return this.guidesService.create(dto)
+    if (!guide) {
+      throw new NotFoundException(`Nessuna guida trovata per l'unità ${unitId}`)
+    }
+
+    return guide
   }
 }

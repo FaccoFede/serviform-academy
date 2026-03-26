@@ -1,0 +1,67 @@
+.page { min-height: calc(100vh - var(--topbar-h)); }
+.header { background: var(--white); border-bottom: 1px solid var(--border); padding: 32px 0; }
+.headerInner,.filterBarInner,.resultsInner { max-width: 1160px; margin: 0 auto; padding: 0 56px; }
+.breadcrumb { display: flex; gap: 8px; font-size: 11px; font-family: var(--font-mono); color: var(--muted); margin-bottom: 10px; }
+.bcLink { color: var(--muted); text-decoration: none; transition: color 180ms; }
+.bcLink:hover { color: var(--red); }
+.title { font-family: var(--font-display); font-size: clamp(24px,3.5vw,36px); font-weight: 700; letter-spacing: -1px; color: var(--ink); margin-bottom: 4px; }
+.sub { font-size: 13px; color: var(--muted); }
+
+/* Barra filtri orizzontale */
+.filterBar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 0; position: sticky; top: var(--topbar-h); z-index: 50; }
+.filterBarInner { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+.searchBox { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; min-width: 200px; transition: border-color 180ms; }
+.searchBox:focus-within { border-color: var(--ink); }
+.searchInput { border: none; outline: none; font-size: 13px; font-weight: 600; font-family: var(--font-body); color: var(--ink); background: transparent; flex: 1; min-width: 0; }
+.searchInput::placeholder { color: var(--muted); }
+.searchClear { background: none; border: none; font-size: 16px; color: var(--muted); cursor: pointer; line-height: 1; padding: 0 2px; }
+
+.filterGroup { display: flex; align-items: center; gap: 8px; }
+.filterLabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-family: var(--font-mono); white-space: nowrap; }
+.chipRow { display: flex; gap: 5px; flex-wrap: wrap; }
+.chip { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--white); font-size: 12.5px; font-weight: 600; color: var(--muted-dark); cursor: pointer; font-family: var(--font-body); transition: all 180ms; white-space: nowrap; }
+.chip:hover { border-color: rgba(0,0,0,.2); color: var(--ink); }
+.chipOn { background: var(--ink); color: #fff; border-color: var(--ink); }
+.chipOn:hover { background: #2a2a2a; }
+.chipDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.clearBtn { margin-left: auto; padding: 5px 14px; background: none; border: 1px solid var(--border); border-radius: 100px; font-size: 12px; font-weight: 700; color: var(--red); cursor: pointer; font-family: var(--font-body); transition: all 180ms; white-space: nowrap; }
+.clearBtn:hover { background: var(--red-light); }
+
+/* Risultati */
+.results { padding: 28px 0 64px; }
+.resultMeta { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.resultCount { font-size: 12px; font-family: var(--font-mono); color: var(--muted); }
+.resultActive { font-size: 12px; color: var(--muted); background: var(--surface); padding: 3px 10px; border-radius: 100px; border: 1px solid var(--border); }
+
+.cardGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+
+/* Card corso */
+.card { position: relative; display: flex; flex-direction: column; gap: 9px; padding: 22px; background: var(--white); border: 1px solid transparent; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); transition: all 220ms; }
+.card:hover { border-color: rgba(0,0,0,.08); box-shadow: 0 6px 20px rgba(0,0,0,.07); transform: translateY(-2px); }
+.cardAccent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.cardTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cardTag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; padding: 3px 8px; border-radius: 4px; }
+.badgeActive { font-size: 10px; font-weight: 700; color: #059669; font-family: var(--font-mono); }
+.badgeLocked { font-size: 10px; font-weight: 700; color: var(--muted); font-family: var(--font-mono); }
+.badgePreview { font-size: 10px; font-weight: 700; color: var(--po); background: var(--po-light); padding: 2px 7px; border-radius: 4px; }
+.cardTitleLink { text-decoration: none; color: inherit; }
+.cardTitle { font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: -.3px; color: var(--ink); line-height: 1.2; }
+.cardTitle:hover { color: var(--red); }
+.cardDesc { font-size: 12.5px; color: var(--muted); line-height: 1.55; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cardFoot { display: flex; gap: 10px; font-size: 11px; font-family: var(--font-mono); color: var(--muted); padding-top: 10px; border-top: 1px solid var(--border); }
+.cardActions { display: flex; gap: 8px; align-items: center; }
+.cardCta { font-size: 12.5px; font-weight: 700; color: var(--red); text-decoration: none; transition: opacity 180ms; }
+.cardCta:hover { opacity: 0.7; }
+.cardPreviewBtn { font-size: 12px; font-weight: 700; color: var(--po); text-decoration: none; background: var(--po-light); padding: 3px 10px; border-radius: 100px; transition: all 180ms; white-space: nowrap; }
+.cardPreviewBtn:hover { background: #C5E8F8; }
+
+/* Empty */
+.empty { padding: 60px 20px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.empty p { font-size: 14px; color: var(--muted); }
+.empty button { padding: 10px 22px; background: var(--ink); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: background 180ms; }
+.empty button:hover { background: var(--red); }
+
+@media (max-width: 1100px) { .headerInner,.filterBarInner,.resultsInner { padding: 0 32px; } }
+@media (max-width: 900px) { .headerInner,.filterBarInner,.resultsInner { padding: 0 20px; } .filterBarInner { gap: 12px; } .searchBox { min-width: 160px; } }
+@media (max-width: 600px) { .filterBarInner { flex-direction: column; align-items: flex-start; } .cardGrid { grid-template-columns: 1fr; } }

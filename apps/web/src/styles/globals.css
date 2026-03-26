@@ -1,80 +1,109 @@
 /* ═══════════════════════════════════════════════════════════
-   serviform academy. — design system
+   serviform academy. — design system.
+   
+   Gerarchia colori come serviform.com:
+   · Nero #000      → autorità, immersione (hero, topbar, sezioni impatto)
+   · Bianco #FFF    → chiarezza, respiro (contenuto, card, body)
+   · Rosso #E63329  → SOLO azione e identità (CTA, hover link, progress)
+   · Grigio #9D9D9C → struttura, gerarchia (testi secondari, meta)
+   · Grigio #4E4D4D → leggibilità (paragrafi body)
+   · Oro #F6CD4D    → premium, rarissimo (attestati, badge)
+   
+   Font: Bergen Sans (proprietario Serviform)
+   · SemiBold 600 = body default (NON usare Regular 400)
+   · Bold 700 = titoli, CTA
 ═══════════════════════════════════════════════════════════ */
 
+/* ─── Bergen Sans @font-face ──────────────────────────── */
 @font-face {
   font-family: 'Bergen Sans';
   src: url('/fonts/BergenSans-SemiBold.otf') format('opentype');
-  font-weight: 600; font-style: normal; font-display: swap;
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Bergen Sans';
   src: url('/fonts/BergenSans-Bold.otf') format('opentype');
-  font-weight: 700; font-style: normal; font-display: swap;
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Bergen Sans';
   src: url('/fonts/BergenSans-SemiBoldItalic.otf') format('opentype');
-  font-weight: 600; font-style: italic; font-display: swap;
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Bergen Sans';
   src: url('/fonts/BergenSans-BoldItalic.otf') format('opentype');
-  font-weight: 700; font-style: italic; font-display: swap;
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
 }
 
+/* ─── Design Tokens ───────────────────────────────────── */
 :root {
+  /* Font — Bergen Sans per display e body, DM Mono per badge */
   --font-display: 'Bergen Sans', system-ui, sans-serif;
   --font-body:    'Bergen Sans', system-ui, sans-serif;
   --font-mono:    'DM Mono', 'Fira Code', monospace;
 
+  /* Rosso Serviform — SOLO per azione (CTA, hover, progress bar)
+     Mai come sfondo di sezioni, mai come decorazione, mai come bordo statico */
   --red:          #E63329;
   --red-dark:     #B22A22;
-  --red-light:    #FFF1F0;
+  --red-light:    #FFF1F0;        /* Solo per hover-state background leggero */
   --red-glow:     rgba(230, 51, 41, 0.10);
 
-  --coal:         #000000;
-  --ink:          #1E1E1E;
-  --muted-dark:   #4E4D4D;
-  --muted:        #9D9D9C;
-  --border:       #E8E8E8;
-  --border-dark:  rgba(255, 255, 255, 0.06);
-  --surface:      #FAFAFA;
+  /* Gerarchia grigi — come serviform.com */
+  --coal:         #000000;        /* Nero puro: topbar, hero, sezioni scure */
+  --ink:          #1E1E1E;        /* Quasi nero: titoli su bianco */
+  --muted-dark:   #4E4D4D;        /* Grigio scuro brand: testo body */
+  --muted:        #9D9D9C;        /* Grigio logo Serviform: testi secondari, meta, label */
+  --border:       #E8E8E8;        /* Bordo sottile — quasi invisibile */
+  --border-dark:  rgba(255, 255, 255, 0.06);  /* Bordo su sfondo scuro */
+  --surface:      #FAFAFA;        /* Sfondo pagina */
   --white:        #FFFFFF;
 
+  /* Oro accento — SOLO per elementi premium (attestati, badge completamento) */
   --gold:         #F6CD4D;
   --gold-light:   #FFFBEB;
   --gold-dark:    #92400E;
 
-  /* Software colors */
-  --ev:           #003875;
+  /* Software — colori ufficiali dai loghi SVG */
+  --ev:           #003875;        /* EngView */
   --ev-light:     #EEF3FA;
-  --sy:           #E63329;
+  --sy:           #E63329;        /* Sysform = rosso Serviform */
   --sy-light:     #FFF1F0;
-  --po:           #067DB8;
+  --po:           #067DB8;        /* ProjectO */
   --po-light:     #E3F4FC;
-  --sa:           #2D6A4F;
-  --sa-light:     #EDFAF3;
 
   /* Layout */
   --topbar-h:     56px;
   --sidebar-w:    280px;
-  --rail-w:       64px;
+  --rail-w: 0px;
 
+  /* Bordi — sottili, quasi invisibili come serviform.com */
   --r:            12px;
   --r-lg:         16px;
 
+  /* Ombre — appaiono SOLO al hover, mai di default */
   --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.04);
   --shadow-md:    0 4px 20px rgba(0, 0, 0, 0.07);
   --shadow-lg:    0 8px 40px rgba(0, 0, 0, 0.09);
 
-  --t-color:      180ms ease;
-  --t-elevation:  250ms ease-out;
-  --t-slide:      300ms cubic-bezier(0.16, 1, 0.3, 1);
-  --t-fill:       500ms ease-out;
-  --t-fade:       600ms ease-out;
+  /* Transizioni — tempi dall'analisi UX */
+  --t-color:      180ms ease;         /* hover colore */
+  --t-elevation:  250ms ease-out;     /* hover ombra/scale */
+  --t-slide:      300ms cubic-bezier(0.16, 1, 0.3, 1);  /* animazioni di slide */
+  --t-fill:       500ms ease-out;     /* progress bar fill */
+  --t-fade:       600ms ease-out;     /* fade-in scroll */
 }
 
+/* ─── Reset ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 
@@ -99,20 +128,23 @@ a { color: inherit; }
 img { max-width: 100%; display: block; }
 button { cursor: pointer; font-family: var(--font-body); }
 
+/* ─── Animazioni ──────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .fade-up   { animation: fadeUp var(--t-fade) both; }
 .fade-up-1 { animation-delay: 0.1s; }
 .fade-up-2 { animation-delay: 0.2s; }
 .fade-up-3 { animation-delay: 0.35s; }
 
+/* ─── Scrollbar minimalista ───────────────────────────── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
+/* ─── Callout per contenuto unità ─────────────────────── */
 .callout {
   border-radius: var(--r);
   padding: 18px 22px;
@@ -128,9 +160,9 @@ button { cursor: pointer; font-family: var(--font-body); }
   letter-spacing: 0.8px;
   margin-bottom: 8px;
 }
-.callout-red    { background: var(--red-light);  border-left: 3px solid var(--red);  color: #7C1626; }
-.callout-red    strong { color: var(--red); }
-.callout-blue   { background: var(--po-light);   border-left: 3px solid var(--po);   color: #0C4A6E; }
-.callout-blue   strong { color: var(--po); }
-.callout-amber  { background: var(--gold-light); border-left: 3px solid var(--gold); color: #78350F; }
-.callout-amber  strong { color: var(--gold-dark); }
+.callout-red { background: var(--red-light); border-left: 3px solid var(--red); color: #7C1626; }
+.callout-red strong { color: var(--red); }
+.callout-blue { background: var(--po-light); border-left: 3px solid var(--po); color: #0C4A6E; }
+.callout-blue strong { color: var(--po); }
+.callout-amber { background: var(--gold-light); border-left: 3px solid var(--gold); color: #78350F; }
+.callout-amber strong { color: var(--gold-dark); }

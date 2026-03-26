@@ -9,53 +9,11 @@ import { Roles } from '../auth/decorators/roles.decorator'
 @Roles('ADMIN', 'TEAM_ADMIN')
 export class AssignmentsController {
   constructor(private readonly svc: AssignmentsService) {}
-
-  // ── Azienda ──────────────────────────────────────────────────────────────────
-
-  @Get('company/:companyId')
-  findCompanyAssignments(@Param('companyId') companyId: string) {
-    return this.svc.findCompanyAssignments(companyId)
-  }
-
-  @Post('company/:companyId/course/:courseId')
-  assignToCompany(
-    @Param('companyId') companyId: string,
-    @Param('courseId') courseId: string,
-    @Body() body: any,
-    @Request() req: any,
-  ) {
-    return this.svc.assignCourseToCompany(companyId, courseId, body, req.user.id)
-  }
-
-  @Put('company/:id')
-  updateCompanyAssignment(@Param('id') id: string, @Body() body: any) {
-    return this.svc.updateCompanyAssignment(id, body)
-  }
-
-  @Delete('company/:id')
-  removeCompanyAssignment(@Param('id') id: string) {
-    return this.svc.removeCompanyAssignment(id)
-  }
-
-  // ── Utente ───────────────────────────────────────────────────────────────────
-
-  @Get('user/:userId')
-  findUserAssignments(@Param('userId') userId: string) {
-    return this.svc.findUserAssignments(userId)
-  }
-
-  @Post('user/:userId/course/:courseId')
-  assignToUser(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-    @Body() body: any,
-    @Request() req: any,
-  ) {
-    return this.svc.assignCourseToUser(userId, courseId, body, req.user.id)
-  }
-
-  @Delete('user/:id')
-  removeUserAssignment(@Param('id') id: string) {
-    return this.svc.removeUserAssignment(id)
-  }
+  @Get('company/:id') findByCompany(@Param('id') id: string) { return this.svc.findByCompany(id) }
+  @Post('company/:cid/course/:rid') assignToCompany(@Param('cid') cid: string, @Param('rid') rid: string, @Body() body: any, @Request() req: any) { return this.svc.assignToCompany(cid, rid, body, req.user.id) }
+  @Put('company/:id') updateCompany(@Param('id') id: string, @Body() body: any) { return this.svc.updateCompany(id, body) }
+  @Delete('company/:id') removeCompany(@Param('id') id: string) { return this.svc.removeCompany(id) }
+  @Get('user/:id') findByUser(@Param('id') id: string) { return this.svc.findByUser(id) }
+  @Post('user/:uid/course/:cid') assignToUser(@Param('uid') uid: string, @Param('cid') cid: string, @Body() body: any, @Request() req: any) { return this.svc.assignToUser(uid, cid, body, req.user.id) }
+  @Delete('user/:id') removeUser(@Param('id') id: string) { return this.svc.removeUser(id) }
 }

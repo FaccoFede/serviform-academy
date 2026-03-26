@@ -2,18 +2,15 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-export interface AuthUser {
+interface User {
   id: string
   email: string
   name?: string
-  firstName?: string
-  lastName?: string
-  role: 'USER' | 'ADMIN' | 'TEAM_ADMIN'
-  company?: { id: string; name: string; slug: string } | null
+  role: string
 }
 
 interface AuthContextType {
-  user: AuthUser | null
+  user: User | null
   token: string | null
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, name?: string) => Promise<void>
@@ -22,16 +19,18 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const saved = localStorage.getItem('sa_token')
     if (saved) {
+      setToken(saved)
       fetchProfile(saved)
     } else {
       setIsLoading(false)
@@ -45,17 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       if (res.ok) {
         const data = await res.json()
-        // Normalizza la company da membership
-        setUser({
-          ...data,
-          company: data.membership?.company ?? null,
-        })
+        setUser(data)
         setToken(t)
       } else {
         localStorage.removeItem('sa_token')
       }
     } catch {
-      // ignora errori di rete
+      // ignore
     } finally {
       setIsLoading(false)
     }
@@ -69,11 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     if (!res.ok) {
       const err = await res.json()
-      throw new Error(err.message || 'Errore di accesso')
+      throw new Error(err.message || 'Errore di login')
     }
     const data = await res.json()
     setToken(data.accessToken)
-    setUser({ ...data.user, company: data.user.company ?? null })
+    setUser(data.user)
     localStorage.setItem('sa_token', data.accessToken)
   }
 
@@ -89,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const data = await res.json()
     setToken(data.accessToken)
-    setUser({ ...data.user, company: null })
+    setUser(data.user)
     localStorage.setItem('sa_token', data.accessToken)
   }
 

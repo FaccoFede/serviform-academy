@@ -1,129 +1,86 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import styles from '../AdminPage.module.css'
-import t from '../companies/Companies.module.css'
-
-const TYPE_LABEL: Record<string, string> = { NEWS: 'Novità', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar', MAINTENANCE: 'Manutenzione' }
+import t from '../table.module.css'
 
 export default function AdminAnnouncementsPage() {
-  const [items, setItems] = useState<any[]>([])
+  const [rows, setRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [editItem, setEditItem] = useState<any>(null)
-  const [form, setForm] = useState<any>({ type: 'NEWS', published: false })
+  const [show, setShow] = useState(false)
+  const [edit, setEdit] = useState<any>(null)
+  const [form, setForm] = useState<any>({type:'NEWS',published:false})
   const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null)
+  const [msg, setMsg] = useState<{t:string;ok:boolean}|null>(null)
 
-  async function load() {
-    setLoading(true)
-    try { setItems(await api.announcements.findAll()) } catch { setItems([]) } finally { setLoading(false) }
-  }
+  const load = async () => { setLoading(true); try { setRows(await api.announcements.findAll()) } catch {} finally { setLoading(false) } }
   useEffect(() => { load() }, [])
 
-  function openCreate() { setEditItem(null); setForm({ type: 'NEWS', published: false }); setShowForm(true); setMsg(null) }
-  function openEdit(item: any) {
-    setEditItem(item)
-    setForm({ title: item.title, body: item.body, type: item.type, published: item.published, expiresAt: item.expiresAt ? item.expiresAt.slice(0, 10) : '' })
-    setShowForm(true); setMsg(null)
-  }
+  const openNew = () => { setEdit(null); setForm({type:'NEWS',published:false}); setMsg(null); setShow(true) }
+  const openEdit = (r:any) => { setEdit(r); setForm({title:r.title,body:r.body,type:r.type,published:r.published,expiresAt:r.expiresAt?.slice(0,10)||''}); setMsg(null); setShow(true) }
 
-  async function handleSave() {
+  const save = async () => {
     setSaving(true)
     try {
-      if (editItem) { await api.announcements.update(editItem.id, form); setMsg({ text: 'Aggiornato.', type: 'ok' }) }
-      else { await api.announcements.create(form); setMsg({ text: 'Creato.', type: 'ok' }) }
-      setShowForm(false); load()
-    } catch (e: any) { setMsg({ text: e.message, type: 'err' }) }
-    finally { setSaving(false) }
+      if (edit) await api.announcements.update(edit.id,form); else await api.announcements.create(form)
+      setMsg({t:edit?'Aggiornato.':'Creato.',ok:true}); setShow(false); load()
+    } catch(e:any) { setMsg({t:e.message,ok:false}) } finally { setSaving(false) }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Eliminare questo annuncio?')) return
-    try { await api.announcements.remove(id); load() } catch { /* ignore */ }
-  }
+  const del = async (id:string) => { if(!confirm('Eliminare?'))return; await api.announcements.remove(id); load() }
 
-  async function togglePublish(item: any) {
-    try {
-      await api.announcements.update(item.id, { published: !item.published, publishedAt: !item.published ? new Date().toISOString() : null })
-      load()
-    } catch { /* ignore */ }
+  const toggle = async (r:any) => {
+    await api.announcements.update(r.id,{published:!r.published}); load()
   }
 
   return (
     <main className={styles.main}>
       <div className={t.hdr}>
-        <div>
-          <Link href="/admin" className={t.back}>← Admin</Link>
-          <h1 className={styles.title}>Annunci</h1>
-          <p className={styles.desc}>Novità e comunicazioni per gli utenti</p>
-        </div>
-        <button className={t.btnPrimary} onClick={openCreate}>+ Nuovo annuncio</button>
+        <div><Link href="/admin" className={t.back}>← Admin</Link><h1 className={styles.title}>Annunci</h1></div>
+        <button className={t.btnP} onClick={openNew}>+ Nuovo annuncio</button>
       </div>
-
-      {msg && <div className={`${t.msg} ${msg.type === 'err' ? t.msgErr : t.msgOk}`}>{msg.text} <button onClick={() => setMsg(null)}>×</button></div>}
-
-      {loading ? <p className={t.loading}>Caricamento...</p> : (
+      {msg && <div className={msg.ok?t.ok:t.err}>{msg.t}<button onClick={()=>setMsg(null)}>×</button></div>}
+      {loading ? <p>Caricamento...</p> : (
         <div className={t.tableWrap}>
           <table className={t.table}>
-            <thead><tr><th>Titolo</th><th>Tipo</th><th>Stato</th><th>Pubblicato il</th><th>Scadenza</th><th></th></tr></thead>
+            <thead><tr><th>Titolo</th><th>Tipo</th><th>Stato</th><th>Pubblicato il</th><th></th></tr></thead>
             <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className={t.tdBold}>{item.title}</td>
-                  <td><span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{TYPE_LABEL[item.type] || item.type}</span></td>
-                  <td>
-                    <button
-                      onClick={() => togglePublish(item)}
-                      style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: item.published ? '#ECFDF5' : 'var(--surface)', color: item.published ? '#059669' : 'var(--muted)' }}
-                    >
-                      {item.published ? '● Pubblicato' : '○ Bozza'}
-                    </button>
-                  </td>
-                  <td>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('it-IT') : '—'}</td>
-                  <td>{item.expiresAt ? new Date(item.expiresAt).toLocaleDateString('it-IT') : <span className={t.inf}>∞</span>}</td>
-                  <td className={t.actions}>
-                    <button className={t.btnEdit} onClick={() => openEdit(item)}>Modifica</button>
-                    <button className={t.btnDel} onClick={() => handleDelete(item.id)}>Elimina</button>
-                  </td>
+              {rows.map(r=>(
+                <tr key={r.id}>
+                  <td className={t.tdBold}>{r.title}</td>
+                  <td><span style={{padding:'2px 8px',borderRadius:4,background:'var(--surface)',fontSize:11,fontWeight:700,fontFamily:'var(--font-mono)'}}>{r.type}</span></td>
+                  <td><button onClick={()=>toggle(r)} style={{padding:'3px 10px',borderRadius:6,border:'none',cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'var(--font-body)',background:r.published?'#ECFDF5':'var(--surface)',color:r.published?'#059669':'var(--muted)'}}>{r.published?'● Pubblicato':'○ Bozza'}</button></td>
+                  <td>{r.publishedAt?new Date(r.publishedAt).toLocaleDateString('it-IT'):'—'}</td>
+                  <td className={t.actions}><button className={t.btnE} onClick={()=>openEdit(r)}>Modifica</button><button className={t.btnD} onClick={()=>del(r.id)}>Elimina</button></td>
                 </tr>
               ))}
-              {items.length === 0 && <tr><td colSpan={6} className={t.empty}>Nessun annuncio. Creane uno.</td></tr>}
+              {!rows.length && <tr><td colSpan={5} className={t.empty}>Nessun annuncio.</td></tr>}
             </tbody>
           </table>
         </div>
       )}
-
-      {showForm && (
+      {show && (
         <div className={t.overlay}>
           <div className={t.modal}>
-            <div className={t.modalHdr}><h2>{editItem ? 'Modifica annuncio' : 'Nuovo annuncio'}</h2><button onClick={() => setShowForm(false)}>×</button></div>
-            <div className={t.modalBody}>
-              {msg && <div className={`${t.msg} ${msg.type === 'err' ? t.msgErr : t.msgOk}`}>{msg.text}</div>}
-              <label className={t.label}>Titolo *</label>
-              <input className={t.input} value={form.title || ''} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Titolo annuncio..." />
-              <label className={t.label}>Testo *</label>
-              <textarea className={t.textarea} rows={4} value={form.body || ''} onChange={e => setForm({ ...form, body: e.target.value })} placeholder="Contenuto..." />
-              <label className={t.label}>Tipo</label>
-              <select className={t.input} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
-                <option value="NEWS">Novità</option>
-                <option value="NEW_COURSE">Nuovo corso</option>
-                <option value="WEBINAR">Webinar</option>
-                <option value="MAINTENANCE">Manutenzione</option>
+            <div className={t.mhdr}><h2>{edit?'Modifica':'Nuovo'} annuncio</h2><button onClick={()=>setShow(false)}>×</button></div>
+            <div className={t.mbody}>
+              {msg && <div className={msg.ok?t.ok:t.err}>{msg.t}</div>}
+              <label className={t.lbl}>Titolo *</label>
+              <input className={t.inp} value={form.title||''} onChange={e=>setForm({...form,title:e.target.value})} placeholder="Titolo annuncio..."/>
+              <label className={t.lbl}>Testo *</label>
+              <textarea className={t.ta} rows={3} value={form.body||''} onChange={e=>setForm({...form,body:e.target.value})} placeholder="Contenuto..."/>
+              <label className={t.lbl}>Tipo</label>
+              <select className={t.inp} value={form.type} onChange={e=>setForm({...form,type:e.target.value})}>
+                <option value="NEWS">Novità</option><option value="NEW_COURSE">Nuovo corso</option><option value="WEBINAR">Webinar</option><option value="MAINTENANCE">Manutenzione</option>
               </select>
-              <label className={t.label}>Scadenza visibilità (vuoto = nessuna)</label>
-              <input className={t.input} type="date" value={form.expiresAt || ''} onChange={e => setForm({ ...form, expiresAt: e.target.value || null })} />
-              <label className={t.label} style={{ marginTop: 16 }}>
-                <input type="checkbox" checked={!!form.published} onChange={e => setForm({ ...form, published: e.target.checked })} style={{ marginRight: 8 }} />
-                Pubblica subito
+              <label className={t.lbl}>Scadenza visibilità (vuoto = mai)</label>
+              <input className={t.inp} type="date" value={form.expiresAt||''} onChange={e=>setForm({...form,expiresAt:e.target.value||null})}/>
+              <label className={t.lbl} style={{marginTop:16,display:'flex',alignItems:'center',gap:8,flexDirection:'row'}}>
+                <input type="checkbox" checked={!!form.published} onChange={e=>setForm({...form,published:e.target.checked})}/> Pubblica subito
               </label>
             </div>
-            <div className={t.modalFtr}>
-              <button className={t.btnSec} onClick={() => setShowForm(false)}>Annulla</button>
-              <button className={t.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? 'Salvataggio...' : 'Salva'}</button>
-            </div>
+            <div className={t.mftr}><button className={t.btnS} onClick={()=>setShow(false)}>Annulla</button><button className={t.btnP} onClick={save} disabled={saving}>{saving?'Salvo...':'Salva'}</button></div>
           </div>
         </div>
       )}

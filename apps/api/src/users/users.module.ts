@@ -4,10 +4,5 @@ import { UsersController } from './users.controller'
 import { PrismaModule } from '../prisma/prisma.module'
 import { AuthModule } from '../auth/auth.module'
 
-@Module({
-  imports: [PrismaModule, AuthModule],
-  providers: [UsersService],
-  controllers: [UsersController],
-  exports: [UsersService],
-})
+@Module({ imports: [PrismaModule, AuthModule], providers: [UsersService], controllers: [UsersController], exports: [UsersService] })
 export class UsersModule {}

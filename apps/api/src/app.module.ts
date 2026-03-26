@@ -12,37 +12,12 @@ import { ExercisesModule } from './exercises/exercises.module'
 import { CompaniesModule } from './companies/companies.module'
 import { AssignmentsModule } from './assignments/assignments.module'
 import { AnnouncementsModule } from './announcements/announcements.module'
-import { AccessControlModule } from './access-control/access-control.module'
 
-/**
- * AppModule — radice dell'applicazione.
- *
- * Moduli ATTIVI: auth, users, courses, units, guides, software,
- *   progress, certificates, exercises, companies, assignments,
- *   announcements, access-control.
- *
- * Moduli ISOLATI (file presenti ma non registrati):
- *   - PricingModule  → fuori scope definitivo
- *   - VideosModule   → videopillole disabilitate
- *   - SyncModule     → dipendente da Videos, isolato insieme
- *   - EventsModule   → fuori scope attivo
- */
 @Module({
   imports: [
-    PrismaModule,
-    AuthModule,
-    UsersModule,
-    CoursesModule,
-    UnitsModule,
-    GuidesModule,
-    SoftwareModule,
-    ProgressModule,
-    CertificatesModule,
-    ExercisesModule,
-    CompaniesModule,
-    AssignmentsModule,
-    AnnouncementsModule,
-    AccessControlModule,
+    PrismaModule, AuthModule, UsersModule, CoursesModule, UnitsModule,
+    GuidesModule, SoftwareModule, ProgressModule, CertificatesModule,
+    ExercisesModule, CompaniesModule, AssignmentsModule, AnnouncementsModule,
   ],
 })
 export class AppModule {}

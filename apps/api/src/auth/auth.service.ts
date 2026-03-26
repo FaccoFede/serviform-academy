@@ -13,29 +13,17 @@ export class AuthService {
   async register(email: string, password: string, name?: string) {
     const existing = await this.prisma.user.findUnique({ where: { email } })
     if (existing) throw new ConflictException('Email già registrata')
-
     const passwordHash = await bcrypt.hash(password, 12)
-    const user = await this.prisma.user.create({
-      data: { email, passwordHash, name },
-    })
-
+    const user = await this.prisma.user.create({ data: { email, passwordHash, name } })
     return this.buildTokenResponse(user)
   }
 
   async login(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } })
-    if (!user || !user.passwordHash) {
-      throw new UnauthorizedException('Credenziali non valide')
-    }
-
+    if (!user || !user.passwordHash) throw new UnauthorizedException('Credenziali non valide')
     const valid = await bcrypt.compare(password, user.passwordHash)
     if (!valid) throw new UnauthorizedException('Credenziali non valide')
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    })
-
+    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
     return this.buildTokenResponse(user)
   }
 
@@ -43,19 +31,9 @@ export class AuthService {
     return this.prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: true,
-        email: true,
-        name: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        avatarUrl: true,
-        createdAt: true,
-        membership: {
-          include: {
-            company: { select: { id: true, name: true, slug: true } },
-          },
-        },
+        id: true, email: true, name: true, firstName: true,
+        lastName: true, role: true, avatarUrl: true, createdAt: true,
+        membership: { include: { company: { select: { id: true, name: true, slug: true } } } },
       },
     })
   }
@@ -67,45 +45,15 @@ export class AuthService {
     })
   }
 
-  /**
-   * Promuove l'utente corrente ad ADMIN.
-   * Funziona SOLO se non esiste ancora nessun utente ADMIN.
-   * Dopo il primo admin, questo metodo lancia ForbiddenException.
-   */
   async promoteToFirstAdmin(userId: string) {
-    // Controlla se esiste già un ADMIN
-    const existingAdmin = await this.prisma.user.findFirst({
-      where: { role: 'ADMIN', deletedAt: null },
-    })
-
-    if (existingAdmin) {
-      throw new ForbiddenException(
-        'Un amministratore esiste già. Contatta l\'admin per ottenere i permessi.',
-      )
-    }
-
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { role: 'ADMIN' },
-    })
-
-    // Restituisce un nuovo token con il ruolo aggiornato
-    return {
-      message: 'Utente promosso ad ADMIN con successo.',
-      ...this.buildTokenResponse(user),
-    }
+    const existingAdmin = await this.prisma.user.findFirst({ where: { role: 'ADMIN', deletedAt: null } })
+    if (existingAdmin) throw new ForbiddenException('Un amministratore esiste già.')
+    const user = await this.prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } })
+    return { message: 'Promosso ad ADMIN.', ...this.buildTokenResponse(user) }
   }
 
-  private buildTokenResponse(user: {
-    id: string
-    email: string
-    role: string
-    name?: string | null
-  }) {
+  private buildTokenResponse(user: { id: string; email: string; role: string; name?: string | null }) {
     const payload = { sub: user.id, email: user.email, role: user.role }
-    return {
-      accessToken: this.jwt.sign(payload),
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
-    }
+    return { accessToken: this.jwt.sign(payload), user: { id: user.id, email: user.email, name: user.name, role: user.role } }
   }
 }

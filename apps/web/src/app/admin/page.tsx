@@ -2,87 +2,36 @@ import Link from 'next/link'
 import styles from './AdminPage.module.css'
 
 const SECTIONS = [
-  {
-    group: 'Contenuti',
-    items: [
-      {
-        href: '/admin/courses', label: 'Corsi',
-        desc: 'Crea, modifica e pubblica i moduli di formazione',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-      {
-        href: '/admin/units', label: 'Unità didattiche',
-        desc: 'Gestisci le unità raggruppate per corso',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.5"/><path d="M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-      {
-        href: '/admin/software', label: 'Software',
-        desc: 'EngView, Sysform, ProjectO, ServiformA',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M7 21h10M12 18v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-    ],
-  },
-  {
-    group: 'Organizzazione',
-    items: [
-      {
-        href: '/admin/companies', label: 'Aziende',
-        desc: 'Anagrafica clienti, contratti, scadenze e software di interesse',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21v-4h6v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-      {
-        href: '/admin/users', label: 'Utenti',
-        desc: 'Gestisci account, ruoli e aziende di appartenenza',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-      {
-        href: '/admin/assignments', label: 'Assegnazioni',
-        desc: 'Assegna corsi ad aziende e utenti con scadenza',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-    ],
-  },
-  {
-    group: 'Comunicazione e Operazioni',
-    items: [
-      {
-        href: '/admin/announcements', label: 'Annunci',
-        desc: 'Pubblica novità, nuovi corsi e comunicazioni',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-      {
-        href: '/admin/imports', label: 'Import CSV',
-        desc: 'Importa aziende e utenti in blocco via CSV',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-      {
-        href: '/admin/exercises', label: 'Esercitazioni',
-        desc: 'File HTML 3D e .evd per le esercitazioni pratiche',
-        icon: <svg viewBox="0 0 24 24" fill="none" width={22} height={22}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-    ],
-  },
+  { group: 'Contenuti', items: [
+    { href: '/admin/courses', label: 'Corsi', desc: 'Crea, modifica e pubblica i moduli' },
+    { href: '/admin/units', label: 'Unità didattiche', desc: 'Gestisci unità con contenuto HTML e video' },
+    { href: '/admin/software', label: 'Software', desc: 'EngView, Sysform, ProjectO, ServiformA' },
+  ]},
+  { group: 'Organizzazione', items: [
+    { href: '/admin/companies', label: 'Aziende', desc: 'Anagrafica clienti, contratti, scadenze' },
+    { href: '/admin/users', label: 'Utenti', desc: 'Gestisci account, ruoli e appartenenze' },
+    { href: '/admin/assignments', label: 'Assegnazioni', desc: 'Assegna corsi ad aziende con scadenza' },
+  ]},
+  { group: 'Comunicazione', items: [
+    { href: '/admin/announcements', label: 'Annunci', desc: 'Pubblica novità e comunicazioni' },
+    { href: '/admin/exercises', label: 'Esercitazioni', desc: 'File HTML 3D e .evd scaricabili' },
+  ]},
 ]
 
 export default function AdminPage() {
   return (
     <main className={styles.main}>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>Admin Panel</h1>
-        <p className={styles.desc}>Governo completo di Serviform Academy.</p>
-      </div>
-      <div className={styles.groups}>
-        {SECTIONS.map(section => (
-          <div key={section.group} className={styles.group}>
-            <h2 className={styles.groupTitle}>{section.group}</h2>
+      <h1 className={styles.title}>Admin Panel</h1>
+      <p className={styles.desc}>Governo completo di Serviform Academy.</p>
+      <div style={{display:'flex',flexDirection:'column',gap:36,marginTop:32}}>
+        {SECTIONS.map(s=>(
+          <div key={s.group}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',color:'var(--muted)',fontFamily:'var(--font-mono)',marginBottom:14,paddingBottom:10,borderBottom:'1px solid var(--border)'}}>{s.group}</div>
             <div className={styles.grid}>
-              {section.items.map(s => (
-                <Link key={s.href} href={s.href} className={styles.card}>
-                  <div className={styles.cardIcon}>{s.icon}</div>
-                  <div>
-                    <h3 className={styles.cardTitle}>{s.label}</h3>
-                    <p className={styles.cardDesc}>{s.desc}</p>
-                  </div>
+              {s.items.map(item=>(
+                <Link key={item.href} href={item.href} className={styles.card}>
+                  <h3 className={styles.cardTitle}>{item.label}</h3>
+                  <p className={styles.cardDesc}>{item.desc}</p>
                 </Link>
               ))}
             </div>

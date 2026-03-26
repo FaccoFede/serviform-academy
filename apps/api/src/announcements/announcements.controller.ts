@@ -8,46 +8,27 @@ import { Roles } from '../auth/decorators/roles.decorator'
 export class AnnouncementsController {
   constructor(private readonly svc: AnnouncementsService) {}
 
-  /**
-   * GET /announcements
-   * Restituisce gli annunci pubblicati e non scaduti.
-   * Richiede solo autenticazione (tutti gli utenti loggati lo vedono).
-   */
   @Get()
   @UseGuards(JwtAuthGuard)
-  findPublished() {
-    return this.svc.findPublished()
-  }
+  findPublished() { return this.svc.findPublished() }
 
-  /**
-   * GET /announcements/admin/all
-   * Tutti gli annunci incluse bozze — solo ADMIN.
-   */
   @Get('admin/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
-  findAll() {
-    return this.svc.findAll()
-  }
+  findAll() { return this.svc.findAll() }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
-  create(@Request() req: any, @Body() body: any) {
-    return this.svc.create(body, req.user.id)
-  }
+  create(@Request() req: any, @Body() body: any) { return this.svc.create(body, req.user.id) }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.svc.update(id, body)
-  }
+  update(@Param('id') id: string, @Body() body: any) { return this.svc.update(id, body) }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
-  remove(@Param('id') id: string) {
-    return this.svc.remove(id)
-  }
+  remove(@Param('id') id: string) { return this.svc.remove(id) }
 }

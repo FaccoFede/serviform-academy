@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common'
 import { AnnouncementsService } from './announcements.service'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -10,12 +10,23 @@ export class AnnouncementsController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  findPublished() { return this.svc.findPublished() }
+  findPublished(@Query('section') section?: string) {
+    return this.svc.findPublished(section)
+  }
+
+  @Get('public')
+  findPublic(@Query('section') section?: string) {
+    return this.svc.findPublished(section)
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('id') id: string) { return this.svc.findOne(id) }
 
   @Get('admin/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
-  findAll() { return this.svc.findAll() }
+  findAll(@Query('section') section?: string) { return this.svc.findAll(section) }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

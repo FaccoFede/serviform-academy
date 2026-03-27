@@ -107,8 +107,10 @@ export const api = {
     removeUser: (id: string) => request('/assignments/user/' + id, { method: 'DELETE' }),
   },
   announcements: {
-    findPublished: () => request<any[]>('/announcements'),
-    findAll: () => request<any[]>('/announcements/admin/all'),
+    findPublished: (section?: string) => request<any[]>('/announcements' + (section ? '?section=' + section : '')),
+    findPublic: (section?: string) => request<any[]>('/announcements/public' + (section ? '?section=' + section : '')),
+    findAll: (section?: string) => request<any[]>('/announcements/admin/all' + (section ? '?section=' + section : '')),
+    findOne: (id: string) => request<any>('/announcements/' + id),
     create: (data: any) => request('/announcements', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/announcements/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/announcements/' + id, { method: 'DELETE' }),

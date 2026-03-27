@@ -42,7 +42,7 @@
   margin-bottom: 24px;
 }
 .heroTitle span { color: var(--red); }
-.heroSub { font-size: 18px; color: rgba(255,255,255,0.38); line-height: 1.7; max-width: 520px; margin-bottom: 40px; }
+.heroSub { font-size: 18px; color: rgba(255,255,255,0.38); line-height: 1.7; max-width: 530px; margin-bottom: 40px; }
 .heroCtas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
 .ctaBlack {
@@ -70,7 +70,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid rgba(255,255,255,0.06);
-  margin-top: 72px;
+  margin-top: 50px;
 }
 .heroStat { padding: 28px 0; border-right: 1px solid rgba(255,255,255,0.06); }
 .heroStat:last-child { border-right: none; }

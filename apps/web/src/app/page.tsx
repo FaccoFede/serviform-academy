@@ -7,10 +7,19 @@ export default async function PublicHomePage() {
   let courses: any[] = []
   try { courses = await api.courses.findAll() } catch {}
 
+  // Calcola ore totali di formazione sommando le durate dei corsi
+  function parseDurationToHours(d?: string): number {
+    if (!d) return 0
+    const h = d.match(/(\d+(?:[.,]\d+)?)\s*h/i)
+    const m = d.match(/(\d+)\s*min/i)
+    return (h ? parseFloat(h[1].replace(',', '.')) : 0) + (m ? parseInt(m[1]) / 60 : 0)
+  }
+  const totalHours = Math.round(courses.reduce((s, c) => s + parseDurationToHours(c.duration), 0))
+
   const stats = {
     courses: courses.length,
     units: courses.reduce((s, c) => s + (c.units?.length || 0), 0),
-    families: 4,
+    hours: totalHours,
   }
   const teaser = courses.slice(0, 3)
   const families = Object.values(SOFTWARE_BRANDS)
@@ -21,25 +30,23 @@ export default async function PublicHomePage() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className={styles.hero}>
         <div className={styles.heroInner}>
-          <div className={styles.heroBadge}>Piattaforma formazione B2B</div>
+          <div className={styles.heroBadge}>SERVIFORM ACADEMY</div>
           <h1 className={styles.heroTitle}>
-            Ogni software Serviform.<br/>
+            Ogni strumento Serviform.<br/>
             <span>Padroneggiato.</span>
           </h1>
           <p className={styles.heroSub}>
             Percorsi strutturati per EngView, Sysform, ProjectO e ServiformA.
-            Dal livello base all'avanzato, con guide Zendesk integrate.
           </p>
           <div className={styles.heroCtas}>
-            <Link href="/catalog" className={styles.ctaBlack}>Esplora il catalogo →</Link>
+            <Link href="/catalog" className={styles.ctaBlack}>Esplora i corsi →</Link>
             <Link href="/auth/login" className={styles.ctaGhost}>Accedi</Link>
           </div>
           <div className={styles.heroStats}>
             {[
               { n: stats.courses + '+', l: 'corsi' },
               { n: stats.units + '+', l: 'unità didattiche' },
-              { n: stats.families, l: 'software supportati' },
-              { n: '∞', l: 'guide Zendesk' },
+              { n: stats.hours > 0 ? stats.hours + 'h+' : '∞', l: 'ore di formazione' }
             ].map((s, i) => (
               <div key={i} className={styles.heroStat}>
                 <span className={styles.heroStatN}>{s.n}</span>

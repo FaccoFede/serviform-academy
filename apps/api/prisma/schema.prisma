@@ -18,7 +18,8 @@ model User {
   avatarUrl    String?
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
-  deletedAt    DateTime?
+  deletedAt          DateTime?
+  mustChangePassword Boolean  @default(false)
   progress     UserProgress[]
   certificates Certificate[]
   membership   CompanyMembership?
@@ -110,6 +111,10 @@ model Announcement {
   published   Boolean  @default(false)
   publishedAt DateTime?
   expiresAt   DateTime?
+  isPinned    Boolean  @default(false)
+  section     String   @default("NEWS")
+  bannerUrl   String?
+  content     String?  @db.Text
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -256,6 +261,9 @@ model Event {
   registrationUrl String?
   recordingUrl    String?
   published       Boolean   @default(true)
+  isRegistrable   Boolean   @default(false)
+  availableSeats  Int?
+  registrations   Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }

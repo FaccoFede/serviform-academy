@@ -1,23 +1,10 @@
 'use client'
 
 /**
- * ProtectedVideo — player video protetto contro il download.
- *
- * Supporta:
- *  - URL iframe embed diretti (Vimeo, Bunny.net/iframe.mediadelivery.net, Loom, ecc.)
- *  - URL video diretti (.mp4, .webm) tramite <video>
- *
- * Protezioni applicate:
- *  - controlsList="nodownload" sull'elemento video
- *  - onContextMenu preventDefault (blocca tasto destro sul video)
- *  - CSS overlay trasparente sopra l'iframe (blocca click destro e drag)
- *  - allow="encrypted-media" sull'iframe
- *
- * NOTA: queste protezioni sono sufficienti per la maggior parte degli utenti.
- * Per protezione totale in produzione usare un CDN con token firmati
- * (Bunny.net signed URLs, Cloudflare Stream, Mux).
+ * ProtectedVideo — player video protetto.
+ * FIX: l'overlay non blocca le interazioni col player (pointer-events: none).
+ * Il blocco del tasto destro viene applicato solo al container, non all'iframe.
  */
-
 interface ProtectedVideoProps {
   url: string
   title?: string
@@ -32,48 +19,39 @@ export default function ProtectedVideo({ url, title }: ProtectedVideoProps) {
 
   if (isDirectVideo(url)) {
     return (
-      <div className="video-wrapper">
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', background: '#000', margin: '24px 0' }}
+        onContextMenu={e => e.preventDefault()}>
         <video
-          className="video-el"
+          style={{ width: '100%', height: '100%', display: 'block' }}
           controls
-          controlsList="nodownload nofullscreen"
+          controlsList="nodownload"
           disablePictureInPicture
-          onContextMenu={e => e.preventDefault()}
           playsInline
         >
-          <source src={url} />
+          <source src={url}/>
           Il tuo browser non supporta la riproduzione video.
         </video>
-        <style>{`
-          .video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; background: #000; margin: 24px 0; }
-          .video-el { width: 100%; height: 100%; display: block; }
-        `}</style>
       </div>
     )
   }
 
-  // Iframe embed (Vimeo, Bunny, Loom, ecc.)
+  // Iframe embed — Vimeo, Bunny.net, Loom, ecc.
+  // NOTA: l'overlay ha pointer-events: none per non bloccare i controlli del player
   return (
-    <div className="iframe-wrapper">
+    <div
+      style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', background: '#000', margin: '24px 0' }}
+      onContextMenu={e => e.preventDefault()}
+    >
       <iframe
         src={url}
         title={title || 'Video lezione'}
-        allow="autoplay; encrypted-media; picture-in-picture"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowFullScreen
-        className="iframe-el"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}
         referrerPolicy="strict-origin"
       />
-      {/* Overlay trasparente — blocca tasto destro e download drag-and-drop */}
-      <div
-        className="iframe-overlay"
-        onContextMenu={e => e.preventDefault()}
-        onDragStart={e => e.preventDefault()}
-      />
-      <style>{`
-        .iframe-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; background: #000; margin: 24px 0; }
-        .iframe-el { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-        .iframe-overlay { position: absolute; inset: 0; z-index: 1; background: transparent; }
-      `}</style>
+      {/* Overlay trasparente: pointer-events none = non blocca il player */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'transparent', pointerEvents: 'none' }}/>
     </div>
   )
 }

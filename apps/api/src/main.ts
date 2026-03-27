@@ -3,50 +3,41 @@ import { ValidationPipe, Logger } from '@nestjs/common'
 import { AppModule } from './app.module'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 
-/**
- * Bootstrap dell'applicazione NestJS.
- *
- * Configurazione globale:
- * - ValidationPipe: valida automaticamente i DTO in ingresso
- * - HttpExceptionFilter: formatta tutte le risposte di errore
- * - CORS: abilita le richieste cross-origin dal frontend
- * - Prefisso API: opzionale, per versionamento futuro
- */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   const logger = new Logger('Bootstrap')
 
-  // Validazione globale dei DTO
-  // whitelist: rimuove proprietà non definite nel DTO
-  // forbidNonWhitelisted: restituisce errore se riceve campi extra
-  // transform: converte automaticamente i tipi (es. string → number)
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  )
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: false, // rilassato: frontend può inviare campi extra
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+  }))
 
-  // Filtro globale per le eccezioni
   app.useGlobalFilters(new HttpExceptionFilter())
 
-  // CORS — permette al frontend Next.js di comunicare con l'API
-  // In produzione, restringere l'origin al dominio effettivo
+  // CORS — accetta richieste da qualsiasi origin in dev, dominio in prod
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+    : ['http://localhost:3000', 'http://127.0.0.1:3000']
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true) // same-origin / curl
+      if (process.env.NODE_ENV !== 'production') return callback(null, true) // dev: aperto
+      if (corsOrigins.includes(origin)) return callback(null, true)
+      callback(new Error('CORS policy violation'))
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
 
-  // Porta configurabile via env
   const port = process.env.PORT || 3001
-
-  await app.listen(port)
-  logger.log(`Serviform Academy API avviata su http://localhost:${port}`)
+  // Bind 0.0.0.0 — accessibile da tutti i dispositivi in rete
+  await app.listen(port, '0.0.0.0')
+  logger.log(`Serviform Academy API avviata su http://0.0.0.0:${port}`)
+  logger.log(`  → locale:   http://localhost:${port}`)
 }
 
 bootstrap()

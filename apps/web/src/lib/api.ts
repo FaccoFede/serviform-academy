@@ -4,7 +4,6 @@
  * Se il server risponde 401 (token scaduto / utente non trovato):
  *   → cancella il token da localStorage
  *   → reindirizza a /auth/login
- * Questo rompe il loop "401 silenzioso" nelle pagine admin.
  */
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -16,7 +15,6 @@ function getToken(): string | null {
 function handleUnauthorized() {
   if (typeof window === 'undefined') return
   localStorage.removeItem('sa_token')
-  // Redirect solo se non siamo già sulla pagina di login
   if (!window.location.pathname.startsWith('/auth')) {
     window.location.href = '/auth/login'
   }
@@ -34,7 +32,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   const res = await fetch(BASE_URL + path, { ...options, headers })
 
-  // 401 = token invalido/scaduto → logout automatico
   if (res.status === 401) {
     handleUnauthorized()
     throw new Error('Sessione scaduta. Effettua di nuovo il login.')
@@ -42,7 +39,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Errore di rete' }))
-    throw new Error(err.message || `Errore ${res.status}`)
+    // Gestisce sia message stringa che message array (class-validator)
+    const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || `Errore ${res.status}`)
+    throw new Error(msg)
   }
 
   return res.json()
@@ -60,24 +59,49 @@ export const api = {
     update: (id: string, data: any) => request('/software/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   },
   courses: {
-    findAll: () => request<Course[]>('/courses', { cache: 'no-store' }),
-    findBySlug: (slug: string) => request<Course>('/courses/' + slug, { cache: 'no-store' }),
+    findAll: () => request<Course[]>('/courses'),
+    findBySlug: (slug: string) => request<Course>('/courses/' + slug),
     create: (data: any) => request('/courses', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/courses/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/courses/' + id, { method: 'DELETE' }),
   },
   units: {
-    findBySlug: (cs: string, us: string) => request<Unit>(`/units/${cs}/${us}`, { cache: 'no-store' }),
     findByCourse: (courseId: string) => request<Unit[]>('/units/course/' + courseId),
+    findBySlug: (courseSlug: string, unitSlug: string) => request<Unit>(`/units/${courseSlug}/${unitSlug}`),
     create: (data: any) => request('/units', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/units/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/units/' + id, { method: 'DELETE' }),
+  },
+  videos: {
+    findAll: () => request<any[]>('/videos'),
+    findBySoftware: (slug: string) => request<any[]>('/videos/software/' + slug),
+    create: (data: any) => request('/videos', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/videos/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/videos/' + id, { method: 'DELETE' }),
   },
   exercises: {
     findByUnit: (unitId: string) => request<any[]>('/exercises/unit/' + unitId),
     create: (data: any) => request('/exercises', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/exercises/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/exercises/' + id, { method: 'DELETE' }),
+  },
+  events: {
+    // Pubblica: solo eventi pubblicati
+    findAll: () => request<any[]>('/events'),
+    findUpcoming: () => request<any[]>('/events/upcoming'),
+    findPast: () => request<any[]>('/events/past'),
+    findOne: (id: string) => request<any>('/events/' + id),
+    // Admin: tutti gli eventi (inclusi non pubblicati)
+    findAllAdmin: () => request<any[]>('/events/admin/all'),
+    create: (data: any) => request('/events', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/events/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/events/' + id, { method: 'DELETE' }),
+  },
+  pricing: {
+    findAll: () => request<any[]>('/pricing'),
+    create: (data: any) => request('/pricing', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request('/pricing/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/pricing/' + id, { method: 'DELETE' }),
   },
   guides: {
     findByUnit: (unitId: string) => request<any>('/guides/unit/' + unitId),
@@ -107,10 +131,8 @@ export const api = {
     removeUser: (id: string) => request('/assignments/user/' + id, { method: 'DELETE' }),
   },
   announcements: {
-    findPublished: (section?: string) => request<any[]>('/announcements' + (section ? '?section=' + section : '')),
-    findPublic: (section?: string) => request<any[]>('/announcements/public' + (section ? '?section=' + section : '')),
-    findAll: (section?: string) => request<any[]>('/announcements/admin/all' + (section ? '?section=' + section : '')),
-    findOne: (id: string) => request<any>('/announcements/' + id),
+    findPublished: () => request<any[]>('/announcements'),
+    findAll: () => request<any[]>('/announcements/admin/all'),
     create: (data: any) => request('/announcements', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/announcements/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/announcements/' + id, { method: 'DELETE' }),
@@ -131,5 +153,10 @@ export const api = {
     register: (email: string, password: string, name?: string) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
     profile: () => request<any>('/auth/profile'),
     promoteAdmin: () => request<any>('/auth/promote-admin', { method: 'POST' }),
+    // ── NUOVI endpoint profilo ──────────────────────────────────────────────
+    updateProfile: (data: { name?: string; firstName?: string; lastName?: string; email?: string }) =>
+      request<any>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      request<any>('/auth/change-password', { method: 'PATCH', body: JSON.stringify({ currentPassword, newPassword }) }),
   },
 }

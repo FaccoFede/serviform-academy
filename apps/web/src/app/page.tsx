@@ -60,8 +60,8 @@ export default async function PublicHomePage() {
       {/* ── SOFTWARE ──────────────────────────────────────────── */}
       <section className={styles.section}>
         <div className={styles.inner}>
-          <div className={styles.sectionTag}>Software supportati</div>
-          <h2 className={styles.sectionTitle}>Un percorso per ogni prodotto</h2>
+          <div className={styles.sectionTag}>Percorsi formativi</div>
+          <h2 className={styles.sectionTitle}>Un percorso per ogni competenza</h2>
           <div className={styles.familyGrid}>
             {families.map(f => {
               const count = courses.filter(c => c.software?.slug === f.key).length

@@ -1,6 +1,10 @@
 import {
-  Injectable, UnauthorizedException, ConflictException,
-  ForbiddenException, NotFoundException,
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  ForbiddenException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
@@ -27,64 +31,120 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.passwordHash)
     if (!valid) throw new UnauthorizedException('Credenziali non valide')
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
-    const resp = this.buildTokenResponse(user)
-    // Se l'utente deve cambiare password, segnalarlo nel response
-    return { ...resp, mustChangePassword: !!(user as any).mustChangePassword }
-  }
-
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } })
-    if (!user) throw new NotFoundException('Utente non trovato')
-    if (user.passwordHash) {
-      const valid = await bcrypt.compare(currentPassword, user.passwordHash)
-      if (!valid) throw new UnauthorizedException('Password attuale non corretta')
-    }
-    const passwordHash = await bcrypt.hash(newPassword, 12)
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash, mustChangePassword: false } as any,
-    })
-    return { message: 'Password aggiornata con successo' }
-  }
-
-  async adminResetPassword(adminUserId: string, targetUserId: string, newPassword: string, forceChange = true) {
-    // Solo ADMIN può resettare password altrui
-    const admin = await this.prisma.user.findUnique({ where: { id: adminUserId } })
-    if (!admin || !['ADMIN', 'TEAM_ADMIN'].includes(admin.role)) {
-      throw new ForbiddenException('Permessi insufficienti')
-    }
-    const target = await this.prisma.user.findUnique({ where: { id: targetUserId } })
-    if (!target) throw new NotFoundException('Utente non trovato')
-    const passwordHash = await bcrypt.hash(newPassword, 12)
-    await this.prisma.user.update({
-      where: { id: targetUserId },
-      data: { passwordHash, mustChangePassword: forceChange } as any,
-    })
-    return { message: `Password reimpostata. Cambio obbligatorio al prossimo accesso: ${forceChange}` }
-  }
-
-  async generateImpersonationToken(adminUserId: string, targetUserId: string) {
-    const admin = await this.prisma.user.findUnique({ where: { id: adminUserId } })
-    if (!admin || admin.role !== 'ADMIN') throw new ForbiddenException('Solo ADMIN può impersonare')
-    const target = await this.prisma.user.findUnique({ where: { id: targetUserId } })
-    if (!target) throw new NotFoundException('Utente non trovato')
-    // Token con scadenza corta (30 min) e flag impersonation per audit
-    const payload = { sub: target.id, email: target.email, role: target.role, impersonatedBy: adminUserId }
-    const accessToken = this.jwt.sign(payload, { expiresIn: '30m' })
-    return { accessToken, message: `Accesso come ${target.email} (sessione 30 min, non viene salvata come login)` }
+    return this.buildTokenResponse(user)
   }
 
   async getProfile(userId: string) {
-    const user = await this.prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: true, email: true, name: true, firstName: true, lastName: true,
-        role: true, avatarUrl: true, createdAt: true,
-        mustChangePassword: true,
-        membership: { include: { company: { select: { id: true, name: true, slug: true } } } },
-      } as any,
+        id: true,
+        email: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        membership: {
+          include: {
+            company: { select: { id: true, name: true, slug: true } },
+          },
+        },
+      },
     })
-    return user
+  }
+
+  /**
+   * Aggiorna il profilo dell'utente autenticato.
+   * Gestisce: name, firstName, lastName, email (con verifica unicità).
+   * Non permette il cambio di ruolo tramite questo endpoint.
+   */
+  async updateProfile(
+    userId: string,
+    data: { name?: string; firstName?: string; lastName?: string; email?: string },
+  ) {
+    // Validazione base name
+    if (data.name !== undefined && data.name.trim().length < 2) {
+      throw new BadRequestException('Il nome deve avere almeno 2 caratteri')
+    }
+
+    // Se cambia email, verifica unicità
+    if (data.email !== undefined) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(data.email)) {
+        throw new BadRequestException('Email non valida')
+      }
+      const existing = await this.prisma.user.findFirst({
+        where: { email: data.email, id: { not: userId } },
+      })
+      if (existing) throw new ConflictException('Email già in uso da un altro account')
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.name !== undefined && { name: data.name.trim() }),
+        ...(data.firstName !== undefined && { firstName: data.firstName.trim() }),
+        ...(data.lastName !== undefined && { lastName: data.lastName.trim() }),
+        ...(data.email !== undefined && { email: data.email.toLowerCase().trim() }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        avatarUrl: true,
+      },
+    })
+
+    // Se l'email è cambiata, occorre un nuovo token (il payload del JWT contiene email)
+    if (data.email !== undefined) {
+      return {
+        user: updated,
+        accessToken: this.jwt.sign({ sub: updated.id, email: updated.email, role: updated.role }),
+        tokenRefreshed: true,
+      }
+    }
+
+    return { user: updated, tokenRefreshed: false }
+  }
+
+  /**
+   * Cambia password con verifica della password attuale.
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+    if (!user) throw new NotFoundException('Utente non trovato')
+
+    if (!user.passwordHash) {
+      throw new BadRequestException('Questo account non ha una password impostata')
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!valid) throw new UnauthorizedException('La password attuale non è corretta')
+
+    // Validazione nuova password
+    if (newPassword.length < 8) {
+      throw new BadRequestException('La nuova password deve avere almeno 8 caratteri')
+    }
+    if (newPassword === currentPassword) {
+      throw new BadRequestException('La nuova password deve essere diversa da quella attuale')
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12)
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newHash },
+    })
+
+    return { message: 'Password aggiornata con successo' }
   }
 
   async validateToken(payload: { sub: string; email: string }) {
@@ -95,13 +155,23 @@ export class AuthService {
   }
 
   async promoteToFirstAdmin(userId: string) {
-    const existingAdmin = await this.prisma.user.findFirst({ where: { role: 'ADMIN', deletedAt: null } })
+    const existingAdmin = await this.prisma.user.findFirst({
+      where: { role: 'ADMIN', deletedAt: null },
+    })
     if (existingAdmin) throw new ForbiddenException('Un amministratore esiste già.')
-    const user = await this.prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } })
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role: 'ADMIN' },
+    })
     return { message: 'Promosso ad ADMIN.', ...this.buildTokenResponse(user) }
   }
 
-  private buildTokenResponse(user: { id: string; email: string; role: string; name?: string | null }) {
+  private buildTokenResponse(user: {
+    id: string
+    email: string
+    role: string
+    name?: string | null
+  }) {
     const payload = { sub: user.id, email: user.email, role: user.role }
     return {
       accessToken: this.jwt.sign(payload),

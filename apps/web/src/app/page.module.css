@@ -107,7 +107,7 @@
 .seeAll:hover { color: #fff; }
 
 /* ── FAMIGLIE SOFTWARE ─────────────────────────────────── */
-.familyGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.familyGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .familyCard {
   position: relative;
   padding: 26px 24px;

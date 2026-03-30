@@ -7,10 +7,6 @@ import styles from './Topbar.module.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-function Icon({ d, size = 16 }: { d: string; size?: number }) {
-  return <svg viewBox="0 0 24 24" fill="none" width={size} height={size} style={{flexShrink:0}}><path d={d} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-}
-
 export default function Topbar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -48,15 +44,16 @@ export default function Topbar() {
   const unread = announcements.length
 
   const navItems = user ? [
-    { label: 'Dashboard',   href: '/dashboard' },
-    { label: 'Catalogo',    href: '/catalog' },
-    { label: 'Com. & Eventi', href: '/communications-events' },
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Catalogo', href: '/catalog' },
+    { label: 'Newsroom', href: '/newsroom' },
   ] : [
     { label: 'Catalogo', href: '/catalog' },
   ]
 
   return (
     <header className={styles.bar}>
+      {/* Logo */}
       <Link href={user ? '/dashboard' : '/'} className={styles.logoWrap}>
         <svg viewBox="0 0 32 34" fill="none" width={24} height={24}>
           <circle cx="16" cy="19" r="14" fill="#E63329"/>
@@ -66,6 +63,7 @@ export default function Topbar() {
         <span className={styles.brand}>serviform <em>academy</em></span>
       </Link>
 
+      {/* Nav */}
       <nav className={styles.nav}>
         {navItems.map(item => (
           <Link key={item.href} href={item.href}
@@ -75,81 +73,149 @@ export default function Topbar() {
         ))}
       </nav>
 
+      {/* Right */}
       <div className={styles.right}>
         <a href="https://support.serviform.com" target="_blank" rel="noopener"
-          className={styles.iconBtn} title="Assistenza">
-          <Icon d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          className={styles.iconBtn} title="Assistenza Zendesk">
+          <svg viewBox="0 0 16 16" fill="none" width={16} height={16}>
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2"/>
+            <path d="M6 6.5a2 2 0 114 0c0 1-1 1.5-2 2M8 11.5v.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
         </a>
 
         {!isLoading && user && (
           <>
+            {/* Link Comunicazioni */}
+            <Link href="/communications" className={styles.iconBtn} title="Comunicazioni">
+              <svg viewBox="0 0 16 16" fill="none" width={16} height={16}>
+                <path d="M3 5h10M3 8h7M3 11h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </Link>
+
             {/* Annunci dropdown */}
             <div className={styles.dd} ref={annRef}>
-              <button className={styles.iconBtn} onClick={() => { setAnnOpen(v=>!v); setUserOpen(false) }}>
-                <Icon d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              <button className={styles.iconBtn} onClick={() => { setAnnOpen(v => !v); setUserOpen(false) }} title="Annunci">
+                <svg viewBox="0 0 16 16" fill="none" width={16} height={16}>
+                  <path d="M8 2a5.5 5.5 0 015.5 5.5c0 2.8-1.5 4.4-2 5H4.5c-.5-.6-2-2.2-2-5A5.5 5.5 0 018 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
                 {unread > 0 && <span className={styles.badge}>{unread > 9 ? '9+' : unread}</span>}
               </button>
+
               {annOpen && (
                 <div className={styles.annPanel}>
-                  <div className={styles.annPanelHdr}>
-                    <span>Comunicazione &amp; Eventi</span>
-                    <Link href="/communications-events" className={styles.annPanelLink} onClick={()=>setAnnOpen(false)}>Vedi tutte</Link>
+                  <div className={styles.annPanelHeader}>
+                    <span>Novità e annunci</span>
+                    <Link href="/communications" className={styles.annPanelLink} onClick={() => setAnnOpen(false)}>Vedi tutti</Link>
                   </div>
                   {announcements.length === 0 ? (
-                    <div className={styles.annPanelEmpty}>Nessun annuncio disponibile.</div>
+                    <div className={styles.annPanelEmpty}>
+                      <svg viewBox="0 0 32 32" fill="none" width={24} height={24}><circle cx="16" cy="16" r="12" stroke="var(--border)" strokeWidth="1.5"/><path d="M12 16h8M16 12v8" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      Nessun annuncio
+                    </div>
                   ) : announcements.slice(0, 5).map(a => (
-                    <Link key={a.id} href="/communications-events" className={styles.annRow} onClick={()=>setAnnOpen(false)}>
-                      <div className={styles.annDot} style={{ background: a.type==='NEW_COURSE'?'#E63329':a.type==='WEBINAR'?'#059669':'#067DB8' }}/>
-                      <div>
-                        <div className={styles.annRowTitle}>{a.title}</div>
-                        {a.publishedAt && <div className={styles.annRowDate}>{new Date(a.publishedAt).toLocaleDateString('it-IT',{day:'2-digit',month:'short'})}</div>}
+                    <div key={a.id} className={styles.annItem}>
+                      <div className={styles.annItemDot} data-type={a.type}/>
+                      <div className={styles.annItemBody}>
+                        <div className={styles.annItemTitle}>{a.title}</div>
+                        <div className={styles.annItemText}>{a.body}</div>
+                        {a.publishedAt && (
+                          <div className={styles.annItemDate}>
+                            {new Date(a.publishedAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                          </div>
+                        )}
                       </div>
-                    </Link>
+                    </div>
                   ))}
-                  <Link href="/communications-events" className={styles.annPanelFooter} onClick={()=>setAnnOpen(false)}>
-                    Vai a Comunicazione &amp; Eventi →
+                  <Link href="/communications" className={styles.annPanelFooter} onClick={() => setAnnOpen(false)}>
+                    Vedi tutte le comunicazioni →
                   </Link>
                 </div>
               )}
             </div>
 
+            {/* Admin link */}
             {(user.role === 'ADMIN' || user.role === 'TEAM_ADMIN') && (
-              <Link href="/admin" className={[styles.navLink, isActive('/admin') ? styles.navActive : ''].join(' ')}>Admin</Link>
+              <Link href="/admin"
+                className={[styles.navLink, isActive('/admin') ? styles.navActive : ''].join(' ')}>
+                Admin
+              </Link>
             )}
 
             {/* User menu */}
             <div className={styles.dd} ref={userRef}>
-              <button className={styles.userBtn} onClick={()=>{setUserOpen(v=>!v);setAnnOpen(false)}}>
-                <span className={styles.avatar}>{displayName[0]?.toUpperCase()||'?'}</span>
+              <button className={styles.userBtn} onClick={() => { setUserOpen(v => !v); setAnnOpen(false) }}>
+                <span className={styles.avatar}>{displayName[0]?.toUpperCase() || '?'}</span>
                 <span className={styles.userName}>{displayName}</span>
-                <Icon d="M19 9l-7 7-7-7" size={10}/>
+                <svg viewBox="0 0 10 10" fill="none" width={10} height={10}
+                  style={{ transform: userOpen ? 'rotate(180deg)' : 'none', transition: '150ms' }}>
+                  <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
+
               {userOpen && (
                 <div className={styles.userPanel}>
+                  {/* Info utente */}
                   <div className={styles.userPanelInfo}>
-                    <div className={styles.userPanelAvatar}>{displayName[0]?.toUpperCase()||'?'}</div>
+                    <div className={styles.userPanelAvatar}>{displayName[0]?.toUpperCase() || '?'}</div>
                     <div>
                       <div className={styles.userPanelName}>{displayName}</div>
                       <div className={styles.userPanelEmail}>{user.email}</div>
                     </div>
                   </div>
-                  {user.company && <div className={styles.userPanelCo}>{user.company.name}</div>}
-                  <div className={styles.userPanelDiv}/>
-                  <Link href="/dashboard" className={styles.menuItem} onClick={()=>setUserOpen(false)}>
-                    <Icon d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" size={14}/>Dashboard
+
+                  {/* Azienda se presente */}
+                  {(user as any).company && (
+                    <div className={styles.userPanelCompany}>{(user as any).company.name}</div>
+                  )}
+
+                  <div className={styles.userPanelDivider}/>
+
+                  {/* Voci menu */}
+                  <Link href="/dashboard" className={styles.userPanelItem} onClick={() => setUserOpen(false)}>
+                    <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
+                      <rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1"/>
+                      <rect x="7.5" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1"/>
+                      <rect x="1" y="7.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1"/>
+                      <rect x="7.5" y="7.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1"/>
+                    </svg>
+                    Dashboard
                   </Link>
-                  <Link href="/catalog" className={styles.menuItem} onClick={()=>setUserOpen(false)}>
-                    <Icon d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" size={14}/>Catalogo
+
+                  <Link href="/catalog" className={styles.userPanelItem} onClick={() => setUserOpen(false)}>
+                    <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
+                      <rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.1"/>
+                      <path d="M4 5h6M4 7.5h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                    </svg>
+                    Catalogo corsi
                   </Link>
-                  <Link href="/communications-events" className={styles.menuItem} onClick={()=>setUserOpen(false)}>
-                    <Icon d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" size={14}/>Com. &amp; Eventi
+
+                  <Link href="/newsroom" className={styles.userPanelItem} onClick={() => setUserOpen(false)}>
+                    <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
+                      <path d="M2 3h10v8H2z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                      <path d="M4 6h6M4 8.5h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                    </svg>
+                    Newsroom
                   </Link>
-                  <Link href="/profile" className={styles.menuItem} onClick={()=>setUserOpen(false)}>
-                    <Icon d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" size={14}/>Il mio profilo
+
+                  <div className={styles.userPanelDivider}/>
+
+                  {/* ── NUOVO: link Profilo ──────────────────────────── */}
+                  <Link href="/profile" className={styles.userPanelItem} onClick={() => setUserOpen(false)}>
+                    <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
+                      <circle cx="7" cy="4.5" r="2.5" stroke="currentColor" strokeWidth="1.1"/>
+                      <path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                    </svg>
+                    Il mio profilo
                   </Link>
-                  <div className={styles.userPanelDiv}/>
-                  <button className={styles.logoutBtn} onClick={handleLogout}>
-                    <Icon d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" size={14}/>Esci
+
+                  <div className={styles.userPanelDivider}/>
+
+                  <button className={styles.userPanelLogout} onClick={handleLogout}>
+                    <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
+                      <path d="M9 2h2a1 1 0 011 1v8a1 1 0 01-1 1H9M6 10l3-3-3-3M9 7H2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Esci
                   </button>
                 </div>
               )}

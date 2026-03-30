@@ -10,7 +10,7 @@ const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '
 
 export const metadata: Metadata = {
   title: 'Serviform Academy',
-  description: 'Piattaforma di formazione B2B per EngView, Sysform, ProjectO e ServiformA.',
+  description: 'Piattaforma di formazione per EngView, Sysform, ProjectO e ServiformA.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

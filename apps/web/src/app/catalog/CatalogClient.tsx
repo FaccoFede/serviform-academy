@@ -1,168 +1,277 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { SOFTWARE_BRANDS, LEVEL_COLORS, getBrand } from '@/lib/brands'
+import { useProgress } from '@/context/ProgressContext'
+import { getBrand, LEVEL_COLORS } from '@/lib/brands'
 import styles from './Catalog.module.css'
 
-export default function CatalogClient({ courses }: { courses: any[] }) {
-  const { user } = useAuth()
-  const searchParams = useSearchParams()
-  const [family, setFamily] = useState(searchParams.get('family') || '')
-  const [level, setLevel] = useState('')
-  const [q, setQ] = useState('')
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-  const families = useMemo(() => {
-    const slugs = new Set(courses.map(c => c.software?.slug).filter(Boolean))
-    return Object.values(SOFTWARE_BRANDS).filter(b => slugs.has(b.key))
+export default function CatalogClient({ initialCourses }: { initialCourses: any[] }) {
+  const { user, token } = useAuth()
+  const { courseProgress, loadCompletedUnitsFromServer } = useProgress()
+  const [courses] = useState<any[]>(initialCourses)
+  const [q, setQ] = useState('')
+  const [softwareFilter, setSoftwareFilter] = useState<string>('ALL')
+  const [levelFilter, setLevelFilter] = useState<string>('ALL')
+  const [progressMap, setProgressMap] = useState<Record<string, any>>({})
+
+  // Carica il progresso di tutti i corsi se loggato
+  useEffect(() => {
+    if (!user || !token) return
+    const h = { Authorization: 'Bearer ' + token }
+    courses.forEach(c => {
+      fetch(`${API_URL}/progress/course/${c.slug}`, { headers: h })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d) setProgressMap(prev => ({ ...prev, [c.slug]: d }))
+        })
+        .catch(() => {})
+    })
+  }, [user, token, courses])
+
+  // Software unici
+  const softwares = useMemo(() => {
+    const map = new Map<string, { slug: string; name: string }>()
+    courses.forEach(c => {
+      if (c.software) map.set(c.software.slug, c.software)
+    })
+    return Array.from(map.values())
   }, [courses])
 
-  const filtered = useMemo(() => courses.filter(c => {
-    if (family && c.software?.slug !== family) return false
-    if (level && c.level !== level) return false
-    if (q) {
-      const ql = q.toLowerCase()
-      if (!c.title.toLowerCase().includes(ql) && !(c.description||'').toLowerCase().includes(ql)) return false
-    }
-    return true
-  }), [courses, family, level, q])
+  // Livelli unici
+  const levels = useMemo(() => {
+    const set = new Set<string>()
+    courses.forEach(c => { if (c.level) set.add(c.level) })
+    return Array.from(set)
+  }, [courses])
 
-  const hasFilters = !!(family || level || q)
-  const clearAll = () => { setFamily(''); setLevel(''); setQ('') }
+  const filtered = useMemo(() => {
+    let out = courses
+    if (softwareFilter !== 'ALL') out = out.filter(c => c.software?.slug === softwareFilter)
+    if (levelFilter !== 'ALL') out = out.filter(c => c.level === levelFilter)
+    if (q.trim()) {
+      const ql = q.toLowerCase()
+      out = out.filter(c =>
+        c.title.toLowerCase().includes(ql) ||
+        (c.description || '').toLowerCase().includes(ql)
+      )
+    }
+    return out
+  }, [courses, softwareFilter, levelFilter, q])
 
   return (
     <div className={styles.page}>
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className={styles.header}>
         <div className={styles.headerInner}>
-          <div className={styles.breadcrumb}><Link href="/" className={styles.bcLink}>Home</Link><span>/</span><span>Catalogo</span></div>
+          <nav className={styles.breadcrumb}>
+            {user
+              ? <><Link href="/dashboard" className={styles.bcLink}>dashboard</Link><span>/</span><span>catalogo</span></>
+              : <span>catalogo</span>
+            }
+          </nav>
           <h1 className={styles.title}>Catalogo corsi</h1>
-          <p className={styles.sub}>{courses.length} cors{courses.length===1?'o':'i'} disponibili · 4 famiglie software</p>
+          <p className={styles.sub}>
+            {filtered.length} corso{filtered.length !== 1 ? 'i' : ''} disponibili
+          </p>
         </div>
       </div>
 
-      {/* Barra filtri orizzontale */}
+      {/* ── Barra filtri ────────────────────────────────────────────────── */}
       <div className={styles.filterBar}>
         <div className={styles.filterBarInner}>
           {/* Ricerca */}
           <div className={styles.searchBox}>
-            <svg viewBox="0 0 14 14" fill="none" width={13} height={13} style={{color:'var(--muted)',flexShrink:0}}>
-              <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.3"/>
-              <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
+              <circle cx="6" cy="6" r="4.5" stroke="var(--muted)" strokeWidth="1.2"/>
+              <path d="M9.5 9.5l3 3" stroke="var(--muted)" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
             <input
+              type="text"
               className={styles.searchInput}
               placeholder="Cerca corsi..."
               value={q}
               onChange={e => setQ(e.target.value)}
             />
-            {q && <button className={styles.searchClear} onClick={() => setQ('')}>×</button>}
+            {q && (
+              <button className={styles.searchClear} onClick={() => setQ('')}>×</button>
+            )}
           </div>
 
-          {/* Famiglia */}
+          {/* Filtro software */}
           <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>Software</span>
-            <div className={styles.chipRow}>
-              <button className={[styles.chip, !family ? styles.chipOn : ''].join(' ')} onClick={() => setFamily('')}>Tutti</button>
-              {families.map(f => (
+            {[{ slug: 'ALL', name: 'Tutti' }, ...softwares].map(s => {
+              const brand = s.slug !== 'ALL' ? getBrand(s.slug) : null
+              const active = softwareFilter === s.slug
+              return (
                 <button
-                  key={f.key}
-                  className={[styles.chip, family === f.key ? styles.chipOn : ''].join(' ')}
-                  onClick={() => setFamily(f.key)}
-                  style={family === f.key ? {background:f.light,color:f.color,borderColor:f.border} : {}}
+                  key={s.slug}
+                  className={[styles.chip, active ? styles.chipActive : ''].join(' ')}
+                  style={active && brand ? { background: brand.color, borderColor: brand.color, color: '#fff' } : {}}
+                  onClick={() => setSoftwareFilter(s.slug)}
                 >
-                  <span className={styles.chipDot} style={{background:f.color}}/>
-                  {f.name}
+                  {brand && <span className={styles.chipDot} style={{ background: active ? '#fff' : brand.color }}/>}
+                  {s.name}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Filtro livello */}
+          {levels.length > 0 && (
+            <div className={styles.filterGroup}>
+              {[{ value: 'ALL', label: 'Tutti i livelli' }, ...levels.map(l => ({ value: l, label: l }))].map(l => (
+                <button
+                  key={l.value}
+                  className={[styles.chip, levelFilter === l.value ? styles.chipActive : ''].join(' ')}
+                  onClick={() => setLevelFilter(l.value)}
+                >
+                  {l.label}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Livello */}
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>Livello</span>
-            <div className={styles.chipRow}>
-              <button className={[styles.chip, !level ? styles.chipOn : ''].join(' ')} onClick={() => setLevel('')}>Tutti</button>
-              {['Base','Intermedio','Avanzato'].map(l => (
-                <button
-                  key={l}
-                  className={[styles.chip, level === l ? styles.chipOn : ''].join(' ')}
-                  onClick={() => setLevel(l)}
-                  style={level === l ? {background:((LEVEL_COLORS[l]||'')+'18'),color:LEVEL_COLORS[l]||'var(--ink)',borderColor:(LEVEL_COLORS[l]||'')+'44'} : {}}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {hasFilters && (
-            <button className={styles.clearBtn} onClick={clearAll}>Rimuovi filtri ×</button>
           )}
         </div>
       </div>
 
-      {/* Risultati */}
-      <div className={styles.results}>
-        <div className={styles.resultsInner}>
-          <div className={styles.resultMeta}>
-            <span className={styles.resultCount}>{filtered.length} risultat{filtered.length===1?'o':'i'}</span>
-            {hasFilters && <span className={styles.resultActive}>Filtri attivi: {[family && families.find(f=>f.key===family)?.name, level, q&&`"${q}"`].filter(Boolean).join(', ')}</span>}
+      {/* ── Risultati ───────────────────────────────────────────────────── */}
+      <div className={styles.resultsInner}>
+        {filtered.length === 0 ? (
+          <div className={styles.empty}>
+            <p>Nessun corso trovato per i filtri selezionati.</p>
+            <button onClick={() => { setQ(''); setSoftwareFilter('ALL'); setLevelFilter('ALL') }}>
+              Rimuovi filtri
+            </button>
           </div>
+        ) : (
+          <div className={styles.cardGrid}>
+            {filtered.map(course => {
+              const brand = getBrand(course.software?.slug || '')
+              const prog = progressMap[course.slug]
+              const isActive = course.available !== false
+              const hasProgress = prog && prog.percent > 0
+              const isDone = prog && prog.percent >= 100
+              const unitCount = course.units?.filter((u: any) => u.unitType !== 'OVERVIEW').length || 0
 
-          {filtered.length === 0 ? (
-            <div className={styles.empty}>
-              <svg viewBox="0 0 48 48" fill="none" width={40} height={40}><circle cx="24" cy="24" r="20" stroke="var(--border)" strokeWidth="2"/><path d="M16 24h16M24 16v16" stroke="var(--border)" strokeWidth="2" strokeLinecap="round"/></svg>
-              <p>Nessun corso trovato.</p>
-              <button onClick={clearAll}>Rimuovi tutti i filtri</button>
-            </div>
-          ) : (
-            <div className={styles.cardGrid}>
-              {filtered.map(c => {
-                const brand = getBrand(c.software?.slug || '')
-                const isActive = c.available !== false
-                const firstUnitSlug = c.units?.filter((u: any) => u.unitType !== 'OVERVIEW')?.[0]?.slug
-                return (
-                  <div key={c.id} className={styles.card}>
-                    <div className={styles.cardAccent} style={{background:brand.color}}/>
-                    <div className={styles.cardTop}>
-                      <span className={styles.cardTag} style={{background:brand.light,color:brand.color}}>{brand.name}</span>
-                      {user ? (
-                        isActive
-                          ? <span className={styles.badgeActive}>● Disponibile</span>
-                          : <span className={styles.badgeLocked}>🔒 Richiedi accesso</span>
-                      ) : (
-                        <span className={styles.badgePreview}>Anteprima</span>
-                      )}
-                    </div>
-                    <Link href={`/courses/${c.slug}`} className={styles.cardTitleLink}>
-                      <h3 className={styles.cardTitle}>{c.title}</h3>
-                    </Link>
-                    {c.description && <p className={styles.cardDesc}>{c.description}</p>}
-                    <div className={styles.cardFoot}>
-                      {c.duration && <span>{c.duration}</span>}
-                      {c.units?.length > 0 && <span>{c.units.filter((u:any)=>u.unitType!=='OVERVIEW').length} unità</span>}
-                      {c.level && <span style={{color:LEVEL_COLORS[c.level]||'var(--muted)'}}>{c.level}</span>}
-                    </div>
-                    <div className={styles.cardActions}>
-                      <Link href={`/courses/${c.slug}`} className={styles.cardCta}>
-                        {user ? (isActive ? 'Vai al corso' : 'Scopri') : 'Dettagli'}
-                      </Link>
-                      {/* Anteprima gratuita sempre visibile per non loggati */}
-                      {!user && firstUnitSlug && (
-                        <Link href={`/courses/${c.slug}/${firstUnitSlug}`} className={styles.cardPreviewBtn}>
-                          ▶ Prova gratis
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+              return (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  brand={brand}
+                  prog={prog}
+                  hasProgress={hasProgress}
+                  isDone={isDone}
+                  isActive={isActive}
+                  unitCount={unitCount}
+                  isLoggedIn={!!user}
+                />
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+// ─── Componente Card ─────────────────────────────────────────────────────────
+
+function CourseCard({
+  course, brand, prog, hasProgress, isDone, isActive, unitCount, isLoggedIn
+}: {
+  course: any
+  brand: any
+  prog: any
+  hasProgress: boolean
+  isDone: boolean
+  isActive: boolean
+  unitCount: number
+  isLoggedIn: boolean
+}) {
+  return (
+    <Link
+      href={`/courses/${course.slug}`}
+      className={[styles.card, !isActive ? styles.cardLocked : ''].join(' ')}
+    >
+      {/* Accent line colorata in cima */}
+      <div className={styles.cardAccent} style={{ background: brand.color }}/>
+
+      {/* Thumbnail / placeholder famiglia */}
+      <div className={styles.cardThumb} style={{ background: brand.light }}>
+        <span className={styles.cardThumbLabel} style={{ color: brand.color }}>
+          {brand.name}
+        </span>
+        {isDone && (
+          <span className={styles.cardThumbBadgeDone}>✓</span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className={styles.cardBody}>
+        <div className={styles.cardTop}>
+          <span className={styles.cardTag} style={{ background: brand.light, color: brand.color }}>
+            {brand.name}
+          </span>
+          {isLoggedIn && isDone ? (
+            <span className={styles.stateBadgeActive}>✓ Completato</span>
+          ) : isLoggedIn && hasProgress ? (
+            <span className={styles.stateBadgeProgress}>{prog.percent}%</span>
+          ) : !isActive ? (
+            <span className={styles.stateBadgeLocked}>
+              <svg viewBox="0 0 10 12" fill="none" width={9} height={10}>
+                <rect x="1" y="4.5" width="8" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.1"/>
+                <path d="M3 4.5V3a2 2 0 114 0v1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+              </svg>
+              Bloccato
+            </span>
+          ) : (
+            <span className={styles.stateBadgePreview}>Disponibile</span>
+          )}
+        </div>
+
+        <h3 className={styles.cardTitle}>{course.title}</h3>
+
+        {course.description && (
+          <p className={styles.cardDesc}>{course.description}</p>
+        )}
+
+        {/* Progress bar se in corso */}
+        {isLoggedIn && hasProgress && !isDone && (
+          <div className={styles.cardProgressWrap}>
+            <div className={styles.cardProgressTrack}>
+              <div className={styles.cardProgressFill} style={{ width: `${prog.percent}%` }}/>
+            </div>
+            <span className={styles.cardProgressLabel}>{prog.completed}/{prog.total} unità</span>
+          </div>
+        )}
+
+        {/* Meta */}
+        <div className={styles.cardFoot}>
+          {course.level && (
+            <span className={styles.footItem}>{course.level}</span>
+          )}
+          {course.duration && (
+            <span className={styles.footItem}>{course.duration}</span>
+          )}
+          {unitCount > 0 && (
+            <span className={styles.footItem}>{unitCount} unità</span>
+          )}
+
+          {/* CTA */}
+          <span className={styles.cardCta}>
+            {isLoggedIn && hasProgress && !isDone
+              ? 'Continua →'
+              : isLoggedIn && isDone
+                ? 'Rileggi →'
+                : isActive
+                  ? 'Inizia →'
+                  : 'Dettagli →'
+            }
+          </span>
+        </div>
+      </div>
+    </Link>
   )
 }

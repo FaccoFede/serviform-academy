@@ -11,27 +11,65 @@
   gap: 0;
 }
 
-/* Logo */
+/* ── Logo + Testo ───────────────────────────────────────── */
 .logoWrap {
-  display: flex; align-items: center; gap: 10px;
-  text-decoration: none; flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;                  /* spazio tra SVG e testo */
+  text-decoration: none;
+  flex-shrink: 0;
   margin-right: 32px;
 }
+
+/*
+  Contenitore del logo SVG con position: relative richiesto da Next.js <Image fill>.
+  L'altezza è fissa (28px) per restare dentro la topbar (56px).
+  La larghezza è "auto" tramite aspect-ratio: si adatta proporzionalmente
+  alla viewBox del file SVG senza distorcerlo.
+  Se il tuo SVG è molto largo, aumenta max-width.
+*/
+.logoImgWrap {
+  position: relative;
+  height: 28px;               /* altezza fissa — cambia questo se il logo è troppo alto/basso */
+  width: auto;
+  min-width: 28px;
+  max-width: 160px;           /* tetto per loghi molto larghi — regola a piacere */
+  aspect-ratio: auto;         /* calcolato dal browser in base al SVG caricato */
+  flex-shrink: 0;
+}
+
+/*
+  Il tag <img> generato da Next.js Image con fill=true.
+  object-fit: contain garantisce che il logo non venga tagliato né deformato.
+  position: static sovrascrive il "position: absolute" di default di Next Image fill,
+  lasciando che il wrapper gestisca le dimensioni.
+*/
+.logoImg {
+  position: static !important;  /* override del position:absolute di Next Image fill */
+  width: auto !important;
+  height: 100% !important;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+
+/* Testo brand — sempre visibile, anche accanto al logo */
 .brand {
   font-family: var(--font-display);
-  font-size: 15px; font-weight: 700;
-  color: var(--ink); letter-spacing: -.2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.2px;
+  white-space: nowrap;
 }
-.brand em { font-style: normal; color: var(--muted); font-weight: 600; }
 
-/* Nav */
+/* ── Nav ────────────────────────────────────────────────── */
 .nav {
   display: flex; align-items: center; gap: 2px;
   flex: 1;
 }
 .navLink {
-  padding: 6px 12px;
-  border-radius: 7px;
+  padding: 6px 12px; border-radius: 7px;
   font-size: 13.5px; font-weight: 600;
   color: var(--muted-dark); text-decoration: none;
   transition: all 180ms;
@@ -39,188 +77,101 @@
 .navLink:hover { color: var(--ink); background: var(--surface); }
 .navActive { color: var(--ink); background: var(--surface); font-weight: 700; }
 
-/* Right zone */
+/* ── Right zone ─────────────────────────────────────────── */
 .right { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 
 .iconBtn {
-  position: relative;
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  border: none; background: transparent;
-  color: var(--muted);
+  position: relative; width: 36px; height: 36px; border-radius: 8px;
+  border: none; background: transparent; color: var(--muted);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 180ms;
-  text-decoration: none;
-  flex-shrink: 0;
+  cursor: pointer; transition: all 180ms; text-decoration: none; flex-shrink: 0;
 }
 .iconBtn:hover { color: var(--ink); background: var(--surface); }
 
 .badge {
-  position: absolute;
-  top: 4px; right: 4px;
+  position: absolute; top: 4px; right: 4px;
   min-width: 16px; height: 16px;
   background: var(--red); color: #fff;
-  font-size: 9px; font-weight: 700;
-  font-family: var(--font-mono);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 3px; line-height: 1;
+  font-size: 9px; font-weight: 700; font-family: var(--font-mono);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 3px;
 }
 
-/* User button */
-.userBtn {
-  display: flex; align-items: center; gap: 7px;
-  padding: 4px 10px 4px 4px;
-  border-radius: 100px;
-  border: 1px solid var(--border);
-  background: transparent;
-  cursor: pointer; transition: all 180ms;
-  margin-left: 4px;
-}
-.userBtn:hover { border-color: rgba(0,0,0,.2); background: var(--surface); }
-.avatar {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: var(--ink); color: #fff;
-  font-size: 11px; font-weight: 700;
-  font-family: var(--font-mono);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.userName { font-size: 13px; font-weight: 700; color: var(--ink); }
-
-/* CTA (non loggato) */
 .ctaBtn {
-  height: 34px; padding: 0 18px;
-  background: var(--ink); color: #fff;
-  border-radius: 8px; font-size: 13px; font-weight: 700;
-  text-decoration: none; display: flex; align-items: center;
-  transition: all 180ms; margin-left: 8px;
+  height: 34px; padding: 0 16px; background: var(--ink); color: #fff;
+  border-radius: 7px; font-size: 13px; font-weight: 700;
+  text-decoration: none; display: inline-flex; align-items: center;
+  transition: background 180ms; white-space: nowrap;
 }
-.ctaBtn:hover { background: var(--red); }
+.ctaBtn:hover { background: #333; }
 
-/* Dropdown container */
+/* ── Dropdown wrapper ───────────────────────────────────── */
 .dd { position: relative; }
 
-/* Announcements panel */
+/* ── Pannello annunci ───────────────────────────────────── */
 .annPanel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 340px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.1);
-  overflow: hidden;
-  z-index: 200;
+  position: absolute; top: calc(100% + 8px); right: 0; width: 320px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden; z-index: 200;
 }
-.annPanelHeader {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px;
+.annHead {
+  padding: 14px 16px 10px; font-family: var(--font-display);
+  font-size: 14px; font-weight: 700; color: var(--ink);
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 13px; font-weight: 700; color: var(--ink);
 }
-.annPanelLink {
-  font-size: 12px; font-weight: 700; color: var(--red);
-  text-decoration: none;
-}
-.annPanelEmpty {
-  padding: 28px;
-  text-align: center;
-  font-size: 13px; color: var(--muted);
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-}
-.annItem {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 13px 18px;
-  border-bottom: 1px solid var(--border);
-  transition: background 150ms;
-}
-.annItem:last-of-type { border-bottom: none; }
-.annItem:hover { background: var(--surface); }
-.annItemDot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--muted); flex-shrink: 0; margin-top: 5px;
-}
-.annItemDot[data-type='NEW_COURSE'] { background: var(--red); }
-.annItemDot[data-type='WEBINAR'] { background: #059669; }
-.annItemDot[data-type='MAINTENANCE'] { background: #D97706; }
-.annItemBody { flex: 1; min-width: 0; }
-.annItemTitle { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; margin-bottom: 3px; }
-.annItemText {
-  font-size: 12px; color: var(--muted); line-height: 1.45;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.annItemDate { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; }
-.annPanelFooter {
-  display: block; padding: 12px 18px;
-  font-size: 12.5px; font-weight: 700; color: var(--red);
-  text-decoration: none; text-align: center;
-  border-top: 1px solid var(--border);
-  transition: background 150ms;
-}
-.annPanelFooter:hover { background: var(--red-light); }
+.annEmpty { padding: 20px 16px; font-size: 13px; color: var(--muted); text-align: center; }
 
-/* User panel */
+/* ── User button ────────────────────────────────────────── */
+.userBtn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px 5px 6px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer; color: var(--ink); transition: all 180ms;
+}
+.userBtn:hover { background: var(--surface); }
+
+.avatar {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--red);
+  color: #fff; font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.userName {
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── User panel ─────────────────────────────────────────── */
 .userPanel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 240px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.1);
-  overflow: hidden;
-  z-index: 200;
+  position: absolute; top: calc(100% + 8px); right: 0; width: 240px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-lg); padding: 6px; z-index: 200;
 }
-.userPanelInfo {
-  display: flex; align-items: center; gap: 10px;
-  padding: 16px 18px;
-  background: var(--surface);
-}
+.userPanelInfo { display: flex; align-items: center; gap: 10px; padding: 10px 10px 8px; }
 .userPanelAvatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--ink); color: #fff;
-  font-size: 14px; font-weight: 700;
-  font-family: var(--font-mono);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%; background: var(--red);
+  color: #fff; font-size: 14px; font-weight: 700; font-family: var(--font-mono);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.userPanelName { font-size: 13px; font-weight: 700; color: var(--ink); }
-.userPanelEmail { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+.userPanelName { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.userPanelEmail { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .userPanelCompany {
-  padding: 8px 18px;
-  font-size: 11px; font-weight: 700;
-  color: var(--muted); font-family: var(--font-mono);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  margin: 0 10px 6px; padding: 4px 8px; background: var(--surface);
+  border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--muted-dark);
 }
 .userPanelDivider { height: 1px; background: var(--border); margin: 4px 0; }
 .userPanelItem {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 18px;
-  font-size: 13.5px; font-weight: 600;
-  color: var(--muted-dark); text-decoration: none;
-  transition: background 150ms;
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px;
+  border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--ink);
+  text-decoration: none; transition: background 150ms;
+  border: none; background: transparent; cursor: pointer; font-family: inherit;
 }
-.userPanelItem:hover { background: var(--surface); color: var(--ink); }
+.userPanelItem:hover { background: var(--surface); }
+.userPanelItem svg { color: var(--muted); flex-shrink: 0; }
+
 .userPanelLogout {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 11px 18px;
-  font-size: 13.5px; font-weight: 700;
-  color: var(--red);
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px;
+  border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--red);
   background: transparent; border: none; cursor: pointer;
-  font-family: var(--font-body);
-  transition: background 150ms;
-  margin-bottom: 4px;
+  transition: background 150ms; font-family: inherit;
 }
 .userPanelLogout:hover { background: var(--red-light); }
-
-@media (max-width: 768px) {
-  .bar { padding: 0 16px; }
-  .nav { display: none; }
-  .userName { display: none; }
-  .annPanel { width: 300px; right: -50px; }
-}
+.userPanelLogout svg { color: var(--red); flex-shrink: 0; }

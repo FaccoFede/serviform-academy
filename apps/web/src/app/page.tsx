@@ -3,6 +3,12 @@ import { api } from '@/lib/api'
 import { SOFTWARE_BRANDS } from '@/lib/brands'
 import styles from './page.module.css'
 
+// ─── CONFIGURAZIONE CORSI IN EVIDENZA ────────────────────────────────────────
+// Imposta qui gli slug dei corsi da mostrare nella sezione "Cosa trovi sulla
+// piattaforma". Se vuoto, vengono mostrati automaticamente i primi 3 corsi.
+// Esempio: const FEATURED_SLUGS = ['engview-3d', 'sysform-introduzione', 'projecto-primi-passi']
+const FEATURED_SLUGS: string[] = []
+
 export default async function PublicHomePage() {
   let courses: any[] = []
   try { courses = await api.courses.findAll() } catch {}
@@ -21,7 +27,20 @@ export default async function PublicHomePage() {
     units: courses.reduce((s, c) => s + (c.units?.length || 0), 0),
     hours: totalHours,
   }
-  const teaser = courses.slice(0, 3)
+
+  // ── Selezione corsi teaser ─────────────────────────────────────────────────
+  // Se FEATURED_SLUGS è popolato, mostra quelli (nell'ordine indicato).
+  // Altrimenti mostra i primi 3 in ordine di risposta API.
+  let teaser: any[]
+  if (FEATURED_SLUGS.length > 0) {
+    teaser = FEATURED_SLUGS
+      .map(slug => courses.find(c => c.slug === slug))
+      .filter(Boolean)
+      .slice(0, 3)
+  } else {
+    teaser = courses.slice(0, 3)
+  }
+
   const families = Object.values(SOFTWARE_BRANDS)
 
   return (
@@ -46,7 +65,7 @@ export default async function PublicHomePage() {
             {[
               { n: stats.courses + '+', l: 'corsi' },
               { n: stats.units + '+', l: 'unità didattiche' },
-              { n: stats.hours > 0 ? stats.hours + 'h+' : '∞', l: 'ore di formazione' }
+              { n: stats.hours > 0 ? stats.hours + 'h+' : '—', l: 'ore di formazione' },
             ].map((s, i) => (
               <div key={i} className={styles.heroStat}>
                 <span className={styles.heroStatN}>{s.n}</span>
@@ -57,21 +76,43 @@ export default async function PublicHomePage() {
         </div>
       </section>
 
-      {/* ── SOFTWARE ──────────────────────────────────────────── */}
+     {/* ── COME FUNZIONA ─────────────────────────────────────── */}
       <section className={styles.section}>
         <div className={styles.inner}>
-          <div className={styles.sectionTag}>Percorsi formativi</div>
-          <h2 className={styles.sectionTitle}>Un percorso per ogni competenza</h2>
+          <div className={styles.sectionTag}>Come funziona</div>
+          <h2 className={styles.sectionTitle}>Dalla registrazione alla certificazione</h2>
+          <div className={styles.stepsGrid}>
+            {[
+              { n: '01', t: 'Esplora', d: 'Sfoglia il catalogo e scegli il percorso più adatto alle tue esigenze.' },
+              { n: '02', t: 'Studia', d: 'Tieni traccia dei tuoi traguardi e amplia le tue conoscenze.' },
+              { n: '03', t: 'Certifica', d: 'Completa il tuo percorso e certifica le tue competenze.' },
+            ].map((s, i) => (
+              <div key={i} className={styles.step}>
+                <span className={styles.stepN}>{s.n}</span>
+                <div className={styles.stepT}>{s.t}</div>
+                <p className={styles.stepD}>{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAMIGLIE SOFTWARE ─────────────────────────────────── */}
+      <section className={styles.sectionDark}>
+        <div className={styles.inner}>
+          <div className={styles.sectionTag}>Percorsi di apprendimento</div>
+          <h2 className={styles.sectionTitle}>Cosa vuoi imparare oggi?</h2>
           <div className={styles.familyGrid}>
             {families.map(f => {
               const count = courses.filter(c => c.software?.slug === f.key).length
               return (
-                <Link key={f.key} href={`/catalog?family=${f.key}`} className={styles.familyCard}
-                  style={{ '--fc': f.color, '--fl': f.light } as React.CSSProperties}>
+                <Link key={f.key} href={`/catalog?software=${f.key}`} className={styles.familyCard}>
                   <div className={styles.familyAccent} style={{ background: f.color }} />
                   <div className={styles.familyTop}>
-                    <span className={styles.familyName}>{f.name}</span>
-                    <span className={styles.familyCount}>{count > 0 ? `${count} cors${count === 1 ? 'o' : 'i'}` : 'coming soon'}</span>
+                    <span className={styles.familyName} style={{ color: f.color }}>{f.name}</span>
+                    <span className={styles.familyCount}>
+                      {count > 0 ? `${count} cors${count === 1 ? 'o' : 'i'}` : 'coming soon'}
+                    </span>
                   </div>
                   <p className={styles.familyTagline}>{f.tagline}</p>
                 </Link>
@@ -83,7 +124,7 @@ export default async function PublicHomePage() {
 
       {/* ── TEASER CORSI ──────────────────────────────────────── */}
       {teaser.length > 0 && (
-        <section className={styles.sectionDark}>
+        <section className={styles.section}>
           <div className={styles.inner}>
             <div className={styles.sectionRow}>
               <div>
@@ -94,17 +135,36 @@ export default async function PublicHomePage() {
             </div>
             <div className={styles.teaserGrid}>
               {teaser.map(c => {
-                const brand = SOFTWARE_BRANDS[c.software?.slug || ''] || SOFTWARE_BRANDS.engview
+                // ── FIX TAG SOFTWARE ──────────────────────────────────────────
+                // Legge lo slug reale dal campo software del corso.
+                // Se lo slug non esiste in SOFTWARE_BRANDS, getBrand() restituisce
+                // un fallback neutro (grigio) invece di forzare "EngView".
+                const softwareSlug = c.software?.slug || ''
+                const brand = SOFTWARE_BRANDS[softwareSlug] || {
+                  name: c.software?.name || softwareSlug || 'N/D',
+                  color: '#4E4D4D',
+                  light: '#F5F5F5',
+                }
                 return (
                   <Link key={c.id} href={`/courses/${c.slug}`} className={styles.teaserCard}>
                     <div className={styles.teaserTop}>
-                      <span className={styles.teaserTag} style={{ color: brand.color, background: brand.light }}>{brand.name}</span>
+                      <span
+                        className={styles.teaserTag}
+                        style={{ color: brand.color, background: brand.light }}
+                      >
+                        {brand.name}
+                      </span>
                       {c.level && <span className={styles.teaserLevel}>{c.level}</span>}
                     </div>
                     <h3 className={styles.teaserTitle}>{c.title}</h3>
                     {c.description && <p className={styles.teaserDesc}>{c.description}</p>}
+
+                    {/* ── FIX SEPARATORE DURATA / UNITÀ ─────────────────────── */}
                     <div className={styles.teaserFoot}>
                       {c.duration && <span>{c.duration}</span>}
+                      {c.duration && c.units?.length > 0 && (
+                        <span className={styles.teaserSep}>·</span>
+                      )}
                       {c.units?.length > 0 && <span>{c.units.length} unità</span>}
                     </div>
                   </Link>
@@ -115,37 +175,19 @@ export default async function PublicHomePage() {
         </section>
       )}
 
-      {/* ── COME FUNZIONA ─────────────────────────────────────── */}
-      <section className={styles.section}>
-        <div className={styles.inner}>
-          <div className={styles.sectionTag}>Come funziona</div>
-          <h2 className={styles.sectionTitle}>Dalla registrazione alla certificazione</h2>
-          <div className={styles.stepsGrid}>
-            {[
-              { n: '01', t: 'Esplora', d: 'Sfoglia il catalogo per software o livello. Anteprima gratuita sulle prime unità.' },
-              { n: '02', t: 'Studia', d: 'Unità brevi con contenuto HTML e video. Guide Zendesk integrate per ogni argomento.' },
-              { n: '03', t: 'Certifica', d: 'Completa tutte le unità e ottieni il tuo attestato verificabile.' },
-            ].map(s => (
-              <div key={s.n} className={styles.step}>
-                <span className={styles.stepN}>{s.n}</span>
-                <h3 className={styles.stepT}>{s.t}</h3>
-                <p className={styles.stepD}>{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+ 
 
-      {/* ── CTA AZIENDALE ─────────────────────────────────────── */}
+      {/* ── CTA FINALE ────────────────────────────────────────── */}
       <section className={styles.sectionCta}>
         <div className={styles.inner}>
           <div className={styles.ctaBlock}>
-            <div className={styles.sectionTagLight}>Per le aziende</div>
-            <h2 className={styles.ctaTitle}>Forma tutto il tuo team!</h2>
-            <br></br>
+            <h2 className={styles.ctaTitle}>Pronto a formarti?</h2>
+            <p className={styles.ctaDesc}>
+              Accedi con le tue credenziali Serviform e inizia subito il percorso.
+            </p>
             <div className={styles.heroCtas}>
-              <Link href="/auth/login" className={styles.ctaRed}>Accedi alla piattaforma</Link>
-              <a href="mailto:support@serviform.com?subject=Richiesta accesso Academy" className={styles.ctaGhostLight}>Richiedi accesso →</a>
+              <Link href="/auth/login" className={styles.ctaRed}>Accedi ora →</Link>
+              <Link href="/catalog" className={styles.ctaGhostLight}>Esplora il catalogo</Link>
             </div>
           </div>
         </div>

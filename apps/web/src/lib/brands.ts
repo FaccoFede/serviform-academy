@@ -11,17 +11,17 @@ export const SOFTWARE_BRANDS: Record<string, SoftwareBrand> = {
   },
   sysform: {
     key: 'sysform', name: 'Sysform',
-    tagline: 'Gestione e ottimizzazione della produzione',
+    tagline: 'Progettazione e creazione di utensili fustella',
     color: '#E63329', light: '#FFF1F0', border: '#F5C4C4',
   },
   projecto: {
     key: 'projecto', name: 'ProjectO',
-    tagline: 'Project management e workflow creativo',
+    tagline: 'La soluzione gestionale innovativa per i fustellifici',
     color: '#067DB8', light: '#E3F4FC', border: '#A8D8EE',
   },
   serviformA: {
-    key: 'serviformA', name: 'ServiformA',
-    tagline: 'Gestione amministrativa e documentale Serviform',
+    key: 'serviformA', name: 'ServiFormA',
+    tagline: 'I nostri consigli per potenziare la tua produttività',
     color: '#2D6A4F', light: '#EDFAF3', border: '#A8D5BC',
   },
 }

@@ -20,105 +20,101 @@
 }
 .heroInner { position: relative; max-width: 1160px; margin: 0 auto; padding: 96px 56px 0; }
 .heroBadge {
-  display: inline-block;
-  padding: 4px 14px;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.45);
-  font-family: var(--font-mono);
-  margin-bottom: 28px;
+  display: inline-block; padding: 4px 14px;
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 100px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: rgba(255,255,255,0.45); font-family: var(--font-mono); margin-bottom: 28px;
 }
 .heroTitle {
-  font-family: var(--font-display);
-  font-size: clamp(42px, 6vw, 80px);
-  font-weight: 700;
-  letter-spacing: -3px;
-  color: rgba(255,255,255,0.92);
-  line-height: 1.0;
-  margin-bottom: 24px;
+  font-family: var(--font-display); font-size: clamp(42px, 6vw, 80px);
+  font-weight: 700; letter-spacing: -3px; color: rgba(255,255,255,0.92);
+  line-height: 1.0; margin-bottom: 24px;
 }
 .heroTitle span { color: var(--red); }
 .heroSub { font-size: 18px; color: rgba(255,255,255,0.38); line-height: 1.7; max-width: 530px; margin-bottom: 40px; }
 .heroCtas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
 .ctaBlack {
-  height: 48px; padding: 0 28px;
-  background: #fff; color: #0A0A0A;
+  height: 48px; padding: 0 28px; background: #fff; color: #0A0A0A;
   border-radius: 8px; font-size: 14px; font-weight: 700;
   text-decoration: none; display: inline-flex; align-items: center;
-  transition: all 200ms ease;
-  white-space: nowrap;
+  transition: all 200ms ease; white-space: nowrap;
 }
 .ctaBlack:hover { background: rgba(255,255,255,0.88); }
 
 .ctaGhost {
-  height: 48px; padding: 0 28px;
-  border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.6);
-  border-radius: 8px; font-size: 14px; font-weight: 700;
+  height: 48px; padding: 0 28px; border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6); border-radius: 8px; font-size: 14px; font-weight: 700;
   text-decoration: none; display: inline-flex; align-items: center;
-  transition: all 200ms ease;
-  white-space: nowrap;
+  transition: all 200ms ease; white-space: nowrap;
 }
 .ctaGhost:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 
+/* ── STATISTICHE HERO (sfondo scuro) ──────────────────── */
 .heroStats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border-top: 1px solid rgba(255,255,255,0.06);
-  margin-top: 50px;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgba(255,255,255,0.06); margin-top: 50px;
 }
-.heroStat { padding: 28px 0; border-right: 1px solid rgba(255,255,255,0.06); }
+.heroStat { padding: 36px 40px 36px 0; border-right: 1px solid rgba(255,255,255,0.06); }
+.heroStat:first-child { padding-left: 0; }
+.heroStat:not(:first-child) { padding-left: 40px; }
 .heroStat:last-child { border-right: none; }
-.heroStatN { display: block; font-family: var(--font-mono); font-size: 42px; font-weight: 500; color: rgba(255,255,255,0.9); letter-spacing: -2px; line-height: 1; }
-.heroStatL { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.4px; color: rgba(255,255,255,0.25); text-transform: uppercase; margin-top: 6px; }
+.heroStatN {
+  display: block; font-family: var(--font-mono); font-size: 42px;
+  font-weight: 500; color: rgba(255,255,255,0.9); letter-spacing: -2px; line-height: 1;
+}
+.heroStatL {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.25); text-transform: uppercase; margin-top: 10px;
+}
 
-/* ── SEZIONI CHIARE ────────────────────────────────────── */
+/* ── SEZIONI ────────────────────────────────────────────── */
 .section { padding: 88px 0; background: var(--white); }
-.sectionDark { padding: 88px 0; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+/* sectionDark = sfondo grigio chiaro (#FAFAFA) — TESTI SCURI */
+.sectionDark {
+  padding: 88px 0; background: var(--surface);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
 .sectionCta { padding: 88px 0; background: #0F0F0F; }
+
 .sectionTag {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 1.2px; color: var(--red); font-family: var(--font-mono);
-  margin-bottom: 12px; display: block;
-}
-.sectionTagLight {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1.2px; color: rgba(230,51,41,0.8); font-family: var(--font-mono);
   margin-bottom: 12px; display: block;
 }
 .sectionTitle {
   font-family: var(--font-display); font-size: clamp(26px, 3vw, 38px);
   font-weight: 700; letter-spacing: -1px; color: var(--ink); margin-bottom: 48px;
 }
-.sectionTitleOLD_UNUSED {
+.sectionTagLight {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--red); font-family: var(--font-mono);
+  margin-bottom: 12px; display: block;
+}
+.sectionTitleLight {
   font-family: var(--font-display); font-size: clamp(26px, 3vw, 38px);
-  font-weight: 700; letter-spacing: -1px; color: rgba(255,255,255,0.9); margin-bottom: 0;
+  font-weight: 700; letter-spacing: -1px;
+  color: var(--ink);   /* testo scuro — sfondo chiaro */
+  margin-bottom: 0;
 }
 .sectionRow {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: 24px; margin-bottom: 40px;
 }
-.seeAll { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.45); text-decoration: none; white-space: nowrap; transition: color 200ms; flex-shrink: 0; }
-.seeAll:hover { color: #fff; }
+.seeAll {
+  font-size: 13px; font-weight: 700; color: var(--red);
+  text-decoration: none; white-space: nowrap;
+  transition: opacity 200ms; flex-shrink: 0;
+}
+.seeAll:hover { opacity: 0.7; }
 
 /* ── FAMIGLIE SOFTWARE ─────────────────────────────────── */
 .familyGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .familyCard {
-  position: relative;
-  padding: 26px 24px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  text-decoration: none;
-  color: inherit;
-  overflow: hidden;
-  transition: all 220ms ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  position: relative; padding: 26px 24px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; text-decoration: none; color: inherit;
+  overflow: hidden; transition: all 220ms ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .familyCard:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.1); }
 .familyAccent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
@@ -127,34 +123,72 @@
 .familyCount { font-size: 10px; font-family: var(--font-mono); color: var(--muted); font-weight: 600; }
 .familyTagline { font-size: 13px; color: var(--muted); line-height: 1.55; }
 
-/* ── TEASER CORSI (su sfondo scuro) ──────────────────────  */
+/* ── TEASER CORSI — su sfondo CHIARO (var(--surface) = #FAFAFA) ── */
 .teaserGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
 .teaserCard {
   padding: 24px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 12px;
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: all 220ms ease;
+  background: var(--white);               /* card bianca su grigio chiaro */
+  border: 1px solid var(--border);
+  border-radius: 12px; text-decoration: none; color: inherit;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: all 220ms ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.teaserCard:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.12); }
+.teaserCard:hover {
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  transform: translateY(-3px);
+}
+
 .teaserTop { display: flex; align-items: center; gap: 8px; }
-.teaserTag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; padding: 3px 9px; border-radius: 4px; }
-.teaserLevel { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.3); font-family: var(--font-mono); }
-.teaserTitle { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: rgba(255,255,255,0.88); letter-spacing: -0.3px; line-height: 1.2; }
-.teaserDesc { font-size: 13px; color: rgba(255,255,255,0.35); line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.teaserFoot { display: flex; gap: 12px; font-size: 11px; color: rgba(255,255,255,0.25); font-family: var(--font-mono); padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+/* badge software: colori iniettati inline (brand.color / brand.light) — ok */
+.teaserTag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; padding: 3px 9px; border-radius: 4px; flex-shrink: 0;
+}
+
+/* livello — su sfondo chiaro deve essere grigio scuro, non bianco */
+.teaserLevel {
+  font-size: 10px; font-weight: 700;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* titolo corso — su sfondo chiaro: nero */
+.teaserTitle {
+  font-family: var(--font-display); font-size: 17px; font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px; line-height: 1.2;
+}
+
+/* descrizione — su sfondo chiaro: grigio leggibile */
+.teaserDesc {
+  font-size: 13px; color: var(--muted);
+  line-height: 1.6; flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* footer: durata · unità — su sfondo chiaro */
+.teaserFoot {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--muted);
+  font-family: var(--font-mono);
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+
+/* separatore · */
+.teaserSep {
+  color: var(--border); font-size: 14px; line-height: 1; flex-shrink: 0;
+}
 
 /* ── STEPS ─────────────────────────────────────────────── */
 .stepsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
 .step { padding: 0 40px 0 0; border-right: 1px solid var(--border); }
 .step:last-child { border-right: none; padding-right: 0; padding-left: 40px; }
 .step:nth-child(2) { padding-left: 40px; }
-.stepN { display: block; font-family: var(--font-mono); font-size: 52px; font-weight: 500; color: var(--border); letter-spacing: -3px; line-height: 1; margin-bottom: 20px; }
+.stepN { display: block; font-family: var(--font-mono); font-size: 52px; font-weight: 500; color: var(--red); letter-spacing: -3px; line-height: 1; margin-bottom: 20px; }
 .stepT { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
 .stepD { font-size: 14px; color: var(--muted); line-height: 1.7; }
 
@@ -162,25 +196,19 @@
 .ctaBlock { max-width: 600px; }
 .ctaTitle { font-family: var(--font-display); font-size: clamp(26px,3.5vw,46px); font-weight: 700; letter-spacing: -1.5px; color: rgba(255,255,255,0.9); line-height: 1.08; margin-bottom: 16px; }
 .ctaDesc { font-size: 16px; color: rgba(255,255,255,0.38); line-height: 1.7; margin-bottom: 36px; }
-
 .ctaRed {
-  height: 48px; padding: 0 28px;
-  background: var(--red); color: #fff;
+  height: 48px; padding: 0 28px; background: var(--red); color: #fff;
   border-radius: 8px; font-size: 14px; font-weight: 700;
   text-decoration: none; display: inline-flex; align-items: center;
-  transition: all 200ms ease;
-  box-shadow: 0 4px 20px rgba(230,51,41,0.25);
-  white-space: nowrap;
+  transition: all 200ms ease; box-shadow: 0 4px 20px rgba(230,51,41,0.25); white-space: nowrap;
 }
 .ctaRed:hover { background: var(--red-dark); transform: translateY(-1px); }
-
 .ctaGhostLight {
   height: 48px; padding: 0 28px;
   border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5);
   border-radius: 8px; font-size: 14px; font-weight: 700;
   text-decoration: none; display: inline-flex; align-items: center;
-  transition: all 200ms ease;
-  white-space: nowrap;
+  transition: all 200ms ease; white-space: nowrap;
 }
 .ctaGhostLight:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.8); }
 
@@ -190,7 +218,7 @@
   .familyGrid { grid-template-columns: repeat(2,1fr); }
   .teaserGrid { grid-template-columns: repeat(2,1fr); }
   .heroStats { grid-template-columns: repeat(2,1fr); }
-  .stepsGrid { grid-template-columns: 1fr; gap: 32px; }
+  .stepsGrid { grid-template-columns: 1fr; }
   .step,.step:nth-child(2),.step:last-child { padding: 0; border-right: none; }
 }
 @media (max-width: 600px) {
@@ -201,79 +229,4 @@
   .heroTitle { font-size: 38px; letter-spacing: -2px; }
   .heroCtas { flex-direction: column; align-items: flex-start; }
   .sectionRow { flex-direction: column; align-items: flex-start; gap: 8px; }
-}
-
-/* ── Teaser sezione su sfondo chiaro ── */
-.sectionTitleLight {
-  font-family: var(--font-display);
-  font-size: clamp(26px, 3vw, 38px);
-  font-weight: 700;
-  letter-spacing: -1px;
-  color: var(--ink);
-  margin-bottom: 0;
-}
-.sectionTagLight {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--red);
-  font-family: var(--font-mono);
-  margin-bottom: 12px;
-  display: block;
-}
-.seeAll {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--red);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: opacity 200ms;
-  flex-shrink: 0;
-}
-.seeAll:hover { opacity: 0.7; }
-.teaserCard {
-  padding: 24px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: all 220ms ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.teaserCard:hover {
-  border-color: rgba(0,0,0,0.12);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
-  transform: translateY(-3px);
-}
-.teaserTitle {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.3px;
-  line-height: 1.2;
-}
-.teaserDesc {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.teaserFoot {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
 }

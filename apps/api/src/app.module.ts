@@ -12,12 +12,17 @@ import { ExercisesModule } from './exercises/exercises.module'
 import { CompaniesModule } from './companies/companies.module'
 import { AssignmentsModule } from './assignments/assignments.module'
 import { AnnouncementsModule } from './announcements/announcements.module'
+import { EventsModule } from './events/events.module'
+import { ImportsModule } from './imports/imports.module'
+import { UploadsModule } from './uploads/uploads.module'
+import { VideoAssetsModule } from './video-assets/video-assets.module'
 
 @Module({
   imports: [
     PrismaModule, AuthModule, UsersModule, CoursesModule, UnitsModule,
     GuidesModule, SoftwareModule, ProgressModule, CertificatesModule,
     ExercisesModule, CompaniesModule, AssignmentsModule, AnnouncementsModule,
+    EventsModule, ImportsModule, UploadsModule, VideoAssetsModule,
   ],
 })
 export class AppModule {}

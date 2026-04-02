@@ -141,8 +141,8 @@ export default async function PublicHomePage() {
         <div className={styles.inner}>
           <div className={styles.ctaBlock}>
             <div className={styles.sectionTagLight}>Per le aziende</div>
-            <h2 className={styles.ctaTitle}>Forma tutto il tuo team in un unico posto</h2>
-            <p className={styles.ctaDesc}>Assegna corsi, monitora l'avanzamento, gestisci scadenze. Importa utenti via CSV e parti subito.</p>
+            <h2 className={styles.ctaTitle}>Forma tutto il tuo team!</h2>
+            <br></br>
             <div className={styles.heroCtas}>
               <Link href="/auth/login" className={styles.ctaRed}>Accedi alla piattaforma</Link>
               <a href="mailto:support@serviform.com?subject=Richiesta accesso Academy" className={styles.ctaGhostLight}>Richiedi accesso →</a>

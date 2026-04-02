@@ -70,13 +70,10 @@ export default function NewsroomPage() {
           <div className={styles.breadcrumb}>
             <Link href="/dashboard" className={styles.bcLink}>dashboard</Link>
             <span>/</span>
-            <span>newsroom</span>
+            <span>Com. & eventi</span>
           </div>
           <div className={styles.subheaderTitle}>
-            <h1 className={styles.pageTitle}>Newsroom</h1>
-          </div>
-          <div className={styles.subheaderTab}>
-            <span className={styles.tabActive}>Home newsroom</span>
+            <h1 className={styles.pageTitle}>Comunicazione & Eventi</h1>
           </div>
         </div>
       </div>

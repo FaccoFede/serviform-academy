@@ -41,12 +41,17 @@
 .doneBadge{font-size:11px;font-weight:700;color:#059669;background:#ECFDF5;padding:3px 10px;border-radius:100px}
 .previewBadge{font-size:11px;font-weight:700;color:#067DB8;background:#E3F4FC;padding:3px 10px;border-radius:100px}
 .counter{font-size:12px;font-family:var(--font-mono);color:var(--muted)}
-.body{padding:48px 60px;max-width:800px;flex:1}
+.body{padding:48px 60px;max-width:100%;flex:1}
 .unitHeader{margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
 .unitMeta{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .unitBadge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-family:var(--font-mono);background:var(--surface);color:var(--muted)}
 .unitTitle{font-family:var(--font-display);font-size:clamp(22px,3vw,32px);font-weight:700;letter-spacing:-1px;color:var(--ink);line-height:1.08;margin-bottom:10px}
 .unitSubtitle{font-size:16px;color:var(--muted);line-height:1.65}
+.videoWrapper {
+  width: 100%;
+  max-width: clamp(320px, 70%, 1000px);   /* 👈 controlli la grandezza */
+  overflow: hidden
+}
 .richContent{font-size:15px;line-height:1.8;color:var(--muted-dark);margin-bottom:32px}
 .richContent h3{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:-.3px;color:var(--ink);margin:28px 0 12px}
 .richContent p{margin-bottom:16px}

@@ -1,34 +1,69 @@
-import { Controller, Post, Body, Get, Param, NotFoundException } from '@nestjs/common'
+import {
+  Controller, Post, Put, Get, Delete,
+  Param, Body, UseGuards, NotFoundException,
+} from '@nestjs/common'
 import { GuidesService } from './guides.service'
-import { CreateGuideDto } from './dto/create-guide.dto'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import { Roles } from '../auth/decorators/roles.decorator'
 
-/**
- * Controller per le guide di riferimento Zendesk.
- *
- * Ogni guida è collegata a una singola unità (relazione 1:1).
- *
- * Endpoint:
- * - POST /guides            → crea una nuova guida
- * - GET  /guides/unit/:unitId → ottieni la guida di un'unità
- */
 @Controller('guides')
 export class GuidesController {
+  constructor(private readonly svc: GuidesService) {}
 
-  constructor(private readonly guidesService: GuidesService) {}
-
-  @Post()
-  async create(@Body() dto: CreateGuideDto) {
-    return this.guidesService.create(dto)
+  /**
+   * GET /guides/unit/:unitId
+   * Restituisce TUTTE le guide di un'unità (array, non oggetto singolo)
+   */
+  @Get('unit/:unitId')
+  findByUnit(@Param('unitId') unitId: string) {
+    return this.svc.findByUnit(unitId)
   }
 
-  @Get('unit/:unitId')
-  async findByUnit(@Param('unitId') unitId: string) {
-    const guide = await this.guidesService.findByUnit(unitId)
+  /**
+   * POST /guides
+   * Crea una nuova guida per un'unità (1:N — si possono creare quante se ne vuole)
+   */
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  create(@Body() body: { unitId: string; zendeskId: string; title: string; url: string; order?: number }) {
+    return this.svc.create(body)
+  }
 
-    if (!guide) {
-      throw new NotFoundException(`Nessuna guida trovata per l'unità ${unitId}`)
-    }
+  /**
+   * PUT /guides/:id
+   * Aggiorna una guida esistente
+   */
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  update(
+    @Param('id') id: string,
+    @Body() body: { zendeskId?: string; title?: string; url?: string; order?: number },
+  ) {
+    return this.svc.update(id, body)
+  }
 
-    return guide
+  /**
+   * DELETE /guides/:id
+   * Elimina una singola guida
+   */
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  remove(@Param('id') id: string) {
+    return this.svc.remove(id)
+  }
+
+  /**
+   * DELETE /guides/unit/:unitId
+   * Elimina TUTTE le guide di un'unità (usato quando si aggiornano le guide in blocco)
+   */
+  @Delete('unit/:unitId/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  removeAll(@Param('unitId') unitId: string) {
+    return this.svc.removeAllByUnit(unitId)
   }
 }

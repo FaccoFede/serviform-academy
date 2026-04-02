@@ -12,10 +12,19 @@
   background: #0A0A0A;
   display: flex;
   align-items: center;
+  justify-content: center;   /* centra orizzontalmente */
   overflow: hidden;
   padding: 60px;
 }
-.brandContent { position: relative; z-index: 2; width: 100%; }
+
+/* il contenuto è centrato sia verticalmente che orizzontalmente */
+.brandContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 460px;          /* limita la larghezza per leggibilità */
+  margin: 0 auto;            /* centra il blocco */
+}
 
 .logo {
   display: flex;
@@ -26,13 +35,18 @@
 .logoText { display: flex; flex-direction: column; }
 .logoName {
   font-family: var(--font-display);
-  font-size: 17px; font-weight: 700;
-  color: #fff; letter-spacing: -.2px; line-height: 1.1;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.2px;
+  line-height: 1.1;
 }
 .logoProduct {
-  font-size: 11px; font-weight: 600;
+  font-size: 11px;
+  font-weight: 600;
   color: rgba(255,255,255,.35);
-  text-transform: uppercase; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   font-family: var(--font-mono);
 }
 
@@ -49,6 +63,7 @@
   font-style: normal;
   color: var(--red);
 }
+
 .brandDesc {
   font-size: 15px;
   color: rgba(255,255,255,.35);
@@ -63,34 +78,47 @@
   padding-top: 32px;
   border-top: 1px solid rgba(255,255,255,.07);
 }
-.brandStat { display: flex; flex-direction: column; gap: 3px; }
+.brandStat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 .brandStat strong {
   font-family: var(--font-mono);
-  font-size: 28px; font-weight: 500;
+  font-size: 28px;
+  font-weight: 500;
   color: rgba(255,255,255,.88);
-  letter-spacing: -1px; line-height: 1;
+  letter-spacing: -1px;
+  line-height: 1;
+  transition: opacity 0.3s;
 }
 .brandStat span {
-  font-size: 11px; font-weight: 600;
+  font-size: 11px;
+  font-weight: 600;
   color: rgba(255,255,255,.3);
-  text-transform: uppercase; letter-spacing: .8px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
 }
 
-/* Decorative */
+/* Decorativi */
 .deco1 {
   position: absolute;
-  width: 400px; height: 400px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(230,51,41,.12) 0%, transparent 70%);
-  bottom: -100px; right: -100px;
+  top: -100px;
+  right: -100px;
   pointer-events: none;
 }
 .deco2 {
   position: absolute;
-  width: 200px; height: 200px;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.03) 0%, transparent 70%);
-  top: 60px; right: 60px;
+  background: radial-gradient(circle, rgba(0,56,117,.15) 0%, transparent 70%);
+  bottom: -80px;
+  left: -80px;
   pointer-events: none;
 }
 .decoGrid {
@@ -99,149 +127,141 @@
   background-image:
     linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-size: 40px 40px;
   pointer-events: none;
 }
 
 /* ── FORM (destra) ────────────────────────────────── */
 .formPanel {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 80px;
-  background: var(--surface);
-  position: relative;
+  padding: 60px 40px;
+  background: #F7F7F5;
 }
 
 .formBox {
-  width: 100%;
-  max-width: 400px;
   background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 16px;
   padding: 44px 40px;
-  box-shadow: 0 4px 32px rgba(0,0,0,.07);
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 2px 24px rgba(0,0,0,.07);
 }
 
 .formTitle {
   font-family: var(--font-display);
-  font-size: 24px; font-weight: 700;
-  letter-spacing: -.6px; color: var(--ink);
-  margin-bottom: 6px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  color: var(--ink);
+  margin: 0 0 6px;
 }
 .formSub {
   font-size: 14px;
   color: var(--muted);
-  margin-bottom: 32px;
-  line-height: 1.5;
+  margin: 0 0 32px;
 }
 
 .form { display: flex; flex-direction: column; gap: 18px; }
 
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 7px; }
 .label {
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .6px;
-  color: var(--muted); font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--muted);
+  font-family: var(--font-mono);
 }
-
 .inputRow {
-  position: relative;
   display: flex;
   align-items: center;
-}
-.inputIco {
-  position: absolute;
-  left: 14px;
-  color: var(--muted);
-  flex-shrink: 0;
-  pointer-events: none;
-}
-.input {
-  width: 100%;
-  padding: 12px 14px 12px 38px;
+  gap: 10px;
+  padding: 11px 14px;
   border: 1.5px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px; font-weight: 600;
+  border-radius: 9px;
+  background: var(--white);
+  transition: border-color .15s;
+}
+.inputRow:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(30,30,30,.05);
+}
+.inputIco { color: var(--muted); flex-shrink: 0; }
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
   font-family: var(--font-body);
   color: var(--ink);
-  background: var(--white);
-  outline: none;
-  transition: border-color 180ms, box-shadow 180ms;
+  background: transparent;
 }
-.input:focus {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgba(30,30,30,.06);
-}
-.input::placeholder { color: var(--muted); font-weight: 500; }
+.input::placeholder { color: var(--muted); }
 
 .error {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 14px;
-  background: var(--red-light);
-  border-left: 3px solid var(--red);
-  border-radius: 0 8px 8px 0;
-  font-size: 13px; font-weight: 600;
-  color: #7C1626;
+  background: #FFF1F0;
+  border: 1px solid #FFD0CC;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #C8102E;
+  font-weight: 500;
 }
 
 .btn {
-  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
   background: var(--ink);
   color: #fff;
   border: none;
-  border-radius: 12px;
-  font-size: 15px; font-weight: 700;
-  cursor: pointer;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
   font-family: var(--font-body);
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
   margin-top: 4px;
-  transition: all 200ms;
-  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  transition: background .15s, transform .1s;
 }
-.btn:hover { background: var(--red); box-shadow: 0 4px 20px rgba(230,51,41,.25); }
-.btn:active { transform: translateY(1px); }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:hover:not(:disabled) { background: #333; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .spin {
-  width: 16px; height: 16px;
+  width: 14px;
+  height: 14px;
   border: 2px solid rgba(255,255,255,.3);
   border-top-color: #fff;
   border-radius: 50%;
-  animation: spin .6s linear infinite;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.contact {
+.formFooter {
+  margin-top: 24px;
   text-align: center;
   font-size: 13px;
   color: var(--muted);
-  margin-top: 24px;
-  line-height: 1.5;
 }
-.contact a {
+.formLink {
   color: var(--red);
   font-weight: 700;
   text-decoration: none;
 }
-.contact a:hover { text-decoration: underline; }
+.formLink:hover { text-decoration: underline; }
 
-.legal {
-  position: absolute;
-  bottom: 24px;
-  left: 0; right: 0;
-  text-align: center;
-  font-size: 11px;
-  color: var(--muted);
-  padding: 0 40px;
-  line-height: 1.6;
-}
-
-/* Responsive */
+/* ── Responsive ───────────────────────────────────── */
 @media (max-width: 900px) {
   .page { grid-template-columns: 1fr; }
   .brand { display: none; }
-  .formPanel { padding: 40px 24px; background: var(--white); }
-  .formBox { box-shadow: none; border: none; padding: 0; }
+  .formPanel { padding: 40px 20px; background: var(--white); }
+  .formBox { box-shadow: none; padding: 32px 24px; }
 }

@@ -4,14 +4,22 @@ import AdminCrud from '@/components/features/AdminCrud'
 import { api } from '@/lib/api'
 
 /**
- * Admin Corsi — gestione con publishState al posto del solo boolean available.
+ * Admin Corsi — gestione con publishState e thumbnailUrl configurabile.
  * publishState: HIDDEN | VISIBLE_LOCKED | PUBLISHED
+ * thumbnailUrl: opzionale, se vuoto usa placeholder automatico dal brand software
  */
 export default function AdminCoursesPage() {
   return (
     <AdminCrud
       title="Moduli / Corsi"
       columns={[
+        {
+          key: 'thumbnailUrl',
+          label: '',
+          render: (v: any, row: any) => v
+            ? <img src={v} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border)' }} />
+            : <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>auto</span>,
+        },
         { key: 'title', label: 'Titolo' },
         { key: 'slug', label: 'Slug' },
         { key: 'level', label: 'Livello' },
@@ -66,6 +74,12 @@ export default function AdminCoursesPage() {
             { value: 'VISIBLE_LOCKED', label: '🔒 Visibile bloccato — compare nel catalogo ma non è fruibile' },
             { value: 'HIDDEN', label: '⚫ Nascosto — non compare nel catalogo' },
           ],
+        },
+        {
+          key: 'thumbnailUrl',
+          label: 'Anteprima immagine (URL opzionale)',
+          type: 'text',
+          placeholder: 'https://example.com/immagine.jpg — lascia vuoto per usare il placeholder automatico',
         },
       ]}
     />

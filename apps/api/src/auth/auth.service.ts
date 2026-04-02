@@ -34,8 +34,18 @@ export class AuthService {
     return this.buildTokenResponse(user)
   }
 
+  /**
+   * getProfile — select esplicita e sicura.
+   * NON usare select: { ...campi } con campi che potrebbero non esistere nel DB.
+   * Se lo schema Prisma è disallineato dal DB, usare solo campi certi.
+   *
+   * FIX: rimosso il campo 'colonna' che causava PrismaClientKnownRequestError
+   * "The column `colonna` does not exist in the current database."
+   * Quel campo era stato aggiunto per errore in uno schema Prisma locale
+   * senza la corrispondente migration sul DB.
+   */
   async getProfile(userId: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -46,30 +56,40 @@ export class AuthService {
         role: true,
         avatarUrl: true,
         createdAt: true,
+        // Relazione membership → company
         membership: {
-          include: {
-            company: { select: { id: true, name: true, slug: true } },
+          select: {
+            company: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
           },
         },
       },
     })
+    if (!user) return null
+    // Normalizza: porta company al livello radice per comodità del frontend
+    return {
+      ...user,
+      company: user.membership?.company ?? null,
+      membership: undefined,
+    }
   }
 
   /**
-   * Aggiorna il profilo dell'utente autenticato.
-   * Gestisce: name, firstName, lastName, email (con verifica unicità).
-   * Non permette il cambio di ruolo tramite questo endpoint.
+   * updateProfile — aggiorna nome, email.
+   * Se l'email cambia, restituisce un nuovo accessToken.
    */
   async updateProfile(
     userId: string,
     data: { name?: string; firstName?: string; lastName?: string; email?: string },
   ) {
-    // Validazione base name
     if (data.name !== undefined && data.name.trim().length < 2) {
       throw new BadRequestException('Il nome deve avere almeno 2 caratteri')
     }
-
-    // Se cambia email, verifica unicità
     if (data.email !== undefined) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(data.email)) {
@@ -100,7 +120,6 @@ export class AuthService {
       },
     })
 
-    // Se l'email è cambiata, occorre un nuovo token (il payload del JWT contiene email)
     if (data.email !== undefined) {
       return {
         user: updated,
@@ -108,42 +127,24 @@ export class AuthService {
         tokenRefreshed: true,
       }
     }
-
     return { user: updated, tokenRefreshed: false }
   }
 
   /**
-   * Cambia password con verifica della password attuale.
+   * changePassword — richiede la password attuale.
    */
-  async changePassword(
-    userId: string,
-    currentPassword: string,
-    newPassword: string,
-  ) {
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } })
     if (!user) throw new NotFoundException('Utente non trovato')
-
-    if (!user.passwordHash) {
-      throw new BadRequestException('Questo account non ha una password impostata')
-    }
+    if (!user.passwordHash) throw new BadRequestException('Questo account non ha una password impostata')
 
     const valid = await bcrypt.compare(currentPassword, user.passwordHash)
     if (!valid) throw new UnauthorizedException('La password attuale non è corretta')
-
-    // Validazione nuova password
-    if (newPassword.length < 8) {
-      throw new BadRequestException('La nuova password deve avere almeno 8 caratteri')
-    }
-    if (newPassword === currentPassword) {
-      throw new BadRequestException('La nuova password deve essere diversa da quella attuale')
-    }
+    if (newPassword.length < 8) throw new BadRequestException('La nuova password deve avere almeno 8 caratteri')
+    if (newPassword === currentPassword) throw new BadRequestException('La nuova password deve essere diversa da quella attuale')
 
     const newHash = await bcrypt.hash(newPassword, 12)
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash: newHash },
-    })
-
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: newHash } })
     return { message: 'Password aggiornata con successo' }
   }
 
@@ -155,23 +156,13 @@ export class AuthService {
   }
 
   async promoteToFirstAdmin(userId: string) {
-    const existingAdmin = await this.prisma.user.findFirst({
-      where: { role: 'ADMIN', deletedAt: null },
-    })
+    const existingAdmin = await this.prisma.user.findFirst({ where: { role: 'ADMIN', deletedAt: null } })
     if (existingAdmin) throw new ForbiddenException('Un amministratore esiste già.')
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { role: 'ADMIN' },
-    })
+    const user = await this.prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } })
     return { message: 'Promosso ad ADMIN.', ...this.buildTokenResponse(user) }
   }
 
-  private buildTokenResponse(user: {
-    id: string
-    email: string
-    role: string
-    name?: string | null
-  }) {
+  private buildTokenResponse(user: { id: string; email: string; role: string; name?: string | null }) {
     const payload = { sub: user.id, email: user.email, role: user.role }
     return {
       accessToken: this.jwt.sign(payload),

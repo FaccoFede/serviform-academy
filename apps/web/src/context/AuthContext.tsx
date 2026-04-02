@@ -1,69 +1,118 @@
 'use client'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-export interface AuthUser {
+interface User {
   id: string
   email: string
   name?: string
   firstName?: string
   lastName?: string
-  role: 'USER' | 'ADMIN' | 'TEAM_ADMIN'
-  company?: { id: string; name: string; slug: string } | null
+  role: string
+  avatarUrl?: string
 }
 
 interface AuthContextType {
-  user: AuthUser | null
+  user: User | null
   token: string | null
+  isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, name?: string) => Promise<void>
   logout: () => void
-  isLoading: boolean
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const TOKEN_KEY = 'sa_token'
+
+// Interceptor globale: cattura 401 SOLO se non è l'endpoint di login/register
+// In questo modo un completamento modulo che restituisce 401 non causa logout
+let globalLogoutHandler: (() => void) | null = null
+
+export function setupAuthInterceptor(logoutFn: () => void) {
+  globalLogoutHandler = logoutFn
+}
+
+/**
+ * fetchWithAuth - wrapper che aggiunge il token e gestisce 401.
+ * NON fa logout automatico: restituisce la risposta e lascia che il chiamante decida.
+ * Questo previene il logout involontario durante il completamento di un modulo.
+ */
+export async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+  token: string | null,
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {}),
+  }
+  if (token) headers['Authorization'] = 'Bearer ' + token
+
+  const res = await fetch(url, { ...options, headers })
+
+  // 401 su endpoint progress/certificates: NON fare logout, rilanciare l'errore
+  // 401 su /auth/profile: il token è scaduto, logout
+  if (res.status === 401) {
+    const path = new URL(url, 'http://localhost').pathname
+    const isCritical = path.startsWith('/auth/profile')
+    if (isCritical && globalLogoutHandler) {
+      globalLogoutHandler()
+    }
+  }
+
+  return res
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    // Sicuro: solo client-side
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('sa_token') : null
-    if (saved) {
-      setToken(saved)
-      fetchProfile(saved)
-    } else {
-      setIsLoading(false)
-    }
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY)
+    setToken(null)
+    setUser(null)
   }, [])
 
-  async function fetchProfile(t: string) {
+  // Registra il logout globale per l'interceptor
+  useEffect(() => {
+    setupAuthInterceptor(logout)
+  }, [logout])
+
+  const loadProfile = useCallback(async (t: string) => {
     try {
-      const res = await fetch(`${API_URL}/auth/profile`, {
+      const res = await fetch(API_URL + '/auth/profile', {
         headers: { Authorization: 'Bearer ' + t },
       })
       if (res.ok) {
         const data = await res.json()
-        setUser({
-          ...data,
-          company: data.membership?.company ?? null,
-        })
-        setToken(t)
-      } else {
-        if (typeof window !== 'undefined') localStorage.removeItem('sa_token')
+        setUser(data)
+        return true
       }
-    } catch {
-      // network error — mantieni loading false
-    } finally {
+      // Token scaduto o invalido
+      if (res.status === 401) {
+        localStorage.removeItem(TOKEN_KEY)
+        setToken(null)
+        setUser(null)
+      }
+    } catch {}
+    return false
+  }, [])
+
+  // Bootstrap: carica il token dal localStorage all'avvio
+  useEffect(() => {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (stored) {
+      setToken(stored)
+      loadProfile(stored).finally(() => setIsLoading(false))
+    } else {
       setIsLoading(false)
     }
-  }
+  }, [loadProfile])
 
-  async function login(email: string, password: string) {
-    const res = await fetch(`${API_URL}/auth/login`, {
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await fetch(API_URL + '/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -73,36 +122,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(err.message || 'Credenziali non valide')
     }
     const data = await res.json()
-    const u: AuthUser = { ...data.user, company: data.user.company ?? null }
-    setToken(data.accessToken)
-    setUser(u)
-    if (typeof window !== 'undefined') localStorage.setItem('sa_token', data.accessToken)
-  }
+    const t = data.accessToken
+    localStorage.setItem(TOKEN_KEY, t)
+    setToken(t)
+    setUser(data.user || data)
+  }, [])
 
-  async function register(email: string, password: string, name?: string) {
-    const res = await fetch(`${API_URL}/auth/register`, {
+  const register = useCallback(async (email: string, password: string, name?: string) => {
+    const res = await fetch(API_URL + '/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
-      throw new Error(err.message || 'Errore di registrazione')
+      throw new Error(err.message || 'Errore durante la registrazione')
     }
     const data = await res.json()
-    setToken(data.accessToken)
-    setUser({ ...data.user, company: null })
-    if (typeof window !== 'undefined') localStorage.setItem('sa_token', data.accessToken)
-  }
+    const t = data.accessToken
+    localStorage.setItem(TOKEN_KEY, t)
+    setToken(t)
+    setUser(data.user || data)
+  }, [])
 
-  function logout() {
-    setUser(null)
-    setToken(null)
-    if (typeof window !== 'undefined') localStorage.removeItem('sa_token')
-  }
+  const refreshUser = useCallback(async () => {
+    if (token) await loadProfile(token)
+  }, [token, loadProfile])
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

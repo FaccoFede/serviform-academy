@@ -151,6 +151,7 @@ model Course {
   duration     String?
   available    Boolean   @default(true)
   publishState PublishState @default(PUBLISHED)
+  thumbnailUrl String?
   softwareId   String
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -180,7 +181,7 @@ model Unit {
   videoUrl  String?
   courseId  String
   course    Course   @relation(fields: [courseId], references: [id])
-  guide     GuideReference?
+  guides    GuideReference[]
   exercises Exercise[]
   progress  UserProgress[]
   createdAt DateTime @default(now())
@@ -200,7 +201,8 @@ model GuideReference {
   zendeskId String
   title     String
   url       String
-  unitId    String @unique
+  order     Int    @default(0)
+  unitId    String
   unit      Unit   @relation(fields: [unitId], references: [id])
 }
 
@@ -237,6 +239,17 @@ model UserProgress {
   unit        Unit      @relation(fields: [unitId], references: [id])
   @@unique([userId, unitId])
   @@index([userId, completed])
+}
+
+model VideoAsset {
+  id        String   @id @default(uuid())
+  title     String
+  filename  String
+  url       String
+  size      Int?
+  mimeType  String   @default("video/mp4")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VideoPill {

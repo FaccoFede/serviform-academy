@@ -48,7 +48,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export interface Software { id: string; name: string; slug: string; tagline?: string; color?: string; lightColor?: string }
-export interface Course { id: string; title: string; slug: string; description?: string; level?: string; duration?: string; available: boolean; publishState?: string; software?: Software; units?: Unit[] }
+export interface Course { id: string; title: string; slug: string; description?: string; level?: string; duration?: string; available: boolean; publishState?: string; thumbnailUrl?: string; software?: Software; units?: Unit[] }
 export interface Unit { id: string; title: string; slug: string; order: number; subtitle?: string; duration?: string; unitType: string; content?: string; videoUrl?: string; courseId: string; guide?: any; exercises?: any[] }
 
 export const api = {
@@ -147,7 +147,23 @@ export const api = {
   },
   certificates: {
     issue: (slug: string) => request('/certificates/issue', { method: 'POST', body: JSON.stringify({ courseSlug: slug }) }),
+    my: () => request<any[]>('/certificates/my'),
   },
+  uploads: {
+  image: async (file: File, token: string) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch(
+      (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/uploads/image',
+      { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }
+    )
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}))
+      throw new Error(e.message || 'Upload fallito')
+    }
+    return res.json() as Promise<{ url: string; filename: string }>
+  },
+},
   auth: {
     login: (email: string, password: string) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     register: (email: string, password: string, name?: string) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),

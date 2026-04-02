@@ -206,17 +206,35 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
             <h1 className={styles.unitTitle}>{data.title}</h1>
             {data.subtitle && <p className={styles.unitSubtitle}>{data.subtitle}</p>}
           </div>
-
-          {data.videoUrl && <ProtectedVideo url={data.videoUrl} title={data.title}/>}
+            <div className={styles.videoWrapper}>
+              <ProtectedVideo url={data.videoUrl} title={data.title}/>
+            </div>
           {data.content && <div className={styles.richContent} dangerouslySetInnerHTML={{__html: data.content}}/>}
           {!data.videoUrl && !data.content && <p style={{color:'var(--muted)',padding:'40px 0'}}>Nessun contenuto per questa unità.</p>}
 
-          {data.guide && (
-            <div className={styles.guideSection}>
-              <span className={styles.guideLabel}>Guida di riferimento Zendesk</span>
-              <a href={data.guide.url} target="_blank" rel="noopener" className={styles.guideLink}>→ {data.guide.title}</a>
-            </div>
-          )}
+          {(data.guides?.length > 0 || data.guide) && (
+      <div className={styles.guideSection}>
+       <span className={styles.guideLabel}>
+        {(data.guides?.length || 1) > 1 ? 'Guide di riferimento' : 'Guida di riferimento'}
+       </span>
+       {/* Supporta sia il vecchio campo guide (singolo) che il nuovo guides (array) */}
+       {(data.guides?.length > 0 ? data.guides : [data.guide]).map((g: any) => (
+         <a
+           key={g.id}
+           href={g.url}
+           target="_blank"
+           rel="noopener noreferrer"
+           className={styles.guideLink}
+         >
+           <svg viewBox="0 0 16 16" fill="none" width={13} height={13}>
+             <path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1v-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+             <path d="M9 2h5v5M14 2L8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+           </svg>
+           {g.title}
+         </a>
+       ))}
+     </div>
+   )}
           {data.exercises?.length > 0 && (
             <div className={styles.exercisesSection}>
               <h3 className={styles.exercisesTitle}>Esercitazioni pratiche</h3>

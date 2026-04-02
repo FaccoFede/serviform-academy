@@ -278,23 +278,29 @@ export default function UnitPageClient({ data, slug, unitSlug }: UnitPageClientP
             <div className={styles.richContent} dangerouslySetInnerHTML={{ __html: data.content }} />
           )}
 
-          {data.guide && (
-            <div className={styles.guideSection}>
-              <span className={styles.guideLabel}>
-                <svg viewBox="0 0 16 16" fill="none" width={13} height={13}>
-                  <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M6 6.5a2 2 0 114 0c0 1-1 1.5-2 2M8 11.5v.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                Guida di riferimento
-              </span>
-              <a href={data.guide.url} target="_blank" rel="noopener" className={styles.guideLink}>
-                <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
-                  <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {data.guide.title} — Zendesk
-              </a>
-            </div>
-          )}
+          {(data.guides?.length > 0 || data.guide) && (
+     <div className={styles.guideSection}>
+       <span className={styles.guideLabel}>
+         {(data.guides?.length || 1) > 1 ? 'Guide di riferimento' : 'Guida di riferimento'}
+       </span>
+       {/* Supporta sia il vecchio campo guide (singolo) che il nuovo guides (array) */}
+       {(data.guides?.length > 0 ? data.guides : [data.guide]).map((g: any) => (
+         <a
+           key={g.id}
+           href={g.url}
+           target="_blank"
+           rel="noopener noreferrer"
+           className={styles.guideLink}
+         >
+           <svg viewBox="0 0 16 16" fill="none" width={13} height={13}>
+             <path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1v-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+             <path d="M9 2h5v5M14 2L8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+           </svg>
+           {g.title}
+         </a>
+       ))}
+     </div>
+   )}
 
           {data.exercises?.length > 0 && (
             <div className={styles.exercisesSection}>

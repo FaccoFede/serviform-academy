@@ -2,16 +2,18 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
-import { useProgress } from '@/context/ProgressContext'
-import { getBrand, LEVEL_COLORS } from '@/lib/brands'
+import { getBrand } from '@/lib/brands'
 import styles from './Catalog.module.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-export default function CatalogClient({ initialCourses }: { initialCourses: any[] }) {
+// ── prop rinominata da initialCourses → courses, allineata con page.tsx ──────
+export default function CatalogClient({ courses: rawCourses }: { courses: any[] }) {
   const { user, token } = useAuth()
-  const { courseProgress, loadCompletedUnitsFromServer } = useProgress()
-  const [courses] = useState<any[]>(initialCourses)
+
+  // Guard difensivo: garantisce sempre un array anche se il server manda null/undefined
+  const courses: any[] = Array.isArray(rawCourses) ? rawCourses : []
+
   const [q, setQ] = useState('')
   const [softwareFilter, setSoftwareFilter] = useState<string>('ALL')
   const [levelFilter, setLevelFilter] = useState<string>('ALL')
@@ -19,23 +21,22 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
 
   // Carica il progresso di tutti i corsi se loggato
   useEffect(() => {
-    if (!user || !token) return
+    if (!user || !token || courses.length === 0) return
     const h = { Authorization: 'Bearer ' + token }
     courses.forEach(c => {
+      if (!c?.slug) return
       fetch(`${API_URL}/progress/course/${c.slug}`, { headers: h })
         .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          if (d) setProgressMap(prev => ({ ...prev, [c.slug]: d }))
-        })
+        .then(d => { if (d) setProgressMap(prev => ({ ...prev, [c.slug]: d })) })
         .catch(() => {})
     })
   }, [user, token, courses])
 
-  // Software unici
+  // Software unici — guard con optional chaining
   const softwares = useMemo(() => {
     const map = new Map<string, { slug: string; name: string }>()
     courses.forEach(c => {
-      if (c.software) map.set(c.software.slug, c.software)
+      if (c?.software?.slug) map.set(c.software.slug, c.software)
     })
     return Array.from(map.values())
   }, [courses])
@@ -43,19 +44,19 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
   // Livelli unici
   const levels = useMemo(() => {
     const set = new Set<string>()
-    courses.forEach(c => { if (c.level) set.add(c.level) })
+    courses.forEach(c => { if (c?.level) set.add(c.level) })
     return Array.from(set)
   }, [courses])
 
   const filtered = useMemo(() => {
     let out = courses
-    if (softwareFilter !== 'ALL') out = out.filter(c => c.software?.slug === softwareFilter)
-    if (levelFilter !== 'ALL') out = out.filter(c => c.level === levelFilter)
+    if (softwareFilter !== 'ALL') out = out.filter(c => c?.software?.slug === softwareFilter)
+    if (levelFilter !== 'ALL') out = out.filter(c => c?.level === levelFilter)
     if (q.trim()) {
       const ql = q.toLowerCase()
       out = out.filter(c =>
-        c.title.toLowerCase().includes(ql) ||
-        (c.description || '').toLowerCase().includes(ql)
+        (c?.title || '').toLowerCase().includes(ql) ||
+        (c?.description || '').toLowerCase().includes(ql)
       )
     }
     return out
@@ -74,7 +75,7 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
           </nav>
           <h1 className={styles.title}>Catalogo corsi</h1>
           <p className={styles.sub}>
-            {filtered.length} corso{filtered.length !== 1 ? 'i' : ''} disponibili
+            {filtered.length} corso{filtered.length !== 1 ? 'i' : ''} disponibil{filtered.length !== 1 ? 'i' : 'e'}
           </p>
         </div>
       </div>
@@ -95,9 +96,7 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
               value={q}
               onChange={e => setQ(e.target.value)}
             />
-            {q && (
-              <button className={styles.searchClear} onClick={() => setQ('')}>×</button>
-            )}
+            {q && <button className={styles.searchClear} onClick={() => setQ('')}>×</button>}
           </div>
 
           {/* Filtro software */}
@@ -138,7 +137,11 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
 
       {/* ── Risultati ───────────────────────────────────────────────────── */}
       <div className={styles.resultsInner}>
-        {filtered.length === 0 ? (
+        {courses.length === 0 ? (
+          <div className={styles.empty}>
+            <p>Nessun corso disponibile al momento.</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className={styles.empty}>
             <p>Nessun corso trovato per i filtri selezionati.</p>
             <button onClick={() => { setQ(''); setSoftwareFilter('ALL'); setLevelFilter('ALL') }}>
@@ -148,12 +151,12 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
         ) : (
           <div className={styles.cardGrid}>
             {filtered.map(course => {
-              const brand = getBrand(course.software?.slug || '')
-              const prog = progressMap[course.slug]
-              const isActive = course.available !== false
+              const brand = getBrand(course?.software?.slug || '')
+              const prog = progressMap[course?.slug]
+              const isActive = course?.available !== false
               const hasProgress = prog && prog.percent > 0
               const isDone = prog && prog.percent >= 100
-              const unitCount = course.units?.filter((u: any) => u.unitType !== 'OVERVIEW').length || 0
+              const unitCount = (course?.units || []).filter((u: any) => u?.unitType !== 'OVERVIEW').length
 
               return (
                 <CourseCard
@@ -176,39 +179,24 @@ export default function CatalogClient({ initialCourses }: { initialCourses: any[
   )
 }
 
-// ─── Componente Card ─────────────────────────────────────────────────────────
+// ─── Card corso ──────────────────────────────────────────────────────────────
 
-function CourseCard({
-  course, brand, prog, hasProgress, isDone, isActive, unitCount, isLoggedIn
-}: {
-  course: any
-  brand: any
-  prog: any
-  hasProgress: boolean
-  isDone: boolean
-  isActive: boolean
-  unitCount: number
-  isLoggedIn: boolean
+function CourseCard({ course, brand, prog, hasProgress, isDone, isActive, unitCount, isLoggedIn }: {
+  course: any; brand: any; prog: any; hasProgress: boolean
+  isDone: boolean; isActive: boolean; unitCount: number; isLoggedIn: boolean
 }) {
   return (
     <Link
       href={`/courses/${course.slug}`}
       className={[styles.card, !isActive ? styles.cardLocked : ''].join(' ')}
     >
-      {/* Accent line colorata in cima */}
       <div className={styles.cardAccent} style={{ background: brand.color }}/>
 
-      {/* Thumbnail / placeholder famiglia */}
       <div className={styles.cardThumb} style={{ background: brand.light }}>
-        <span className={styles.cardThumbLabel} style={{ color: brand.color }}>
-          {brand.name}
-        </span>
-        {isDone && (
-          <span className={styles.cardThumbBadgeDone}>✓</span>
-        )}
+        <span className={styles.cardThumbLabel} style={{ color: brand.color }}>{brand.name}</span>
+        {isDone && <span className={styles.cardThumbBadgeDone}>✓</span>}
       </div>
 
-      {/* Body */}
       <div className={styles.cardBody}>
         <div className={styles.cardTop}>
           <span className={styles.cardTag} style={{ background: brand.light, color: brand.color }}>
@@ -219,13 +207,7 @@ function CourseCard({
           ) : isLoggedIn && hasProgress ? (
             <span className={styles.stateBadgeProgress}>{prog.percent}%</span>
           ) : !isActive ? (
-            <span className={styles.stateBadgeLocked}>
-              <svg viewBox="0 0 10 12" fill="none" width={9} height={10}>
-                <rect x="1" y="4.5" width="8" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.1"/>
-                <path d="M3 4.5V3a2 2 0 114 0v1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-              </svg>
-              Bloccato
-            </span>
+            <span className={styles.stateBadgeLocked}>Bloccato</span>
           ) : (
             <span className={styles.stateBadgePreview}>Disponibile</span>
           )}
@@ -237,7 +219,6 @@ function CourseCard({
           <p className={styles.cardDesc}>{course.description}</p>
         )}
 
-        {/* Progress bar se in corso */}
         {isLoggedIn && hasProgress && !isDone && (
           <div className={styles.cardProgressWrap}>
             <div className={styles.cardProgressTrack}>
@@ -247,28 +228,14 @@ function CourseCard({
           </div>
         )}
 
-        {/* Meta */}
         <div className={styles.cardFoot}>
-          {course.level && (
-            <span className={styles.footItem}>{course.level}</span>
-          )}
-          {course.duration && (
-            <span className={styles.footItem}>{course.duration}</span>
-          )}
-          {unitCount > 0 && (
-            <span className={styles.footItem}>{unitCount} unità</span>
-          )}
-
-          {/* CTA */}
+          {course.level && <span className={styles.footItem}>{course.level}</span>}
+          {course.duration && <span className={styles.footItem}>{course.duration}</span>}
+          {unitCount > 0 && <span className={styles.footItem}>{unitCount} unità</span>}
           <span className={styles.cardCta}>
-            {isLoggedIn && hasProgress && !isDone
-              ? 'Continua →'
-              : isLoggedIn && isDone
-                ? 'Rileggi →'
-                : isActive
-                  ? 'Inizia →'
-                  : 'Dettagli →'
-            }
+            {isLoggedIn && hasProgress && !isDone ? 'Continua →'
+              : isLoggedIn && isDone ? 'Rileggi →'
+              : isActive ? 'Inizia →' : 'Dettagli →'}
           </span>
         </div>
       </div>

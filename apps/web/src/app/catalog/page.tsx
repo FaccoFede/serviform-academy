@@ -1,10 +1,17 @@
-import { api } from '@/lib/api'
 import CatalogClient from './CatalogClient'
 
 export const metadata = { title: 'Catalogo — Serviform Academy' }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
 export default async function CatalogPage() {
   let courses: any[] = []
-  try { courses = await api.courses.findAll() } catch {}
-  return <CatalogClient courses={courses} />
+  try {
+    const res = await fetch(`${API_URL}/courses`, { cache: 'no-store' })
+    if (res.ok) courses = await res.json()
+  } catch {
+    // backend non raggiungibile — mostra catalogo vuoto
+  }
+  // PROP NAME: "courses" (non "initialCourses") — allineato con CatalogClient
+  return <CatalogClient courses={Array.isArray(courses) ? courses : []} />
 }

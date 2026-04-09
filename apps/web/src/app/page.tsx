@@ -76,32 +76,11 @@ export default async function PublicHomePage() {
         </div>
       </section>
 
-     {/* ── COME FUNZIONA ─────────────────────────────────────── */}
+      {/* ── FAMIGLIE SOFTWARE ─────────────────────────────────── */}
       <section className={styles.section}>
         <div className={styles.inner}>
-          <div className={styles.sectionTag}>Come funziona</div>
-          <h2 className={styles.sectionTitle}>Dalla registrazione alla certificazione</h2>
-          <div className={styles.stepsGrid}>
-            {[
-              { n: '01', t: 'Esplora', d: 'Sfoglia il catalogo e scegli il percorso più adatto alle tue esigenze.' },
-              { n: '02', t: 'Studia', d: 'Tieni traccia dei tuoi traguardi e amplia le tue conoscenze.' },
-              { n: '03', t: 'Certifica', d: 'Completa il tuo percorso e certifica le tue competenze.' },
-            ].map((s, i) => (
-              <div key={i} className={styles.step}>
-                <span className={styles.stepN}>{s.n}</span>
-                <div className={styles.stepT}>{s.t}</div>
-                <p className={styles.stepD}>{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAMIGLIE SOFTWARE ─────────────────────────────────── */}
-      <section className={styles.sectionDark}>
-        <div className={styles.inner}>
-          <div className={styles.sectionTag}>Percorsi di apprendimento</div>
-          <h2 className={styles.sectionTitle}>Cosa vuoi imparare oggi?</h2>
+          <div className={styles.sectionTag}>I software</div>
+          <h2 className={styles.sectionTitle}>Scegli la tua famiglia</h2>
           <div className={styles.familyGrid}>
             {families.map(f => {
               const count = courses.filter(c => c.software?.slug === f.key).length
@@ -124,7 +103,7 @@ export default async function PublicHomePage() {
 
       {/* ── TEASER CORSI ──────────────────────────────────────── */}
       {teaser.length > 0 && (
-        <section className={styles.section}>
+        <section className={styles.sectionDark}>
           <div className={styles.inner}>
             <div className={styles.sectionRow}>
               <div>
@@ -175,7 +154,26 @@ export default async function PublicHomePage() {
         </section>
       )}
 
- 
+      {/* ── COME FUNZIONA ─────────────────────────────────────── */}
+      <section className={styles.section}>
+        <div className={styles.inner}>
+          <div className={styles.sectionTag}>Come funziona</div>
+          <h2 className={styles.sectionTitle}>Dalla registrazione alla certificazione</h2>
+          <div className={styles.stepsGrid}>
+            {[
+              { n: '01', t: 'Esplora', d: 'Sfoglia il catalogo per software o livello. Anteprima gratuita sulle prime unità.' },
+              { n: '02', t: 'Studia', d: 'Unità brevi con contenuto HTML e video. Guide Zendesk integrate per ogni argomento.' },
+              { n: '03', t: 'Certifica', d: 'Completa tutte le unità e ottieni il tuo attestato verificabile.' },
+            ].map((s, i) => (
+              <div key={i} className={styles.step}>
+                <span className={styles.stepN}>{s.n}</span>
+                <div className={styles.stepT}>{s.t}</div>
+                <p className={styles.stepD}>{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── CTA FINALE ────────────────────────────────────────── */}
       <section className={styles.sectionCta}>

@@ -9,22 +9,20 @@ import styles from './Topbar.module.css'
 // ─────────────────────────────────────────────────────────────────────────────
 // LOGO CONFIGURATION
 // ─────────────────────────────────────────────────────────────────────────────
-// Il logo SVG e il testo vengono sempre mostrati insieme.
-//
 // Per attivare il logo SVG:
 //   1. Copia il file in: apps/web/public/logo.svg
 //   2. Imposta SHOW_LOGO = true
-//
-// Il logo si adatta automaticamente all'altezza della topbar via CSS.
-// Modifica BRAND_TEXT per cambiare il testo affiancato al logo.
-const SHOW_LOGO  = true                  // false = nasconde il logo SVG, mostra solo testo
-const LOGO_PATH  = '/logo.svg'           // percorso relativo da public/
-const BRAND_TEXT = 'Serviform Academy'   // testo accanto al logo
+const SHOW_LOGO  = true
+const LOGO_PATH  = '/logo.svg'
+const BRAND_TEXT = 'Serviform Academy'
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// NAV — MODIFICA: Newsroom aggiunta tra Corsi e Admin
+// ─────────────────────────────────────────────────────────────────────────────
 const NAV = [
   { href: '/catalog',  label: 'Corsi' },
-  //{ href: '/newsroom', label: 'Newsroom' },
+  { href: '/newsroom', label: 'Newsroom' },
 ]
 
 export default function Topbar() {
@@ -55,9 +53,10 @@ export default function Topbar() {
     <header className={styles.bar}>
 
       {/* ── LOGO + TESTO ──────────────────────────────────────────── */}
-      {/* Logo SVG e testo "Serviform Academy" sempre affiancati.     */}
-      {/* Il logo usa object-fit: contain e si scala via CSS puro.    */}
-      <Link href="/" className={styles.logoWrap}>
+      {/*
+        MODIFICA: logo/titolo → /dashboard se autenticato, / se non autenticato
+      */}
+      <Link href={user ? '/dashboard' : '/'} className={styles.logoWrap}>
         {SHOW_LOGO && (
           <div className={styles.logoImgWrap}>
             <Image
@@ -78,7 +77,10 @@ export default function Topbar() {
           <Link
             key={item.href}
             href={item.href}
-            className={[styles.navLink, pathname?.startsWith(item.href) ? styles.navActive : ''].join(' ')}
+            className={[
+              styles.navLink,
+              pathname?.startsWith(item.href) ? styles.navActive : '',
+            ].join(' ')}
           >
             {item.label}
           </Link>
@@ -86,7 +88,10 @@ export default function Topbar() {
         {user?.role === 'ADMIN' && (
           <Link
             href="/admin"
-            className={[styles.navLink, pathname?.startsWith('/admin') ? styles.navActive : ''].join(' ')}
+            className={[
+              styles.navLink,
+              pathname?.startsWith('/admin') ? styles.navActive : '',
+            ].join(' ')}
           >
             Admin
           </Link>
@@ -106,14 +111,20 @@ export default function Topbar() {
                 aria-label="Comunicazioni"
               >
                 <svg viewBox="0 0 20 20" fill="none" width={18} height={18}>
-                  <path d="M10 2a6 6 0 00-6 6c0 3.5-1.5 5-1.5 5h15S16 11.5 16 8a6 6 0 00-6-6z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
-                  <path d="M11.73 17a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                  <path d="M10 2a6 6 0 00-6 6c0 3.5-1.5 5-1.5 5h15S16 11.5 16 8a6 6 0 00-6-6z"
+                    stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+                  <path d="M11.73 17a2 2 0 01-3.46 0"
+                    stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
               </button>
               {annOpen && (
                 <div className={styles.annPanel}>
                   <div className={styles.annHead}>Comunicazioni</div>
-                  <div className={styles.annEmpty}>Nessuna comunicazione</div>
+                  <div className={styles.annEmpty}>
+                    <Link href="/newsroom" onClick={() => setAnnOpen(false)}>
+                      Vai alla Newsroom →
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
@@ -128,14 +139,17 @@ export default function Topbar() {
                 <span className={styles.userName}>{displayName}</span>
                 <svg viewBox="0 0 10 10" fill="none" width={10} height={10}
                   style={{ transform: userOpen ? 'rotate(180deg)' : 'none', transition: '150ms' }}>
-                  <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2"
+                    strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
 
               {userOpen && (
                 <div className={styles.userPanel}>
                   <div className={styles.userPanelInfo}>
-                    <div className={styles.userPanelAvatar}>{displayName[0]?.toUpperCase() || '?'}</div>
+                    <div className={styles.userPanelAvatar}>
+                      {displayName[0]?.toUpperCase() || '?'}
+                    </div>
                     <div>
                       <div className={styles.userPanelName}>{displayName}</div>
                       <div className={styles.userPanelEmail}>{user.email}</div>
@@ -143,7 +157,9 @@ export default function Topbar() {
                   </div>
 
                   {(user as any).company && (
-                    <div className={styles.userPanelCompany}>{(user as any).company.name}</div>
+                    <div className={styles.userPanelCompany}>
+                      {(user as any).company.name}
+                    </div>
                   )}
 
                   <div className={styles.userPanelDivider}/>
@@ -179,7 +195,8 @@ export default function Topbar() {
                   <Link href="/profile" className={styles.userPanelItem} onClick={() => setUserOpen(false)}>
                     <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
                       <circle cx="7" cy="4.5" r="2.5" stroke="currentColor" strokeWidth="1.1"/>
-                      <path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                      <path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5"
+                        stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
                     </svg>
                     Il mio profilo
                   </Link>
@@ -188,7 +205,8 @@ export default function Topbar() {
 
                   <button className={styles.userPanelLogout} onClick={handleLogout}>
                     <svg viewBox="0 0 14 14" fill="none" width={13} height={13}>
-                      <path d="M9 2h2a1 1 0 011 1v8a1 1 0 01-1 1H9M6 10l3-3-3-3M9 7H2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 2h2a1 1 0 011 1v8a1 1 0 01-1 1H9M6 10l3-3-3-3M9 7H2"
+                        stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     Esci
                   </button>

@@ -39,17 +39,36 @@ function sanitize(data: any): any {
 export class AnnouncementsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findPublished(section?: string) {
+  /**
+   * findPublished — restituisce le comunicazioni pubblicate.
+   *
+   * MODIFICA: aggiunto parametro opzionale `userId`.
+   * Se presente, include il campo `read: boolean` per ogni comunicazione,
+   * che indica se l'utente ha già aperto quella comunicazione.
+   * Logica: aperta (AnnouncementRead presente) = letta, non aperta = non letta.
+   */
+  async findPublished(section?: string, userId?: string) {
     const now = new Date()
     const where: any = {
       published: true,
       OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
     }
     if (section) where.section = section
-    return this.prisma.announcement.findMany({
+
+    const items = await this.prisma.announcement.findMany({
       where,
       orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }],
+      include: userId
+        ? { reads: { where: { userId }, select: { id: true } } }
+        : undefined,
     } as any)
+
+    // Mappa: aggiunge campo read, rimuove array reads dal payload
+    return items.map((item: any) => ({
+      ...item,
+      read: userId ? (item.reads?.length > 0) : false,
+      reads: undefined,
+    }))
   }
 
   findAll(section?: string) {
@@ -99,5 +118,28 @@ export class AnnouncementsService {
     const a = await this.prisma.announcement.findUnique({ where: { id } })
     if (!a) throw new NotFoundException('Annuncio non trovato')
     return this.prisma.announcement.delete({ where: { id } })
+  }
+
+  /**
+   * markRead — segna una comunicazione come letta per l'utente specificato.
+   *
+   * NUOVO METODO: chiamato da PATCH /announcements/:id/read
+   * (triggerato da AnnouncementModal.tsx ogni volta che si apre una comunicazione).
+   *
+   * Usa upsert per essere idempotente: aprire più volte la stessa comunicazione
+   * aggiorna solo readAt senza creare duplicati.
+   */
+  async markRead(announcementId: string, userId: string) {
+    // Verifica che l'announcement esista
+    const a = await this.prisma.announcement.findUnique({ where: { id: announcementId } })
+    if (!a) throw new NotFoundException('Comunicazione non trovata')
+
+    return (this.prisma as any).announcementRead.upsert({
+      where: {
+        announcementId_userId: { announcementId, userId },
+      },
+      create: { announcementId, userId },
+      update: { readAt: new Date() },
+    })
   }
 }

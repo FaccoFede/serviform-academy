@@ -78,11 +78,12 @@ export default function DashboardPage() {
         .then(r => r.ok ? r.json() : []),
     ])
       .then(([dashData, anns]) => {
+        console.log('[Dashboard] dashData:', dashData)
         setProgress(dashData.courses || [])
         setLastViewed(dashData.lastViewed || null)
         setAnnouncements(Array.isArray(anns) ? anns : [])
       })
-      .catch(() => {})
+      .catch((err) => { console.error('[Dashboard] fetch error:', err) })
       .finally(() => setLoadingData(false))
   }, [token])
 

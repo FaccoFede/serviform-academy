@@ -72,7 +72,7 @@ export default function DashboardPage() {
     if (!token) return
     const headers: any = { Authorization: 'Bearer ' + token }
     Promise.all([
-      fetch(`${API_URL}/progress/dashboard`, { headers })
+      fetch(`${API_URL}/progress/dashboard`, { headers, cache: 'no-store' })
         .then(r => r.ok ? r.json() : {}),
       fetch(`${API_URL}/announcements`, { headers })
         .then(r => r.ok ? r.json() : []),

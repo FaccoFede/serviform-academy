@@ -26,7 +26,6 @@ export class ProgressService {
   }
 
   async getCourseProgress(userId: string, courseSlug: string) {
-    // Conta solo unità LESSON/EXERCISE (non OVERVIEW)
     const units = await this.prisma.unit.findMany({
       where: { course: { slug: courseSlug }, ...LESSON_FILTER },
       select: { id: true },
@@ -70,23 +69,61 @@ export class ProgressService {
     }
   }
 
+  async getDashboard(userId: string) {
+    const [courses, lastViewed] = await Promise.all([
+      this.getAllCourseProgressForUser(userId),
+      this.getLastViewed(userId),
+    ])
+    return { courses, lastViewed }
+  }
+
   async getAllCourseProgressForUser(userId: string) {
-    const viewed = await this.prisma.userProgress.findMany({
+    // 1. Assegnazioni dirette all'utente
+    const userAssignments = await this.prisma.userCourseAssignment.findMany({
+      where: { userId },
+      select: { courseId: true },
+    })
+
+    // 2. Assegnazioni tramite azienda (via CompanyMembership)
+    const membership = await this.prisma.companyMembership.findUnique({
+      where: { userId },
+      select: { companyId: true },
+    })
+    let companyCourseIds: string[] = []
+    if (membership) {
+      const companyAssignments = await this.prisma.companyCourseAssignment.findMany({
+        where: { companyId: membership.companyId },
+        select: { courseId: true },
+      })
+      companyCourseIds = companyAssignments.map(a => a.courseId)
+    }
+
+    // 3. Corsi con progresso reale (copertura per admin e utenti senza assegnazioni esplicite)
+    const progressRows = await this.prisma.userProgress.findMany({
       where: { userId, viewedAt: { not: null } },
       include: { unit: { select: { courseId: true } } },
     })
-    const courseIds = [...new Set(viewed.map(p => p.unit.courseId))]
-    if (!courseIds.length) return []
+    const progressCourseIds = progressRows.map(p => p.unit.courseId)
 
+    // 4. Unione e deduplicazione
+    const allCourseIds = [...new Set([
+      ...userAssignments.map(a => a.courseId),
+      ...companyCourseIds,
+      ...progressCourseIds,
+    ])]
+    if (!allCourseIds.length) return []
+
+    // 5. Fetch corsi — nessun filtro deletedAt: i corsi su cui l'utente
+    //    ha già lavorato devono sempre comparire nella dashboard
     const courses = await this.prisma.course.findMany({
-      where: { id: { in: courseIds }, deletedAt: null },
+      where: { id: { in: allCourseIds } },
       include: {
         software: true,
-        // Solo unità LESSON/EXERCISE per il conteggio
         units: { where: LESSON_FILTER, select: { id: true } },
       },
     })
 
+    // 6. Calcolo progresso per ciascun corso
     const results: any[] = []
     for (const course of courses) {
       const unitIds = course.units.map(u => u.id)

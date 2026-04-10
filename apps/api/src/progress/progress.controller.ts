@@ -28,6 +28,11 @@ export class ProgressController {
     return this.progressService.getCompletedUnitIds(req.user.id, courseSlug)
   }
 
+  @Get('dashboard')
+  getDashboard(@Request() req: any) {
+    return this.progressService.getDashboard(req.user.id)
+  }
+
   @Get('last-viewed')
   getLastViewed(@Request() req: any) {
     return this.progressService.getLastViewed(req.user.id)

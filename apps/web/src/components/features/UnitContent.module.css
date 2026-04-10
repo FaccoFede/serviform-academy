@@ -1,4 +1,4 @@
-.content { }
+.content { display: block; }
 .block { margin-bottom: 32px; }
 
 .blockTitle {

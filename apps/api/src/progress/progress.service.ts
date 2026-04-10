@@ -70,6 +70,14 @@ export class ProgressService {
     }
   }
 
+  async getDashboard(userId: string) {
+    const [courses, lastViewed] = await Promise.all([
+      this.getAllCourseProgressForUser(userId),
+      this.getLastViewed(userId),
+    ])
+    return { courses, lastViewed }
+  }
+
   async getAllCourseProgressForUser(userId: string) {
     const viewed = await this.prisma.userProgress.findMany({
       where: { userId, viewedAt: { not: null } },

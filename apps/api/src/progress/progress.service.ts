@@ -99,10 +99,18 @@ export class ProgressService {
       companyCourseIds = companyAssignments.map(a => a.courseId)
     }
 
-    // 3. Unione e deduplicazione
+    // 3. Corsi con progresso reale (fallback per admin e utenti senza assegnazioni esplicite)
+    const progressRows = await this.prisma.userProgress.findMany({
+      where: { userId, viewedAt: { not: null } },
+      include: { unit: { select: { courseId: true } } },
+    })
+    const progressCourseIds = progressRows.map(p => p.unit.courseId)
+
+    // 4. Unione e deduplicazione
     const allCourseIds = [...new Set([
       ...userAssignments.map(a => a.courseId),
       ...companyCourseIds,
+      ...progressCourseIds,
     ])]
     if (!allCourseIds.length) return []
 

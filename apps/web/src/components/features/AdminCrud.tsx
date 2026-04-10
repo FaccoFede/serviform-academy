@@ -77,7 +77,11 @@ export default function AdminCrud({
   async function openEdit(item: any) {
     setEditItem(item)
     const data: Record<string, any> = {}
-    formFields.forEach(f => { data[f.key] = item[f.key] ?? '' })
+    formFields.forEach(f => {
+      const val = item[f.key] ?? ''
+      // I campi select lavorano con stringhe — converti boolean/number se necessario
+      data[f.key] = f.type === 'select' && typeof val === 'boolean' ? String(val) : val
+    })
     setFormData(data)
     // Chiama onEdit per precaricare stati custom (VideoSelector, GuidesEditor...)
     if (onEdit) await onEdit(item)

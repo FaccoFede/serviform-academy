@@ -13,8 +13,9 @@ const SECTIONS = [
     { href: '/admin/assignments',  label: 'Assegnazioni',        desc: 'Assegna corsi ad aziende e utenti' },
   ]},
   { group: 'Comunicazione & Eventi', items: [
-    { href: '/admin/announcements', label: 'Com. & Eventi',       desc: 'Novità, eventi, comunicati, regole' },
-    { href: '/admin/exercises',     label: 'Esercitazioni',       desc: 'File HTML 3D e .evd scaricabili' },
+    { href: '/admin/announcements', label: 'Comunicazioni',        desc: 'Novità, comunicati, regole' },
+    { href: '/admin/events',        label: 'Calendario eventi',    desc: 'Workshop, webinar e sessioni live' },
+    { href: '/admin/exercises',     label: 'Esercitazioni',        desc: 'File HTML 3D e .evd scaricabili' },
   ]},
 ]
 

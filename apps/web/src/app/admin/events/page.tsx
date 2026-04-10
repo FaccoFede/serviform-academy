@@ -23,11 +23,14 @@ export default function AdminEventsPage() {
         { key: 'published', label: 'Pubblicato', render: (v: any) => v ? '✅' : '❌' },
       ]}
       fetchItems={api.events.findAllAdmin}
-      onSave={(data) => {
-        // Il backend gestisce il parsing della data — si manda come stringa ISO
-        return api.events.create(data)
-      }}
-      onUpdate={(id, data) => api.events.update(id, data)}
+      onSave={(data) => api.events.create({
+        ...data,
+        published: data.published === 'true',
+      })}
+      onUpdate={(id, data) => api.events.update(id, {
+        ...data,
+        published: data.published === 'true',
+      })}
       onDelete={(id) => api.events.remove(id)}
       formFields={[
         { key: 'title', label: 'Titolo', type: 'text', required: true },
@@ -45,7 +48,7 @@ export default function AdminEventsPage() {
         },
         {
           key: 'date',
-          label: 'Data e ora',
+          label: 'Data e ora (es. 2026-04-15T09:00)',
           type: 'text',
           required: true,
           placeholder: '2026-04-15T09:00',
@@ -60,6 +63,15 @@ export default function AdminEventsPage() {
         { key: 'maxSeats', label: 'Posti massimi', type: 'number' },
         { key: 'registrationUrl', label: 'URL iscrizione', type: 'text' },
         { key: 'recordingUrl', label: 'URL registrazione (post-evento)', type: 'text' },
+        {
+          key: 'published',
+          label: 'Visibile sul calendario',
+          type: 'select',
+          options: [
+            { value: 'false', label: 'No (bozza)' },
+            { value: 'true',  label: 'Sì (pubblica)' },
+          ],
+        },
       ]}
     />
   )

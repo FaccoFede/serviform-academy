@@ -115,8 +115,10 @@ export class ProgressService {
     if (!allCourseIds.length) return []
 
     // 4. Fetch corsi con unità LESSON/EXERCISE
+    // Non filtriamo per deletedAt: un corso su cui l'utente ha progresso
+    // deve sempre comparire nella dashboard, anche se soft-deleted
     const courses = await this.prisma.course.findMany({
-      where: { id: { in: allCourseIds }, deletedAt: null },
+      where: { id: { in: allCourseIds } },
       include: {
         software: true,
         units: { where: LESSON_FILTER, select: { id: true } },

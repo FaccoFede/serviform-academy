@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module'
 import { CoursesModule } from './courses/courses.module'
 import { UnitsModule } from './units/units.module'
 import { GuidesModule } from './guides/guides.module'
+import { GuideCatalogModule } from './guide-catalog/guide-catalog.module'
 import { SoftwareModule } from './software/software.module'
 import { ProgressModule } from './progress/progress.module'
 import { CertificatesModule } from './certificates/certificates.module'
@@ -20,7 +21,7 @@ import { VideoAssetsModule } from './video-assets/video-assets.module'
 @Module({
   imports: [
     PrismaModule, AuthModule, UsersModule, CoursesModule, UnitsModule,
-    GuidesModule, SoftwareModule, ProgressModule, CertificatesModule,
+    GuidesModule, GuideCatalogModule, SoftwareModule, ProgressModule, CertificatesModule,
     ExercisesModule, CompaniesModule, AssignmentsModule, AnnouncementsModule,
     EventsModule, ImportsModule, UploadsModule, VideoAssetsModule,
   ],

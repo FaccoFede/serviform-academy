@@ -40,6 +40,11 @@ model Company {
   contractType        String?
   assistanceExpiresAt DateTime?
   notes               String?   @db.Text
+  // ID dei Software (prodotti Academy) i cui contenuti sono visibili
+  // all'azienda nel portale. Array vuoto = vede TUTTI i contenuti
+  // (comportamento di default, compatibile con le aziende esistenti).
+  // NOTA: questo filtro NON si applica alle Comunicazioni né agli Eventi.
+  visibleSoftwareIds  String[]  @default([])
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   deletedAt           DateTime?
@@ -166,6 +171,9 @@ model Course {
   available    Boolean     @default(true)
   publishState PublishState @default(PUBLISHED)
   thumbnailUrl String?
+  // Quando true, al completamento del corso l'utente riceve automaticamente
+  // un Certificato (= badge nel profilo)
+  issuesBadge  Boolean     @default(true)
   softwareId   String
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -187,9 +195,17 @@ model Unit {
   id        String    @id @default(uuid())
   title     String
   slug      String
+  // L'order viene gestito automaticamente dal backend:
+  // - OVERVIEW ha sempre order = 0
+  // - le LESSON/EXERCISE ricevono order progressivo (1, 2, 3…)
   order     Int
   subtitle  String?
+  // duration è la stringa formattata mostrata in UI (es. "5h", "20min", "1h 30min").
+  // Le nuove unità vengono create passando durationHours e durationMinutes —
+  // il backend formatta e popola questo campo.
   duration  String?
+  durationHours   Int?
+  durationMinutes Int?
   unitType  UnitType  @default(LESSON)
   content   String?   @db.Text
   videoUrl  String?
@@ -217,7 +233,25 @@ model GuideReference {
   url       String
   order     Int    @default(0)
   unitId    String
-  unit      Unit   @relation(fields: [unitId], references: [id])
+  // Riferimento facoltativo al catalogo guide.
+  // Quando una guida è selezionata dal catalogo, catalogId viene valorizzato
+  // così l'admin modifica/cancella solo nel catalogo centralizzato.
+  catalogId String?
+  unit      Unit          @relation(fields: [unitId], references: [id])
+  catalog   GuideCatalog? @relation(fields: [catalogId], references: [id], onDelete: SetNull)
+}
+
+// Catalogo centralizzato di guide Zendesk.
+// L'admin registra un URL, il titolo viene recuperato automaticamente
+// dalla pagina, e nelle unità basta selezionare dal catalogo.
+model GuideCatalog {
+  id         String   @id @default(uuid())
+  title      String
+  url        String   @unique
+  zendeskId  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  references GuideReference[]
 }
 
 model Exercise {

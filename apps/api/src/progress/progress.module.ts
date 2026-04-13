@@ -3,9 +3,10 @@ import { ProgressService } from './progress.service'
 import { ProgressController } from './progress.controller'
 import { PrismaModule } from '../prisma/prisma.module'
 import { AuthModule } from '../auth/auth.module'
+import { CertificatesModule } from '../certificates/certificates.module'
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, CertificatesModule],
   providers: [ProgressService],
   controllers: [ProgressController],
   exports: [ProgressService],

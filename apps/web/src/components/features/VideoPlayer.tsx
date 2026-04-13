@@ -16,6 +16,7 @@
  */
 
 import { useState, useRef } from 'react'
+import { resolveVideoUrl } from '@/lib/api'
 
 interface VideoPlayerProps {
   url: string
@@ -34,7 +35,8 @@ interface Parsed {
 // ─── Parser URL ──────────────────────────────────────────────────────────────
 
 function parseUrl(url: string): Parsed {
-  const u = url.trim()
+  // Risolvi path relativi (/uploads/videos/...) in URL assoluto prima del parsing
+  const u = resolveVideoUrl(url.trim())
 
   if (u.includes('sharepoint.com') || u.includes('1drv.ms') || u.includes('onedrive.live.com')) {
     return { kind: 'sharepoint', embedUrl: null, youtubeId: null }

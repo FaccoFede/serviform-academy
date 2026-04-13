@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { CertificatesService } from '../certificates/certificates.service'
 
 // Filtro condiviso: esclude OVERVIEW dal conteggio progress
 // Le unità OVERVIEW sono introduttive — l'utente non le "completa"
@@ -7,14 +8,26 @@ const LESSON_FILTER = { deletedAt: null, unitType: { not: 'OVERVIEW' as const } 
 
 @Injectable()
 export class ProgressService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly certificates: CertificatesService,
+  ) {}
 
   async markCompleted(userId: string, unitId: string) {
-    return this.prisma.userProgress.upsert({
+    const progress = await this.prisma.userProgress.upsert({
       where: { userId_unitId: { userId, unitId } },
       update: { completed: true, completedAt: new Date(), viewedAt: new Date() },
       create: { userId, unitId, completed: true, completedAt: new Date(), viewedAt: new Date() },
     })
+
+    // Auto-emissione badge/certificato quando l'utente completa l'ultima unità
+    // del corso. È un'operazione idempotente e silenziosa: non deve mai
+    // interrompere il flusso di markCompleted.
+    try {
+      await this.certificates.autoIssueIfCompleted(userId, unitId)
+    } catch { /* ignore */ }
+
+    return progress
   }
 
   async markViewed(userId: string, unitId: string) {

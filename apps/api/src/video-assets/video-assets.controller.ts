@@ -1,7 +1,7 @@
 import {
-  Controller, Get, Post, Delete, Param,
+  Controller, Get, Post, Put, Delete, Param,
   UseGuards, UseInterceptors, UploadedFile,
-  BadRequestException, Request, Body,
+  BadRequestException, Body,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { memoryStorage } from 'multer'
@@ -25,14 +25,14 @@ export class VideoAssetsController {
     return this.svc.findAll()
   }
 
-  /** GET /video-assets/public — lista pubblica per il player (tutti gli autenticati) */
+  /** GET /video-assets/public — lista per il player (tutti gli autenticati) */
   @Get('public')
   @UseGuards(JwtAuthGuard)
   findPublic() {
     return this.svc.findAll()
   }
 
-  /** POST /video-assets/upload — carica un video MP4 */
+  /** POST /video-assets/upload — carica un video MP4/WebM/OGG */
   @Post('upload')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
@@ -55,7 +55,24 @@ export class VideoAssetsController {
     return this.svc.upload(file, title || file.originalname)
   }
 
-  /** DELETE /video-assets/:id — elimina un video */
+  /**
+   * POST /video-assets/external — registra un URL esterno nel catalogo
+   * (YouTube, Vimeo, Bunny, MP4 remoto, ecc.) senza upload di file.
+   */
+  @Post('external')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  createExternal(@Body() body: { title: string; url: string }) {
+    return this.svc.createExternal(body)
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.svc.update(id, body)
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')

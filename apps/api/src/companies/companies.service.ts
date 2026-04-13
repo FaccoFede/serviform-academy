@@ -14,21 +14,67 @@ export class CompaniesService {
   }
 
   findById(id: string) {
-    return this.prisma.company.findFirst({ where: { id, deletedAt: null }, include: { members: { include: { user: { select: { id: true, email: true, name: true, role: true } } } }, courseAssignments: { include: { course: { select: { id: true, title: true, slug: true } } } } } })
+    return this.prisma.company.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        members: {
+          include: {
+            user: { select: { id: true, email: true, name: true, role: true, lastLoginAt: true } },
+          },
+        },
+        courseAssignments: {
+          include: {
+            course: { select: { id: true, title: true, slug: true, software: { select: { id: true, name: true, slug: true } } } },
+          },
+        },
+      },
+    })
   }
 
   async create(data: any) {
     const existing = await this.prisma.company.findFirst({ where: { slug: data.slug, deletedAt: null } })
     if (existing) throw new ConflictException('Slug già esistente')
-    const { assistanceExpiresAt, ...rest } = data
-    return this.prisma.company.create({ data: { ...rest, assistanceExpiresAt: assistanceExpiresAt ? new Date(assistanceExpiresAt) : undefined } })
+    const { assistanceExpiresAt, visibleSoftwareIds, ...rest } = data
+    return this.prisma.company.create({
+      data: {
+        ...rest,
+        assistanceExpiresAt: assistanceExpiresAt ? new Date(assistanceExpiresAt) : undefined,
+        visibleSoftwareIds: Array.isArray(visibleSoftwareIds) ? visibleSoftwareIds : [],
+      },
+    })
   }
 
   async update(id: string, data: any) {
     const c = await this.prisma.company.findFirst({ where: { id, deletedAt: null } })
     if (!c) throw new NotFoundException('Azienda non trovata')
-    const { assistanceExpiresAt, ...rest } = data
-    return this.prisma.company.update({ where: { id }, data: { ...rest, assistanceExpiresAt: assistanceExpiresAt === null ? null : assistanceExpiresAt ? new Date(assistanceExpiresAt) : undefined, updatedAt: new Date() } })
+    const { assistanceExpiresAt, visibleSoftwareIds, ...rest } = data
+    return this.prisma.company.update({
+      where: { id },
+      data: {
+        ...rest,
+        assistanceExpiresAt:
+          assistanceExpiresAt === null
+            ? null
+            : assistanceExpiresAt
+            ? new Date(assistanceExpiresAt)
+            : undefined,
+        ...(Array.isArray(visibleSoftwareIds) ? { visibleSoftwareIds } : {}),
+        updatedAt: new Date(),
+      },
+    })
+  }
+
+  /**
+   * Imposta la lista dei Software visibili al portale per l'azienda.
+   * Array vuoto = nessun filtro (vede tutti i contenuti).
+   */
+  async setVisibleSoftware(id: string, softwareIds: string[]) {
+    const c = await this.prisma.company.findFirst({ where: { id, deletedAt: null } })
+    if (!c) throw new NotFoundException('Azienda non trovata')
+    return this.prisma.company.update({
+      where: { id },
+      data: { visibleSoftwareIds: Array.isArray(softwareIds) ? softwareIds : [] },
+    })
   }
 
   async remove(id: string) {

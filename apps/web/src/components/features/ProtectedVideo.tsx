@@ -23,6 +23,8 @@
  * - referrerPolicy="strict-origin"
  */
 
+import { resolveVideoUrl } from '@/lib/api'
+
 interface ProtectedVideoProps {
   url: string
   title?: string
@@ -62,7 +64,10 @@ function extractYouTubeId(url: string): string | null {
 function parseVideoUrl(url: string): ParsedVideo {
   if (!url) return { type: 'unknown', embedUrl: null, originalUrl: url }
 
-  const clean = url.trim()
+  // Risolvi eventuali path relativi (/uploads/videos/...) in URL assoluto
+  // usando il NEXT_PUBLIC_API_URL del client. Questo è il motivo per cui
+  // i video del catalogo non partivano quando l'URL era hardcoded a localhost.
+  const clean = resolveVideoUrl(url.trim())
 
   // SharePoint / OneDrive — non embeddabili in iframe per policy Microsoft
   if (

@@ -5,7 +5,24 @@
  *   → cancella il token da localStorage
  *   → reindirizza a /auth/login
  */
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const BASE_URL = API_BASE_URL
+
+/**
+ * Risolve un URL video che può essere:
+ *  - assoluto (http/https) → ritornato così com'è
+ *  - relativo (es. "/uploads/videos/...") → prefissato con API_BASE_URL
+ *
+ * Da quando i VideoAsset caricati vengono salvati con path relativo
+ * (per evitare URL hardcoded a localhost), il client deve risolverli
+ * dinamicamente usando il base URL dell'API configurato per l'ambiente.
+ */
+export function resolveVideoUrl(url: string | null | undefined): string {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('/')) return API_BASE_URL.replace(/\/$/, '') + url
+  return url
+}
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null
@@ -60,6 +77,10 @@ export const api = {
   },
   courses: {
     findAll: () => request<Course[]>('/courses'),
+    // Corsi filtrati in base alle preferenze dell'azienda dell'utente loggato.
+    // Da usare nelle pagine del portale (catalog, dashboard) per rispettare
+    // la visibilità configurata dall'admin sull'azienda.
+    findForPortal: () => request<Course[]>('/courses/portal'),
     findBySlug: (slug: string) => request<Course>('/courses/' + slug),
     create: (data: any) => request('/courses', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/courses/' + id, { method: 'PUT', body: JSON.stringify(data) }),
@@ -71,6 +92,10 @@ export const api = {
     create: (data: any) => request('/units', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/units/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/units/' + id, { method: 'DELETE' }),
+    // Riordina le unità di un corso. Il backend assegna order 1,2,3…
+    // L'unità OVERVIEW resta sempre a 0.
+    reorder: (courseId: string, unitIds: string[]) =>
+      request(`/units/course/${courseId}/reorder`, { method: 'POST', body: JSON.stringify({ unitIds }) }),
   },
   videos: {
     findAll: () => request<any[]>('/videos'),
@@ -80,6 +105,7 @@ export const api = {
     remove: (id: string) => request('/videos/' + id, { method: 'DELETE' }),
   },
   exercises: {
+    findAll: () => request<any[]>('/exercises'),
     findByUnit: (unitId: string) => request<any[]>('/exercises/unit/' + unitId),
     create: (data: any) => request('/exercises', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/exercises/' + id, { method: 'PUT', body: JSON.stringify(data) }),
@@ -104,8 +130,22 @@ export const api = {
     remove: (id: string) => request('/pricing/' + id, { method: 'DELETE' }),
   },
   guides: {
-    findByUnit: (unitId: string) => request<any>('/guides/unit/' + unitId),
+    findByUnit: (unitId: string) => request<any[]>('/guides/unit/' + unitId),
     create: (data: any) => request('/guides', { method: 'POST', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/guides/' + id, { method: 'DELETE' }),
+    removeAllByUnit: (unitId: string) => request(`/guides/unit/${unitId}/all`, { method: 'DELETE' }),
+  },
+  // Catalogo guide Zendesk: l'admin registra un link, il titolo è recuperato
+  // automaticamente dal backend; nelle unità si selezionano guide già presenti.
+  guideCatalog: {
+    findAll: () => request<any[]>('/guide-catalog'),
+    create: (data: { url: string; title?: string; zendeskId?: string }) =>
+      request('/guide-catalog', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: any) =>
+      request('/guide-catalog/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    refreshTitle: (id: string) =>
+      request(`/guide-catalog/${id}/refresh-title`, { method: 'POST' }),
+    remove: (id: string) => request('/guide-catalog/' + id, { method: 'DELETE' }),
   },
   companies: {
     findAll: () => request<any[]>('/companies'),
@@ -113,6 +153,10 @@ export const api = {
     create: (data: any) => request('/companies', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/companies/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/companies/' + id, { method: 'DELETE' }),
+    // Imposta i Software visibili nel portale per l'azienda.
+    // Array vuoto = nessun filtro → l'azienda vede tutti i contenuti.
+    setPreferences: (id: string, visibleSoftwareIds: string[]) =>
+      request(`/companies/${id}/preferences`, { method: 'PUT', body: JSON.stringify({ visibleSoftwareIds }) }),
   },
   users: {
     findAll: () => request<any[]>('/users'),
@@ -148,6 +192,17 @@ export const api = {
   certificates: {
     issue: (slug: string) => request('/certificates/issue', { method: 'POST', body: JSON.stringify({ courseSlug: slug }) }),
     my: () => request<any[]>('/certificates/my'),
+    findAllAdmin: () => request<any[]>('/certificates/admin/all'),
+    revoke: (id: string) => request('/certificates/' + id, { method: 'DELETE' }),
+  },
+  videoAssets: {
+    findAll: () => request<any[]>('/video-assets'),
+    findPublic: () => request<any[]>('/video-assets/public'),
+    createExternal: (title: string, url: string) =>
+      request('/video-assets/external', { method: 'POST', body: JSON.stringify({ title, url }) }),
+    update: (id: string, data: any) =>
+      request('/video-assets/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/video-assets/' + id, { method: 'DELETE' }),
   },
   uploads: {
   image: async (file: File, token: string) => {

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getBrand } from '@/lib/brands'
 import styles from './Catalog.module.css'
@@ -10,6 +11,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 // ── prop rinominata da initialCourses → courses, allineata con page.tsx ──────
 export default function CatalogClient({ courses: rawCourses }: { courses: any[] }) {
   const { user, token } = useAuth()
+  const searchParams = useSearchParams()
+  const statusFilter = searchParams.get('status') || ''
 
   // Guard difensivo: garantisce sempre un array anche se il server manda null/undefined
   const courses: any[] = Array.isArray(rawCourses) ? rawCourses : []
@@ -59,8 +62,16 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
         (c?.description || '').toLowerCase().includes(ql)
       )
     }
+    // Filtro "disponibili": esclude corsi in corso e completati
+    if (statusFilter === 'available') {
+      out = out.filter(c => {
+        const prog = progressMap[c?.slug]
+        if (!prog) return true            // nessun progresso = disponibile
+        return prog.percent === 0         // non ancora iniziato = disponibile
+      })
+    }
     return out
-  }, [courses, softwareFilter, levelFilter, q])
+  }, [courses, softwareFilter, levelFilter, q, statusFilter, progressMap])
 
   return (
     <div className={styles.page}>

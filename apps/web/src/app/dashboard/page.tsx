@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const [lastViewed,    setLastViewed]    = useState<any>(null)
   const [loadingData,   setLoadingData]   = useState(true)
   const [swMap,         setSwMap]         = useState<Map<string, any>>(new Map())
+  const [portalCourses, setPortalCourses] = useState<any[]>([])
   // STEP 4: apre AnnouncementModal direttamente al click
   const [selectedAnn,   setSelectedAnn]   = useState<any>(null)
 
@@ -68,11 +69,15 @@ export default function DashboardPage() {
       // Fetch software list (senza auth) per avere name/color/tagline dal DB
       fetch(`${API_URL}/software`)
         .then(r => r.ok ? r.json() : []),
+      // Corsi visibili per l'utente secondo le preferenze aziendali
+      fetch(`${API_URL}/courses/portal`, { headers, cache: 'no-store' })
+        .then(r => r.ok ? r.json() : []),
     ])
-      .then(([dashData, anns, softwares]) => {
+      .then(([dashData, anns, softwares, portal]) => {
         setProgress(dashData.courses || [])
         setLastViewed(dashData.lastViewed || null)
         setAnnouncements(Array.isArray(anns) ? anns : [])
+        setPortalCourses(Array.isArray(portal) ? portal : [])
         // Mappa slug (normalizzato in lowercase) → oggetto software DB
         const map = new Map<string, any>()
         if (Array.isArray(softwares)) {
@@ -103,12 +108,14 @@ export default function DashboardPage() {
   const h     = new Date().getHours()
   const greet = h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera'
 
-  const started    = progress.filter((c: any) => c.completed > 0)
-  const completed  = progress.filter((c: any) => c.percent >= 100)
-  const avgPct     = started.length
-    ? Math.round(started.reduce((s: number, c: any) => s + c.percent, 0) / started.length) : 0
-  const totalDone  = progress.reduce((s: number, c: any) => s + c.completed, 0)
-  const inProgress = started.filter((c: any) => c.percent < 100)
+  const inProgress  = progress.filter((c: any) => c.percent > 0 && c.percent < 100)
+  const completed   = progress.filter((c: any) => c.percent >= 100)
+  const avgPct      = inProgress.length
+    ? Math.round(inProgress.reduce((s: number, c: any) => s + c.percent, 0) / inProgress.length) : 0
+  const totalDone   = progress.reduce((s: number, c: any) => s + c.completed, 0)
+  const inProgIds   = new Set(inProgress.map((c: any) => c.courseId))
+  const compIds     = new Set(completed.map((c: any) => c.courseId))
+  const disponibili = portalCourses.filter((c: any) => !inProgIds.has(c.id) && !compIds.has(c.id))
 
   return (
     <div className={styles.page}>
@@ -140,13 +147,14 @@ export default function DashboardPage() {
       <div className={styles.body}>
         {/* KPI */}
         <div className={styles.kpiRow}>
+          <Link href="/catalog?status=available"
+            className={[styles.kpiCard, styles.kpiCardLink].join(' ')}>
+            <div className={styles.kpiValue}>{disponibili.length}</div>
+            <div className={styles.kpiLabel}>Disponibili</div>
+          </Link>
           <div className={styles.kpiCard}>
-            <div className={styles.kpiValue}>{progress.length}</div>
-            <div className={styles.kpiLabel}>Corsi assegnati</div>
-          </div>
-          <div className={styles.kpiCard}>
-            <div className={styles.kpiValue}>{started.length}</div>
-            <div className={styles.kpiLabel}>Iniziati</div>
+            <div className={styles.kpiValue}>{inProgress.length}</div>
+            <div className={styles.kpiLabel}>In corso</div>
           </div>
           <div className={styles.kpiCard}>
             <div className={styles.kpiValue}>{completed.length}</div>

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import CatalogClient from './CatalogClient'
 
 export const metadata = { title: 'Catalogo — Serviform Academy' }
@@ -13,5 +14,10 @@ export default async function CatalogPage() {
     // backend non raggiungibile — mostra catalogo vuoto
   }
   // PROP NAME: "courses" (non "initialCourses") — allineato con CatalogClient
-  return <CatalogClient courses={Array.isArray(courses) ? courses : []} />
+  // Suspense richiesto da useSearchParams in CatalogClient
+  return (
+    <Suspense>
+      <CatalogClient courses={Array.isArray(courses) ? courses : []} />
+    </Suspense>
+  )
 }

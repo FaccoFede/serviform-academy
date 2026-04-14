@@ -11,6 +11,9 @@ import { PrismaService } from '../prisma/prisma.service'
  *  - duration è una stringa formattata (es. "5h", "20min", "1h 30min")
  *    popolata automaticamente da durationHours / durationMinutes.
  *  - L'admin NON scrive mai l'unità di misura a mano.
+ *  - La durata è obbligatoria per le unità di tipo LESSON e EXERCISE.
+ *  - Dopo ogni create/update/remove, la durata del corso viene ricalcolata
+ *    automaticamente come somma delle durate delle unità LESSON/EXERCISE.
  */
 
 function formatDuration(h?: number | null, m?: number | null): string | null {
@@ -34,6 +37,32 @@ function slugify(text: string): string {
 @Injectable()
 export class UnitsService {
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * Ricalcola e aggiorna la durata del corso a partire dalla somma delle
+   * durate delle unità LESSON/EXERCISE non eliminate.
+   * Viene chiamato automaticamente dopo ogni create/update/remove di un'unità.
+   */
+  private async recomputeCourseDuration(courseId: string): Promise<void> {
+    const units = await this.prisma.unit.findMany({
+      where: { courseId, deletedAt: null, unitType: { not: 'OVERVIEW' as any } },
+      select: { durationHours: true, durationMinutes: true },
+    })
+
+    let totalMinutes = 0
+    for (const u of units) {
+      totalMinutes += (u.durationHours || 0) * 60 + (u.durationMinutes || 0)
+    }
+
+    const h = Math.floor(totalMinutes / 60)
+    const m = totalMinutes % 60
+    const duration = formatDuration(h, m)
+
+    await this.prisma.course.update({
+      where: { id: courseId },
+      data: { duration },
+    })
+  }
 
   findByCourse(courseId: string) {
     return this.prisma.unit.findMany({
@@ -90,6 +119,17 @@ export class UnitsService {
 
     const unitType = (data.unitType as any) || 'LESSON'
 
+    // ── VALIDAZIONE durata obbligatoria per LESSON/EXERCISE ───────────────
+    if (unitType !== 'OVERVIEW') {
+      const h = Number(data.durationHours || 0)
+      const m = Number(data.durationMinutes || 0)
+      if (!h && !m) {
+        throw new BadRequestException(
+          'La durata è obbligatoria per le unità di tipo LESSON e EXERCISE',
+        )
+      }
+    }
+
     // ── ORDER automatico ───────────────────────────────────────────────
     let order: number
     if (unitType === 'OVERVIEW') {
@@ -122,7 +162,7 @@ export class UnitsService {
     // ── DURATA formattata ──────────────────────────────────────────────
     const duration = formatDuration(data.durationHours, data.durationMinutes)
 
-    return this.prisma.unit.create({
+    const created = await this.prisma.unit.create({
       data: {
         title: data.title,
         slug,
@@ -137,11 +177,25 @@ export class UnitsService {
         courseId: data.courseId,
       },
     })
+
+    await this.recomputeCourseDuration(data.courseId)
+    return created
   }
 
   async update(id: string, data: any) {
     const unit = await this.prisma.unit.findUnique({ where: { id } })
     if (!unit) throw new NotFoundException('Unità non trovata')
+
+    // ── VALIDAZIONE durata obbligatoria per LESSON/EXERCISE ───────────────
+    if ('durationHours' in data || 'durationMinutes' in data) {
+      const h = Number('durationHours' in data ? (data.durationHours ?? 0) : (unit.durationHours ?? 0))
+      const m = Number('durationMinutes' in data ? (data.durationMinutes ?? 0) : (unit.durationMinutes ?? 0))
+      if (unit.unitType !== 'OVERVIEW' && !h && !m) {
+        throw new BadRequestException(
+          'La durata è obbligatoria per le unità di tipo LESSON e EXERCISE',
+        )
+      }
+    }
 
     // Se vengono passati durationHours/Minutes, riformatta la stringa duration
     const patch: any = { ...data }
@@ -155,7 +209,10 @@ export class UnitsService {
     // Se l'admin ha passato un order manuale, lo ignoriamo per evitare conflitti.
     delete patch.order
 
-    return this.prisma.unit.update({ where: { id }, data: patch })
+    const updated = await this.prisma.unit.update({ where: { id }, data: patch })
+
+    await this.recomputeCourseDuration(unit.courseId)
+    return updated
   }
 
   /**
@@ -184,6 +241,8 @@ export class UnitsService {
   async remove(id: string) {
     const unit = await this.prisma.unit.findUnique({ where: { id } })
     if (!unit) throw new NotFoundException('Unità non trovata')
-    return this.prisma.unit.update({ where: { id }, data: { deletedAt: new Date() } })
+    const result = await this.prisma.unit.update({ where: { id }, data: { deletedAt: new Date() } })
+    await this.recomputeCourseDuration(unit.courseId)
+    return result
   }
 }

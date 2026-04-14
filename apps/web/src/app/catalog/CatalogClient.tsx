@@ -178,7 +178,7 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
             {filtered.map(course => {
               const brand = getBrand(course?.software?.slug, course?.software)
               const prog = progressMap[course?.slug]
-              const isActive = course?.available !== false
+              const isActive = course?.publishState === 'PUBLISHED'
               const hasProgress = prog && prog.percent > 0
               const isDone = prog && prog.percent >= 100
               const unitCount = (course?.units || []).filter((u: any) => u?.unitType !== 'OVERVIEW').length

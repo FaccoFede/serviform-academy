@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
  * Admin Corsi — gestione con publishState e thumbnailUrl configurabile.
  * publishState: HIDDEN | VISIBLE_LOCKED | PUBLISHED
  * thumbnailUrl: opzionale, se vuoto usa placeholder automatico dal brand software
+ * duration: calcolata automaticamente dalla somma delle durate delle unità del corso
  */
 export default function AdminCoursesPage() {
   return (
@@ -64,7 +65,6 @@ export default function AdminCoursesPage() {
             { value: 'Avanzato', label: 'Avanzato' },
           ],
         },
-        { key: 'duration', label: 'Durata stimata', type: 'text', placeholder: 'Es. 3h 30m' },
         {
           key: 'publishState',
           label: 'Stato pubblicazione',

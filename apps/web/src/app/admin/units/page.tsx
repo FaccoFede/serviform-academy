@@ -529,6 +529,15 @@ export default function AdminUnitsPage() {
             return units
           }}
           onSave={async (data) => {
+            // Valida durata obbligatoria per LESSON e EXERCISE
+            const unitType = (data.unitType as string) || 'LESSON'
+            if (unitType !== 'OVERVIEW') {
+              const h = editHours === '' ? 0 : Number(editHours)
+              const m = editMinutes === '' ? 0 : Number(editMinutes)
+              if (!h && !m) {
+                throw new Error('La durata è obbligatoria per le unità di tipo Lezione e Esercitazione')
+              }
+            }
             // Rimuovi i campi custom dal payload principale
             const { videoUrl: _v, guides: _g, duration: _d, order: _o, ...rest } = data
             const unit: any = await api.units.create({
@@ -543,6 +552,15 @@ export default function AdminUnitsPage() {
             return unit
           }}
           onUpdate={async (id, data) => {
+            // Valida durata obbligatoria per LESSON e EXERCISE
+            const unitType = (data.unitType as string) || 'LESSON'
+            if (unitType !== 'OVERVIEW') {
+              const h = editHours === '' ? 0 : Number(editHours)
+              const m = editMinutes === '' ? 0 : Number(editMinutes)
+              if (!h && !m) {
+                throw new Error('La durata è obbligatoria per le unità di tipo Lezione e Esercitazione')
+              }
+            }
             const { videoUrl: _v, guides: _g, duration: _d, order: _o, ...rest } = data
             const unit: any = await api.units.update(id, {
               ...rest,

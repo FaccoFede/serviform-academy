@@ -19,7 +19,7 @@ export default function CoursePageClient({ course }: { course: any }) {
   const levelColor = LEVEL_COLORS[course.level || ''] || 'var(--muted)'
   const overviewUnit = course.units?.find((u: any) => u.unitType === 'OVERVIEW')
   const lessonUnits = course.units?.filter((u: any) => u.unitType !== 'OVERVIEW') || []
-  const isActive = course.available !== false
+  const isActive = course.publishState === 'PUBLISHED'
 
   useEffect(() => {
     if (!user || !token) return

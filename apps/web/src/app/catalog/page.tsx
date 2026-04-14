@@ -9,7 +9,12 @@ export default async function CatalogPage() {
   let courses: any[] = []
   try {
     const res = await fetch(`${API_URL}/courses`, { cache: 'no-store' })
-    if (res.ok) courses = await res.json()
+    if (res.ok) {
+      const all = await res.json()
+      // Filtra i corsi HIDDEN: non devono comparire nel catalogo pubblico.
+      // VISIBLE_LOCKED e PUBLISHED vengono passati al client.
+      courses = Array.isArray(all) ? all.filter((c: any) => c.publishState !== 'HIDDEN') : []
+    }
   } catch {
     // backend non raggiungibile — mostra catalogo vuoto
   }

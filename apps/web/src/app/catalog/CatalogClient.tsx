@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 export default function CatalogClient({ courses: rawCourses }: { courses: any[] }) {
   const { user, token } = useAuth()
   const searchParams = useSearchParams()
-  const statusFilter = searchParams.get('status') || ''
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || '')
 
   // Guard difensivo: garantisce sempre un array anche se il server manda null/undefined
   const courses: any[] = Array.isArray(rawCourses) ? rawCourses : []
@@ -142,6 +142,19 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
                   {l.label}
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Filtro disponibili — visibile solo se loggati */}
+          {user && (
+            <div className={styles.filterGroup}>
+              <button
+                className={[styles.chip, statusFilter === 'available' ? styles.chipActive : ''].join(' ')}
+                style={statusFilter === 'available' ? { background: '#059669', borderColor: '#059669' } : {}}
+                onClick={() => setStatusFilter(s => s === 'available' ? '' : 'available')}
+              >
+                {statusFilter === 'available' ? '✓ ' : ''}Disponibili
+              </button>
             </div>
           )}
         </div>

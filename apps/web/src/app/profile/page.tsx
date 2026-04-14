@@ -210,6 +210,17 @@ export default function ProfilePage() {
               </svg>
               Cambia password
             </button>
+            <Link
+              href="/profile/certificates"
+              className={styles.sideNavItem}
+              style={{ textDecoration: 'none' }}
+            >
+              <svg viewBox="0 0 14 14" fill="none" width={14} height={14}>
+                <circle cx="7" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M5 9l-1 4 3-1.5L10 13 9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              I miei badge
+            </Link>
           </nav>
         </aside>
 

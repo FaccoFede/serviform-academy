@@ -16,12 +16,22 @@ export class GuidesService {
   /** Crea una nuova guida per un'unità */
   create(data: {
     unitId: string
-    zendeskId: string
+    zendeskId?: string
     title: string
     url: string
     order?: number
+    catalogId?: string | null
   }) {
-    return this.prisma.guideReference.create({ data })
+    return this.prisma.guideReference.create({
+      data: {
+        unitId: data.unitId,
+        zendeskId: data.zendeskId || '',
+        title: data.title,
+        url: data.url,
+        order: data.order ?? 0,
+        catalogId: data.catalogId || null,
+      },
+    })
   }
 
   /** Aggiorna una guida esistente */

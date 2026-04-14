@@ -49,6 +49,11 @@
   border-radius: 12px; padding: 18px 20px;
 }
 .kpiCardAccent { background: var(--ink, #111); border-color: var(--ink, #111); }
+.kpiCardLink {
+  text-decoration: none; color: inherit; cursor: pointer;
+  transition: box-shadow 180ms, transform 180ms;
+}
+.kpiCardLink:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); transform: translateY(-1px); }
 .kpiCardAccent .kpiValue,
 .kpiCardAccent .kpiLabel { color: #fff; }
 .kpiValue {

@@ -27,7 +27,7 @@ export class GuidesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'TEAM_ADMIN')
-  create(@Body() body: { unitId: string; zendeskId: string; title: string; url: string; order?: number }) {
+  create(@Body() body: { unitId: string; zendeskId?: string; title: string; url: string; order?: number; catalogId?: string | null }) {
     return this.svc.create(body)
   }
 

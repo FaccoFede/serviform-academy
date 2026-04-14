@@ -5,6 +5,30 @@ import { PrismaService } from '../prisma/prisma.service'
 export class ExercisesService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Lista completa esercizi con unità e corso collegati — usata dall'admin.
+   * Ritorna i dati piatti per popolare una tabella senza ulteriori round-trip.
+   */
+  async findAll() {
+    const rows = await this.prisma.exercise.findMany({
+      include: {
+        unit: {
+          select: {
+            id: true, title: true, slug: true, unitType: true,
+            course: { select: { id: true, title: true, slug: true } },
+          },
+        },
+      },
+      orderBy: [{ unitId: 'asc' }, { order: 'asc' }],
+    })
+    return rows.map((e) => ({
+      ...e,
+      unitTitle: e.unit?.title,
+      courseTitle: e.unit?.course?.title,
+      courseSlug: e.unit?.course?.slug,
+    }))
+  }
+
   findByUnit(unitId: string) {
     return this.prisma.exercise.findMany({
       where: { unitId },

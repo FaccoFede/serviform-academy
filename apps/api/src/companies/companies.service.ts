@@ -95,6 +95,21 @@ export class CompaniesService {
   }
 
   /**
+   * Endpoint pubblico per aggiornare l'elenco dei software "visibili"
+   * (= preferenze/interessi) di un'azienda. Riusa la stessa sync logic
+   * usata da `update()` e ritorna l'azienda con le interests aggiornate.
+   */
+  async setVisibleSoftware(companyId: string, softwareIds: string[]) {
+    const c = await this.prisma.company.findFirst({ where: { id: companyId, deletedAt: null } })
+    if (!c) throw new NotFoundException('Azienda non trovata')
+    await this.syncInterests(companyId, (softwareIds || []).filter(Boolean))
+    return this.prisma.company.findFirst({
+      where: { id: companyId },
+      include: { interests: { include: { software: true } } },
+    })
+  }
+
+  /**
    * Allinea le CompanyInterest al set di softwareIds fornito:
    * - rimuove le preferenze non più presenti
    * - aggiunge quelle nuove (skipDuplicates per l'unique composto)

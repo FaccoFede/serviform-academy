@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getBrand, LEVEL_COLORS } from '@/lib/brands'
+import { getBrand, LEVEL_COLORS, DbSoftware } from '@/lib/brands'
 import styles from './CourseCard.module.css'
 
 export type CourseState = 'ACTIVE' | 'VISIBLE_LOCKED' | 'EXPIRED' | 'HIDDEN'
@@ -9,6 +9,8 @@ interface CourseCardProps {
   title: string
   description?: string
   softwareSlug: string
+  /** Software object dal DB — quando presente, name/color/tagline dal DB prevalgono sui default */
+  software?: DbSoftware | null
   level?: string
   duration?: string
   unitCount?: number
@@ -21,13 +23,14 @@ export default function CourseCard({
   title,
   description,
   softwareSlug,
+  software,
   level,
   duration,
   unitCount,
   state = 'VISIBLE_LOCKED',
   expiryLabel,
 }: CourseCardProps) {
-  const brand = getBrand(softwareSlug)
+  const brand = getBrand(softwareSlug, software)
   const isActive = state === 'ACTIVE'
   const isExpired = state === 'EXPIRED'
   const isLocked = state === 'VISIBLE_LOCKED' || isExpired

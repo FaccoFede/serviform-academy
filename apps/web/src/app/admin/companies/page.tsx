@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
+import { getBrand } from '@/lib/brands'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
@@ -17,7 +18,6 @@ import t from '../table.module.css'
  */
 export default function AdminCompaniesPage() {
   const [rows, setRows] = useState<any[]>([])
-  const [software, setSoftware] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [show, setShow] = useState(false)
@@ -26,55 +26,18 @@ export default function AdminCompaniesPage() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null)
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      const [rs, sw] = await Promise.all([api.companies.findAll(), api.software.findAll()])
-      setRows(rs)
-      setSoftware(sw as any[])
-    } catch {}
-    finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-    load()
-  }, [])
+  const load = async () => { setLoading(true); try { setRows(await api.companies.findAll()) } catch {} finally { setLoading(false) } }
+  useEffect(() => { load() }, [])
 
-  const openNew = () => {
-    setEdit(null)
-    setForm({ visibleSoftwareIds: [] })
-    setMsg(null)
-    setShow(true)
-  }
-
-  const openEdit = (r: any) => {
-    setEdit(r)
-    setForm({
-      ...r,
-      assistanceExpiresAt: r.assistanceExpiresAt?.slice(0, 10) || '',
-      visibleSoftwareIds: Array.isArray(r.visibleSoftwareIds) ? r.visibleSoftwareIds : [],
-    })
-    setMsg(null)
-    setShow(true)
-  }
+  const openNew = () => { setEdit(null); setForm({}); setMsg(null); setShow(true) }
+  const openEdit = (r: any) => { setEdit(r); setForm({...r, assistanceExpiresAt: r.assistanceExpiresAt?.slice(0,10)||''}); setMsg(null); setShow(true) }
 
   const save = async () => {
     setSaving(true)
     try {
-      if (edit) {
-        await api.companies.update(edit.id, form)
-      } else {
-        await api.companies.create(form)
-      }
-      setMsg({ t: edit ? 'Aggiornata.' : 'Creata.', ok: true })
-      setShow(false)
-      load()
-    } catch (e: any) {
-      setMsg({ t: e.message, ok: false })
-    } finally {
-      setSaving(false)
-    }
+      if (edit) await api.companies.update(edit.id, form); else await api.companies.create(form)
+      setMsg({t: edit ? 'Aggiornata.' : 'Creata.', ok: true}); setShow(false); load()
+    } catch(e:any) { setMsg({t:e.message,ok:false}) } finally { setSaving(false) }
   }
 
   const del = async (id: string, name: string) => {
@@ -227,80 +190,7 @@ export default function AdminCompaniesPage() {
                 onChange={(e) => setForm({ ...form, assistanceExpiresAt: e.target.value || null })}
               />
               <label className={t.lbl}>Note</label>
-              <textarea
-                className={t.ta}
-                rows={2}
-                value={form.notes || ''}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              />
-
-              {/* ── Preferenze contenuti ─────────────────────────────── */}
-              <div
-                style={{
-                  marginTop: 20,
-                  paddingTop: 16,
-                  borderTop: '1px solid var(--border)',
-                }}
-              >
-                <label className={t.lbl} style={{ marginTop: 0 }}>
-                  Preferenze portale — Software visibili
-                </label>
-                <p style={{ fontSize: 11, color: 'var(--muted)', margin: '4px 0 10px' }}>
-                  Seleziona quali Software gli utenti di questa azienda vedono nel catalogo.
-                  <strong> Nessuna selezione = tutti i software visibili.</strong>
-                  Comunicazioni ed eventi non sono filtrati.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {software.map((sw: any) => {
-                    const checked = (form.visibleSoftwareIds || []).includes(sw.id)
-                    return (
-                      <label
-                        key={sw.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 10,
-                          padding: '7px 10px',
-                          borderRadius: 6,
-                          border: '1px solid var(--border)',
-                          background: checked ? 'var(--surface)' : 'var(--white)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleSoftware(sw.id)}
-                        />
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            background: sw.color || '#888',
-                          }}
-                        />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
-                          {sw.name}
-                        </span>
-                        {sw.tagline && (
-                          <span style={{ fontSize: 11, color: 'var(--muted)' }}>— {sw.tagline}</span>
-                        )}
-                      </label>
-                    )
-                  })}
-                  {software.length === 0 && (
-                    <p style={{ fontSize: 12, color: 'var(--muted)' }}>Nessun software configurato.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className={t.mftr}>
-              <button className={t.btnS} onClick={() => setShow(false)}>Annulla</button>
-              <button className={t.btnP} onClick={save} disabled={saving}>
-                {saving ? 'Salvo…' : 'Salva'}
-              </button>
+              <textarea className={t.ta} rows={2} value={form.notes||''} onChange={e=>setForm({...form,notes:e.target.value})}/>
             </div>
           </div>
         </div>

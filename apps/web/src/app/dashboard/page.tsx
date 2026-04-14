@@ -164,7 +164,7 @@ export default function DashboardPage() {
             <div className={styles.kpiValue}>{totalDone}</div>
             <div className={styles.kpiLabel}>Unità completate</div>
           </div>
-          {started.length > 0 && (
+          {inProgress.length > 0 && (
             <div className={[styles.kpiCard, styles.kpiCardAccent].join(' ')}>
               <div className={styles.kpiValue}>{avgPct}%</div>
               <div className={styles.kpiLabel}>Avanzamento medio</div>

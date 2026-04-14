@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
+import { getBrand } from '@/lib/brands'
 import styles from './DashboardPage.module.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -19,19 +20,6 @@ const TYPE_COLORS: Record<string, string> = {
 function formatDate(d: string) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-const BRANDS: Record<string, { name: string; color: string; light: string }> = {
-  engview:    { name: 'EngView',    color: '#0066CC', light: '#E8F0FF' },
-  sysform:    { name: 'Sysform',    color: '#E63329', light: '#FFF0F0' },
-  projecto:   { name: 'ProjectO',   color: '#0099BB', light: '#E8F8FF' },
-  serviformA: { name: 'ServiformA', color: '#6B21A8', light: '#F3E8FF' },
-}
-function getBrand(slug: string) {
-  for (const [key, val] of Object.entries(BRANDS)) {
-    if (slug?.toLowerCase().includes(key.toLowerCase())) return val
-  }
-  return { name: slug || '—', color: '#888', light: '#f5f5f5' }
 }
 
 // ── Progress circle — STEP 3 ──────────────────────────────────────────────

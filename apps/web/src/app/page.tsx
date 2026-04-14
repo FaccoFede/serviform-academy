@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import { SOFTWARE_BRANDS } from '@/lib/brands'
+import { SOFTWARE_BRANDS, getBrand } from '@/lib/brands'
 import styles from './page.module.css'
 
 // ─── CONFIGURAZIONE CORSI IN EVIDENZA ────────────────────────────────────────
@@ -83,7 +83,8 @@ export default async function PublicHomePage() {
           <h2 className={styles.sectionTitle}>Scegli la tua famiglia</h2>
           <div className={styles.familyGrid}>
             {families.map(f => {
-              const count = courses.filter(c => c.software?.slug === f.key).length
+              // Match case-insensitive: lo slug reale in DB può essere in camelCase (es. `serviFormA`)
+              const count = courses.filter(c => (c.software?.slug || '').toLowerCase() === f.key).length
               return (
                 <Link key={f.key} href={`/catalog?software=${f.key}`} className={styles.familyCard}>
                   <div className={styles.familyAccent} style={{ background: f.color }} />
@@ -115,15 +116,9 @@ export default async function PublicHomePage() {
             <div className={styles.teaserGrid}>
               {teaser.map(c => {
                 // ── FIX TAG SOFTWARE ──────────────────────────────────────────
-                // Legge lo slug reale dal campo software del corso.
-                // Se lo slug non esiste in SOFTWARE_BRANDS, getBrand() restituisce
-                // un fallback neutro (grigio) invece di forzare "EngView".
-                const softwareSlug = c.software?.slug || ''
-                const brand = SOFTWARE_BRANDS[softwareSlug] || {
-                  name: c.software?.name || softwareSlug || 'N/D',
-                  color: '#4E4D4D',
-                  light: '#F5F5F5',
-                }
+                // Usa getBrand() (case-insensitive) così lo stesso software è
+                // rappresentato con gli stessi colori/nome in tutte le sezioni.
+                const brand = getBrand(c.software?.slug)
                 return (
                   <Link key={c.id} href={`/courses/${c.slug}`} className={styles.teaserCard}>
                     <div className={styles.teaserTop}>

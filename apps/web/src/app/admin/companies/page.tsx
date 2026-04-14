@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
+import { getBrand } from '@/lib/brands'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
 export default function AdminCompaniesPage() {
   const [rows, setRows] = useState<any[]>([])
+  const [softwares, setSoftwares] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [show, setShow] = useState(false)
@@ -17,14 +19,42 @@ export default function AdminCompaniesPage() {
 
   const load = async () => { setLoading(true); try { setRows(await api.companies.findAll()) } catch {} finally { setLoading(false) } }
   useEffect(() => { load() }, [])
+  useEffect(() => { api.software.findAll().then(setSoftwares).catch(() => {}) }, [])
 
-  const openNew = () => { setEdit(null); setForm({}); setMsg(null); setShow(true) }
-  const openEdit = (r: any) => { setEdit(r); setForm({...r, assistanceExpiresAt: r.assistanceExpiresAt?.slice(0,10)||''}); setMsg(null); setShow(true) }
+  const openNew = () => {
+    setEdit(null)
+    setForm({ softwareIds: [] })
+    setMsg(null)
+    setShow(true)
+  }
+  const openEdit = (r: any) => {
+    setEdit(r)
+    setForm({
+      ...r,
+      assistanceExpiresAt: r.assistanceExpiresAt?.slice(0,10) || '',
+      softwareIds: Array.isArray(r.interests) ? r.interests.map((i: any) => i.softwareId) : [],
+    })
+    setMsg(null)
+    setShow(true)
+  }
+
+  const togglePreference = (softwareId: string) => {
+    setForm((prev: any) => {
+      const current: string[] = Array.isArray(prev.softwareIds) ? prev.softwareIds : []
+      const next = current.includes(softwareId)
+        ? current.filter(id => id !== softwareId)
+        : [...current, softwareId]
+      return { ...prev, softwareIds: next }
+    })
+  }
 
   const save = async () => {
     setSaving(true)
     try {
-      if (edit) await api.companies.update(edit.id, form); else await api.companies.create(form)
+      // Invia SEMPRE softwareIds (array anche se vuoto) così il backend può sincronizzare
+      // le preferenze, incluso il caso in cui l'utente deseleziona tutto.
+      const payload = { ...form, softwareIds: Array.isArray(form.softwareIds) ? form.softwareIds : [] }
+      if (edit) await api.companies.update(edit.id, payload); else await api.companies.create(payload)
       setMsg({t: edit ? 'Aggiornata.' : 'Creata.', ok: true}); setShow(false); load()
     } catch(e:any) { setMsg({t:e.message,ok:false}) } finally { setSaving(false) }
   }
@@ -82,6 +112,48 @@ export default function AdminCompaniesPage() {
               <input className={t.inp} type="date" value={form.assistanceExpiresAt||''} onChange={e=>setForm({...form,assistanceExpiresAt:e.target.value||null})}/>
               <label className={t.lbl}>Note</label>
               <textarea className={t.ta} rows={2} value={form.notes||''} onChange={e=>setForm({...form,notes:e.target.value})}/>
+
+              <label className={t.lbl}>Preferenze software</label>
+              <p style={{fontSize:11,color:'var(--muted)',margin:'0 0 8px',lineHeight:1.5}}>
+                Famiglie di software di interesse per questa azienda. Usate per profilazione e filtri.
+              </p>
+              {softwares.length === 0 ? (
+                <div style={{fontSize:12,color:'var(--muted)',padding:'8px 0'}}>Nessun software disponibile.</div>
+              ) : (
+                <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                  {softwares.map(sw => {
+                    const selected = Array.isArray(form.softwareIds) && form.softwareIds.includes(sw.id)
+                    const brand = getBrand(sw.slug)
+                    return (
+                      <button
+                        key={sw.id}
+                        type="button"
+                        onClick={() => togglePreference(sw.id)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: 999,
+                          border: `1.5px solid ${selected ? brand.color : 'var(--border)'}`,
+                          background: selected ? brand.light : 'var(--white)',
+                          color: selected ? brand.color : 'var(--muted-dark)',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          fontFamily: 'var(--font-body)',
+                        }}
+                      >
+                        <span style={{
+                          width: 8, height: 8, borderRadius: 2,
+                          background: brand.color, display: 'inline-block',
+                        }} />
+                        {sw.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
             <div className={t.mftr}><button className={t.btnS} onClick={()=>setShow(false)}>Annulla</button><button className={t.btnP} onClick={save} disabled={saving}>{saving?'Salvo...':'Salva'}</button></div>
           </div>

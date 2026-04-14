@@ -102,7 +102,8 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
           {/* Filtro software */}
           <div className={styles.filterGroup}>
             {[{ slug: 'ALL', name: 'Tutti' }, ...softwares].map(s => {
-              const brand = s.slug !== 'ALL' ? getBrand(s.slug) : null
+              // Passa l'intero oggetto software come secondo arg per preferire i valori DB
+              const brand = s.slug !== 'ALL' ? getBrand(s.slug, s) : null
               const active = softwareFilter === s.slug
               return (
                 <button
@@ -151,7 +152,7 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
         ) : (
           <div className={styles.cardGrid}>
             {filtered.map(course => {
-              const brand = getBrand(course?.software?.slug || '')
+              const brand = getBrand(course?.software?.slug, course?.software)
               const prog = progressMap[course?.slug]
               const isActive = course?.available !== false
               const hasProgress = prog && prog.percent > 0

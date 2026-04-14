@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { getBrand } from '@/lib/brands'
+import { getBrand, DbSoftware } from '@/lib/brands'
 import styles from './VideoCard.module.css'
 
 /**
@@ -12,6 +12,8 @@ interface VideoCardProps {
   title: string
   youtubeId: string
   softwareSlug: string
+  /** Software object dal DB — quando presente, name/color dal DB prevalgono sui default */
+  software?: DbSoftware | null
   date?: string
   onClick?: () => void
 }
@@ -20,10 +22,11 @@ export default function VideoCard({
   title,
   youtubeId,
   softwareSlug,
+  software,
   date,
   onClick,
 }: VideoCardProps) {
-  const brand = getBrand(softwareSlug)
+  const brand = getBrand(softwareSlug, software)
 
   return (
     <div className={styles.card} onClick={onClick}>

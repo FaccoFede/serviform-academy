@@ -3,10 +3,23 @@ export interface SoftwareBrand {
   color: string; light: string; border: string;
 }
 
-// ── Registry unico delle famiglie software ──────────────────────────────────
-// Sorgente di verità per nome, tagline e colori di ogni famiglia.
-// Chiavi in lowercase per coerenza; il lookup `getBrand()` è case-insensitive,
-// quindi funziona anche con slug scritti in camelCase nel DB (es. `serviFormA`).
+/**
+ * Sottoinsieme del modello Software restituito dall'API.
+ * Usato come override opzionale in `getBrand`.
+ */
+export interface DbSoftware {
+  id?: string
+  slug: string
+  name?: string | null
+  tagline?: string | null
+  color?: string | null
+  lightColor?: string | null
+}
+
+// ── Registry di default ──────────────────────────────────────────────────────
+// Usato come fallback quando i valori DB sono null/undefined.
+// I valori definitivi vengono dal DB via admin Software.
+// Chiavi in lowercase; getBrand() fa lookup case-insensitive.
 export const SOFTWARE_BRANDS: Record<string, SoftwareBrand> = {
   engview: {
     key: 'engview', name: 'EngView',
@@ -30,7 +43,6 @@ export const SOFTWARE_BRANDS: Record<string, SoftwareBrand> = {
   },
 }
 
-// Fallback neutro quando lo slug non è mappato (evita variazioni tra sezioni)
 const FALLBACK_BRAND: SoftwareBrand = {
   key: '', name: '', tagline: '',
   color: '#4E4D4D', light: '#F5F5F5', border: '#E8E8E8',
@@ -38,16 +50,32 @@ const FALLBACK_BRAND: SoftwareBrand = {
 
 /**
  * Risolve un brand a partire dallo slug del software.
- * Lookup case-insensitive e tollerante agli spazi: qualunque variante di
- * casing (`serviFormA`, `serviforma`, `ServiFormA`) restituisce lo stesso
- * brand, garantendo colori/tagline coerenti in tutte le sezioni del portale.
+ *
+ * - Lookup case-insensitive: `serviFormA`, `serviforma`, `ServiformA` → stesso brand.
+ * - Se viene passato un oggetto `db` (proveniente dall'API /software), i suoi
+ *   valori sovrascrivono quelli di default per name, tagline, color e lightColor.
+ *   Questo consente che le modifiche fatte in admin/software vengano rispecchiate
+ *   in tutto il portale senza toccare questo file.
+ *
+ * Chiamata senza `db` → comportamento identico a prima, compatibile ovunque.
+ * Chiamata con `db` → i dati live del DB prevalgono sui default statici.
  */
-export function getBrand(slug?: string | null): SoftwareBrand {
-  if (!slug) return FALLBACK_BRAND
-  const normalized = slug.trim().toLowerCase()
-  const match = SOFTWARE_BRANDS[normalized]
-  if (match) return match
-  return { ...FALLBACK_BRAND, key: slug, name: slug }
+export function getBrand(slug?: string | null, db?: DbSoftware | null): SoftwareBrand {
+  const normalized = slug ? slug.trim().toLowerCase() : ''
+  const base: SoftwareBrand = normalized && SOFTWARE_BRANDS[normalized]
+    ? { ...SOFTWARE_BRANDS[normalized] }
+    : { ...FALLBACK_BRAND, key: slug || '', name: slug || '' }
+
+  if (!db) return base
+
+  // Applica i valori DB dove presenti e non vuoti, mantenendo i default come fallback
+  if (db.name)      base.name    = db.name
+  if (db.tagline)   base.tagline = db.tagline
+  if (db.color)     base.color   = db.color
+  // DB usa `lightColor`, SoftwareBrand usa `light` — mappa il campo
+  if (db.lightColor) base.light  = db.lightColor
+
+  return base
 }
 
 export const LEVEL_COLORS: Record<string, string> = {

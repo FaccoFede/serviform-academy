@@ -25,13 +25,13 @@ export default function VideosView({ videos, software }: { videos: any[]; softwa
       <div className={styles.tabs}>
         <button className={!activeTab ? styles.tabActive : styles.tab} onClick={() => setActiveTab(null)}>Tutti</button>
         {software.map(sw => {
-          const brand = getBrand(sw.slug)
+          const brand = getBrand(sw.slug, sw)
           return (
             <button key={sw.slug} className={activeTab === sw.slug ? styles.tabActive : styles.tab}
               onClick={() => setActiveTab(sw.slug)}
               style={{ '--tab-color': brand.color } as React.CSSProperties}>
               <span className={styles.tabDot} style={{ background: brand.color }} />
-              {sw.name}
+              {brand.name}
             </button>
           )
         })}
@@ -48,7 +48,7 @@ export default function VideosView({ videos, software }: { videos: any[]; softwa
             </div>
           </div>
           <div className={styles.featuredInfo}>
-            <span className={styles.featuredLabel}>{getBrand(featured.software?.slug || '').name} · Ultima pillola</span>
+            <span className={styles.featuredLabel}>{getBrand(featured.software?.slug, featured.software).name} · Ultima pillola</span>
             <h2>{featured.title}</h2>
             {featured.description && <p>{featured.description}</p>}
           </div>
@@ -64,6 +64,7 @@ export default function VideosView({ videos, software }: { videos: any[]; softwa
           {archive.map(v => (
             <VideoCard key={v.id} title={v.title} youtubeId={v.youtubeId}
               softwareSlug={v.software?.slug || ''}
+              software={v.software}
               onClick={() => setModal({ youtubeId: v.youtubeId, title: v.title })} />
           ))}
         </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Course } from '@/lib/api'
-import { SOFTWARE_BRANDS } from '@/lib/brands'
+import { getBrand } from '@/lib/brands'
 import { FilterBar, CourseCard } from '@/components/ui'
 import styles from './CourseGrid.module.css'
 
@@ -13,16 +13,15 @@ interface CourseGridProps {
 export default function CourseGrid({ courses }: CourseGridProps) {
   const [filter, setFilter] = useState<string | null>(null)
 
-  // Filtri dinamici: mostra solo le famiglie che hanno almeno un corso
-  // Rispetta il requisito §8.1 DOCX: "se una famiglia non ha contenuti, non va mostrata"
-  const presentSlugs = new Set(courses.map((c) => c.software?.slug).filter(Boolean))
-  const filterOptions = Object.values(SOFTWARE_BRANDS)
-    .filter((brand) => presentSlugs.has(brand.key))
-    .map((brand) => ({
-      label: brand.name,
-      value: brand.key,
-      color: brand.color,
-    }))
+  // Filtri dinamici: mostra solo le famiglie che hanno almeno un corso.
+  // Usa getBrand(slug, dbSoftware) così name/color riflettono i valori DB.
+  const swMap = new Map<string, Course['software']>()
+  courses.forEach(c => { if (c.software?.slug) swMap.set(c.software.slug, c.software) })
+
+  const filterOptions = Array.from(swMap.entries()).map(([slug, sw]) => {
+    const brand = getBrand(slug, sw)
+    return { label: brand.name, value: slug, color: brand.color }
+  })
 
   const filtered = filter
     ? courses.filter((c) => c.software?.slug === filter)
@@ -39,6 +38,7 @@ export default function CourseGrid({ courses }: CourseGridProps) {
             title={course.title}
             description={course.description}
             softwareSlug={course.software?.slug || ''}
+            software={course.software}
             level={course.level}
             duration={course.duration}
             unitCount={course.units?.length}

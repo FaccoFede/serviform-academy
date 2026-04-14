@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import { SOFTWARE_BRANDS, getBrand } from '@/lib/brands'
+import { getBrand } from '@/lib/brands'
 import styles from './page.module.css'
 
 // ─── CONFIGURAZIONE CORSI IN EVIDENZA ────────────────────────────────────────
@@ -11,7 +11,9 @@ const FEATURED_SLUGS: string[] = []
 
 export default async function PublicHomePage() {
   let courses: any[] = []
-  try { courses = await api.courses.findAll() } catch {}
+  let softwares: any[] = []
+  // Fetch in parallelo: corsi e lista software (per avere name/tagline/color dal DB)
+  try { [courses, softwares] = await Promise.all([api.courses.findAll(), api.software.findAll()]) } catch {}
 
   // Calcola ore totali di formazione sommando le durate dei corsi
   function parseDurationToHours(d?: string): number {
@@ -41,7 +43,8 @@ export default async function PublicHomePage() {
     teaser = courses.slice(0, 3)
   }
 
-  const families = Object.values(SOFTWARE_BRANDS)
+  // Usa la lista software dal DB; se vuota (backend non raggiungibile) rimane []
+  const families = softwares
 
   return (
     <div className={styles.page}>
@@ -83,18 +86,19 @@ export default async function PublicHomePage() {
           <h2 className={styles.sectionTitle}>Scegli la tua famiglia</h2>
           <div className={styles.familyGrid}>
             {families.map(f => {
-              // Match case-insensitive: lo slug reale in DB può essere in camelCase (es. `serviFormA`)
-              const count = courses.filter(c => (c.software?.slug || '').toLowerCase() === f.key).length
+              // getBrand(slug, dbSoftware): usa name/tagline/color dal DB, brands.ts come fallback
+              const brand = getBrand(f.slug, f)
+              const count = courses.filter(c => (c.software?.slug || '').toLowerCase() === (f.slug || '').toLowerCase()).length
               return (
-                <Link key={f.key} href={`/catalog?software=${f.key}`} className={styles.familyCard}>
-                  <div className={styles.familyAccent} style={{ background: f.color }} />
+                <Link key={f.slug} href={`/catalog?software=${f.slug}`} className={styles.familyCard}>
+                  <div className={styles.familyAccent} style={{ background: brand.color }} />
                   <div className={styles.familyTop}>
-                    <span className={styles.familyName} style={{ color: f.color }}>{f.name}</span>
+                    <span className={styles.familyName} style={{ color: brand.color }}>{brand.name}</span>
                     <span className={styles.familyCount}>
                       {count > 0 ? `${count} cors${count === 1 ? 'o' : 'i'}` : 'coming soon'}
                     </span>
                   </div>
-                  <p className={styles.familyTagline}>{f.tagline}</p>
+                  <p className={styles.familyTagline}>{brand.tagline}</p>
                 </Link>
               )
             })}
@@ -115,10 +119,9 @@ export default async function PublicHomePage() {
             </div>
             <div className={styles.teaserGrid}>
               {teaser.map(c => {
-                // ── FIX TAG SOFTWARE ──────────────────────────────────────────
-                // Usa getBrand() (case-insensitive) così lo stesso software è
-                // rappresentato con gli stessi colori/nome in tutte le sezioni.
-                const brand = getBrand(c.software?.slug)
+                // getBrand(slug, dbSoftware): preferisce i valori del DB (inclusi
+                // modifiche dall'admin Software) con fallback ai default di brands.ts
+                const brand = getBrand(c.software?.slug, c.software)
                 return (
                   <Link key={c.id} href={`/courses/${c.slug}`} className={styles.teaserCard}>
                     <div className={styles.teaserTop}>

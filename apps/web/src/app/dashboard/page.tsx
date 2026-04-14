@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [lastViewed,    setLastViewed]    = useState<any>(null)
   const [loadingData,   setLoadingData]   = useState(true)
+  const [swMap,         setSwMap]         = useState<Map<string, any>>(new Map())
   // STEP 4: apre AnnouncementModal direttamente al click
   const [selectedAnn,   setSelectedAnn]   = useState<any>(null)
 
@@ -64,11 +65,22 @@ export default function DashboardPage() {
         .then(r => r.ok ? r.json() : {}),
       fetch(`${API_URL}/announcements`, { headers })
         .then(r => r.ok ? r.json() : []),
+      // Fetch software list (senza auth) per avere name/color/tagline dal DB
+      fetch(`${API_URL}/software`)
+        .then(r => r.ok ? r.json() : []),
     ])
-      .then(([dashData, anns]) => {
+      .then(([dashData, anns, softwares]) => {
         setProgress(dashData.courses || [])
         setLastViewed(dashData.lastViewed || null)
         setAnnouncements(Array.isArray(anns) ? anns : [])
+        // Mappa slug (normalizzato in lowercase) → oggetto software DB
+        const map = new Map<string, any>()
+        if (Array.isArray(softwares)) {
+          softwares.forEach((sw: any) => {
+            if (sw?.slug) map.set(sw.slug.toLowerCase(), sw)
+          })
+        }
+        setSwMap(map)
       })
       .catch(() => {})
       .finally(() => setLoadingData(false))
@@ -163,7 +175,7 @@ export default function DashboardPage() {
                 </div>
                 <div className={styles.courseList}>
                   {inProgress.map((c: any) => {
-                    const brand = getBrand(c.softwareSlug || '')
+                    const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
                     return (
                       <Link key={c.courseId || c.courseSlug}
                         href={`/courses/${c.courseSlug}`} className={styles.courseCard}>
@@ -198,7 +210,7 @@ export default function DashboardPage() {
                 </div>
                 <div className={styles.courseList}>
                   {completed.map((c: any) => {
-                    const brand = getBrand(c.softwareSlug || '')
+                    const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
                     return (
                       <Link key={c.courseId || c.courseSlug}
                         href={`/courses/${c.courseSlug}`}

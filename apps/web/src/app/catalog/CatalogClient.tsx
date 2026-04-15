@@ -254,9 +254,13 @@ function CourseCard({ course, brand, prog, hasProgress, isDone, isActive, unitCo
         )}
 
         <div className={styles.cardFoot}>
-          {course.level && <span className={styles.footItem}>{course.level}</span>}
-          {course.duration && <span className={styles.footItem}>{course.duration}</span>}
-          {unitCount > 0 && <span className={styles.footItem}>{unitCount} unità</span>}
+          <span className={styles.footMeta}>
+            {course.level && <span className={styles.footItem}>{course.level}</span>}
+            {course.level && course.duration && <span className={styles.footDot} aria-hidden="true">•</span>}
+            {course.duration && <span className={styles.footItem}>{course.duration}</span>}
+            {(course.level || course.duration) && unitCount > 0 && <span className={styles.footDot} aria-hidden="true">•</span>}
+            {unitCount > 0 && <span className={styles.footItem}>{unitCount} unità</span>}
+          </span>
           <span className={styles.cardCta}>
             {isLoggedIn && hasProgress && !isDone ? 'Continua →'
               : isLoggedIn && isDone ? 'Rileggi →'

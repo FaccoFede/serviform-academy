@@ -278,6 +278,20 @@
   font-family: var(--font-mono, monospace);
   color: var(--muted, #888);
 }
+.footMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.footDot {
+  font-size: 10px;
+  color: var(--muted, #888);
+  opacity: 0.45;
+  line-height: 1;
+  flex-shrink: 0;
+}
 .cardCta {
   margin-left: auto;
   font-size: 12.5px;

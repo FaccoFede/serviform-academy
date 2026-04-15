@@ -107,6 +107,9 @@ export const api = {
   exercises: {
     findAll: () => request<any[]>('/exercises'),
     findByUnit: (unitId: string) => request<any[]>('/exercises/unit/' + unitId),
+    // Sostituisce in blocco tutte le esercitazioni di un'unità — stesso pattern di guides
+    saveAll: (unitId: string, exercises: any[]) =>
+      request(`/exercises/unit/${unitId}/save-all`, { method: 'PUT', body: JSON.stringify({ exercises }) }),
     create: (data: any) => request('/exercises', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/exercises/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/exercises/' + id, { method: 'DELETE' }),

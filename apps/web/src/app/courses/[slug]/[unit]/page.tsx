@@ -49,7 +49,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
     </div>
   )
 
-  const units = (data.course?.units || []).filter((u: any) => u.unitType !== 'OVERVIEW')
+  const units = (data.course?.units || []).filter((u: any) => u.unitType === 'LESSON')
   const currentIndex = units.findIndex((u: any) => u.slug === unitSlug)
   const prevUnit = currentIndex > 0 ? units[currentIndex - 1] : null
   const nextUnit = currentIndex < units.length - 1 ? units[currentIndex + 1] : null
@@ -212,6 +212,13 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
           {data.content && <div className={styles.richContent} dangerouslySetInnerHTML={{__html: data.content}}/>}
           {!data.videoUrl && !data.content && <p style={{color:'var(--muted)',padding:'40px 0'}}>Nessun contenuto per questa unità.</p>}
 
+          {data.exercises?.length > 0 && (
+            <div className={styles.exercisesSection}>
+              <h3 className={styles.exercisesTitle}>Esercitazioni pratiche</h3>
+              {data.exercises.map((ex: any) => <ExerciseCard key={ex.id} title={ex.title} description={ex.description} htmlUrl={ex.htmlUrl} evdUrl={ex.evdUrl}/>)}
+            </div>
+          )}
+
           {(data.guides?.length > 0 || data.guide) && (
       <div className={styles.guideSection}>
        <span className={styles.guideLabel}>
@@ -235,12 +242,6 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
        ))}
      </div>
    )}
-          {data.exercises?.length > 0 && (
-            <div className={styles.exercisesSection}>
-              <h3 className={styles.exercisesTitle}>Esercitazioni pratiche</h3>
-              {data.exercises.map((ex: any) => <ExerciseCard key={ex.id} title={ex.title} description={ex.description} htmlUrl={ex.htmlUrl} evdUrl={ex.evdUrl}/>)}
-            </div>
-          )}
         </div>
 
         <div className={styles.footerNav}>

@@ -33,7 +33,7 @@ export default function AdminExercisesPage() {
         { key: 'description', label: 'Descrizione obiettivo', type: 'textarea' },
         {
           key: 'unitId',
-          label: 'Unità (esercitazione)',
+          label: 'Lezione',
           type: 'select',
           required: true,
           loadOptions: async () => {
@@ -42,7 +42,7 @@ export default function AdminExercisesPage() {
             for (const c of courses as any[]) {
               const units = await api.units.findByCourse(c.id).catch(() => [])
               for (const u of units as any[]) {
-                if (u.unitType === 'EXERCISE') {
+                if (u.unitType === 'LESSON') {
                   opts.push({ value: u.id, label: `${c.title} → ${u.title}` })
                 }
               }

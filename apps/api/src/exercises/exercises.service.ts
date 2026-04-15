@@ -55,4 +55,26 @@ export class ExercisesService {
     if (!ex) throw new NotFoundException('Esercizio non trovato')
     return this.prisma.exercise.delete({ where: { id } })
   }
+
+  /**
+   * Sostituisce tutte le esercitazioni di un'unità in blocco.
+   * Elimina quelle esistenti e ricrea dalla lista fornita — stesso pattern di guides.saveAll.
+   */
+  async saveAll(
+    unitId: string,
+    exercises: Array<{ title: string; description?: string; htmlUrl?: string; evdUrl?: string }>,
+  ) {
+    await this.prisma.exercise.deleteMany({ where: { unitId } })
+    if (!exercises.length) return []
+    return this.prisma.exercise.createMany({
+      data: exercises.map((e, i) => ({
+        title: e.title,
+        description: e.description || null,
+        htmlUrl: e.htmlUrl || null,
+        evdUrl: e.evdUrl || null,
+        order: i,
+        unitId,
+      })),
+    })
+  }
 }

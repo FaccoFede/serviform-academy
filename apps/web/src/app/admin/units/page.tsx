@@ -282,6 +282,198 @@ function GuidesFromCatalog({
   )
 }
 
+// ─── Componente: Editor esercitazioni inline ────────────────────────────────
+
+interface ExerciseItem {
+  id?: string
+  title: string
+  description: string
+  htmlUrl: string
+  evdUrl: string
+}
+
+function ExercisesEditor({
+  exercises,
+  onChange,
+}: {
+  exercises: ExerciseItem[]
+  onChange: (exs: ExerciseItem[]) => void
+}) {
+  const [adding, setAdding] = useState(false)
+  const [draft, setDraft] = useState<Omit<ExerciseItem, 'id'>>({ title: '', description: '', htmlUrl: '', evdUrl: '' })
+
+  const add = () => {
+    if (!draft.title.trim()) return
+    onChange([...exercises, { ...draft }])
+    setDraft({ title: '', description: '', htmlUrl: '', evdUrl: '' })
+    setAdding(false)
+  }
+
+  const remove = (i: number) => onChange(exercises.filter((_, j) => j !== i))
+
+  const update = (i: number, patch: Partial<ExerciseItem>) =>
+    onChange(exercises.map((e, j) => (j === i ? { ...e, ...patch } : e)))
+
+  return (
+    <div>
+      {exercises.length === 0 && !adding && (
+        <p style={{ fontSize: 12, color: 'var(--muted)', margin: '0 0 10px' }}>
+          Nessuna esercitazione associata a questa lezione.
+        </p>
+      )}
+
+      {exercises.map((ex, i) => (
+        <div
+          key={i}
+          style={{
+            border: '1px solid var(--border)',
+            borderRadius: 7,
+            padding: '10px 12px',
+            marginBottom: 8,
+            background: 'var(--surface)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>Esercitazione {i + 1}</span>
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              style={{ fontSize: 11, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+            >
+              × Rimuovi
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <input
+              type="text"
+              placeholder="Titolo *"
+              value={ex.title}
+              onChange={(e) => update(i, { title: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Descrizione obiettivo"
+              value={ex.description}
+              onChange={(e) => update(i, { description: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="URL anteprima HTML (modello 3D)"
+              value={ex.htmlUrl}
+              onChange={(e) => update(i, { htmlUrl: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="URL file .evd (download)"
+              value={ex.evdUrl}
+              onChange={(e) => update(i, { evdUrl: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+        </div>
+      ))}
+
+      {adding ? (
+        <div
+          style={{
+            border: '1px dashed var(--border)',
+            borderRadius: 7,
+            padding: '10px 12px',
+            marginBottom: 8,
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Nuova esercitazione</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <input
+              type="text"
+              placeholder="Titolo *"
+              value={draft.title}
+              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Descrizione obiettivo"
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="URL anteprima HTML (modello 3D)"
+              value={draft.htmlUrl}
+              onChange={(e) => setDraft({ ...draft, htmlUrl: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="URL file .evd (download)"
+              value={draft.evdUrl}
+              onChange={(e) => setDraft({ ...draft, evdUrl: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={add}
+              disabled={!draft.title.trim()}
+              style={{
+                padding: '6px 14px',
+                background: draft.title.trim() ? 'var(--ink)' : 'var(--border)',
+                color: draft.title.trim() ? '#fff' : 'var(--muted)',
+                border: 'none',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: draft.title.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              + Aggiungi
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAdding(false); setDraft({ title: '', description: '', htmlUrl: '', evdUrl: '' }) }}
+              style={{
+                padding: '6px 14px',
+                background: 'none',
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                fontSize: 12,
+                color: 'var(--muted)',
+                cursor: 'pointer',
+              }}
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          style={{
+            padding: '7px 14px',
+            background: 'none',
+            border: '1px dashed var(--border)',
+            borderRadius: 7,
+            fontSize: 12,
+            color: 'var(--muted)',
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'center',
+          }}
+        >
+          + Aggiungi esercitazione
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ─── Componente: Selettore video dal catalogo ───────────────────────────────
 
 function VideoSelector({ value, onChange }: { value: string; onChange: (url: string) => void }) {
@@ -380,6 +572,7 @@ export default function AdminUnitsPage() {
   // Stato del form corrente (custom fields)
   const [editVideoUrl, setEditVideoUrl] = useState('')
   const [editGuides, setEditGuides] = useState<CatalogGuide[]>([])
+  const [editExercises, setEditExercises] = useState<ExerciseItem[]>([])
   const [editHours, setEditHours] = useState<number | ''>('')
   const [editMinutes, setEditMinutes] = useState<number | ''>('')
 
@@ -393,8 +586,13 @@ export default function AdminUnitsPage() {
   const resetForm = () => {
     setEditVideoUrl('')
     setEditGuides([])
+    setEditExercises([])
     setEditHours('')
     setEditMinutes('')
+  }
+
+  const saveExercisesForUnit = async (unitId: string) => {
+    await api.exercises.saveAll(unitId, editExercises)
   }
 
   const saveGuidesForUnit = async (unitId: string) => {
@@ -515,6 +713,20 @@ export default function AdminUnitsPage() {
                 )
               },
             },
+            {
+              key: 'exercises',
+              label: 'Esercitazioni',
+              render: (v: any) => {
+                const count = Array.isArray(v) ? v.length : 0
+                return count > 0 ? (
+                  <span style={{ color: '#1a7a4a', fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                    ✎ {count}
+                  </span>
+                ) : (
+                  <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>
+                )
+              },
+            },
           ]}
           fetchItems={async () => {
             const units = await api.units.findByCourse(selectedCourse.id)
@@ -529,17 +741,17 @@ export default function AdminUnitsPage() {
             return units
           }}
           onSave={async (data) => {
-            // Valida durata obbligatoria per LESSON e EXERCISE
+            // Valida durata obbligatoria per le lezioni
             const unitType = (data.unitType as string) || 'LESSON'
             if (unitType !== 'OVERVIEW') {
               const h = editHours === '' ? 0 : Number(editHours)
               const m = editMinutes === '' ? 0 : Number(editMinutes)
               if (!h && !m) {
-                throw new Error('La durata è obbligatoria per le unità di tipo Lezione e Esercitazione')
+                throw new Error('La durata è obbligatoria per le unità di tipo Lezione')
               }
             }
             // Rimuovi i campi custom dal payload principale
-            const { videoUrl: _v, guides: _g, duration: _d, order: _o, ...rest } = data
+            const { videoUrl: _v, guides: _g, exercises: _e, duration: _d, order: _o, ...rest } = data
             const unit: any = await api.units.create({
               ...rest,
               courseId: selectedCourse.id,
@@ -548,20 +760,21 @@ export default function AdminUnitsPage() {
               durationMinutes: editMinutes === '' ? null : Number(editMinutes),
             })
             await saveGuidesForUnit(unit.id)
+            await saveExercisesForUnit(unit.id)
             resetForm()
             return unit
           }}
           onUpdate={async (id, data) => {
-            // Valida durata obbligatoria per LESSON e EXERCISE
+            // Valida durata obbligatoria per le lezioni
             const unitType = (data.unitType as string) || 'LESSON'
             if (unitType !== 'OVERVIEW') {
               const h = editHours === '' ? 0 : Number(editHours)
               const m = editMinutes === '' ? 0 : Number(editMinutes)
               if (!h && !m) {
-                throw new Error('La durata è obbligatoria per le unità di tipo Lezione e Esercitazione')
+                throw new Error('La durata è obbligatoria per le unità di tipo Lezione')
               }
             }
-            const { videoUrl: _v, guides: _g, duration: _d, order: _o, ...rest } = data
+            const { videoUrl: _v, guides: _g, exercises: _e, duration: _d, order: _o, ...rest } = data
             const unit: any = await api.units.update(id, {
               ...rest,
               videoUrl: editVideoUrl || null,
@@ -569,6 +782,7 @@ export default function AdminUnitsPage() {
               durationMinutes: editMinutes === '' ? null : Number(editMinutes),
             })
             await saveGuidesForUnit(id)
+            await saveExercisesForUnit(id)
             resetForm()
             return unit
           }}
@@ -586,6 +800,17 @@ export default function AdminUnitsPage() {
                 zendeskId: g.zendeskId || null,
               })),
             )
+            // Carica le esercitazioni associate all'unità
+            const exercises = Array.isArray(item.exercises) ? item.exercises : []
+            setEditExercises(
+              exercises.map((e: any) => ({
+                id: e.id,
+                title: e.title || '',
+                description: e.description || '',
+                htmlUrl: e.htmlUrl || '',
+                evdUrl: e.evdUrl || '',
+              })),
+            )
           }}
           formFields={[
             { key: 'title', label: 'Titolo', type: 'text', required: true, placeholder: 'Es. Introduzione al modulo' },
@@ -595,7 +820,6 @@ export default function AdminUnitsPage() {
               type: 'select',
               options: [
                 { value: 'LESSON', label: 'Lezione' },
-                { value: 'EXERCISE', label: 'Esercitazione' },
                 { value: 'OVERVIEW', label: 'Overview (una sola per corso, ordine 0)' },
               ],
             },
@@ -626,6 +850,12 @@ export default function AdminUnitsPage() {
               label: 'Contenuto HTML',
               type: 'richtext',
               placeholder: '<h3>Titolo sezione</h3>\n<p>Contenuto della lezione...</p>',
+            },
+            {
+              key: 'exercises',
+              label: 'Esercitazioni',
+              type: 'custom',
+              customRender: () => <ExercisesEditor exercises={editExercises} onChange={setEditExercises} />,
             },
             {
               key: 'guides',

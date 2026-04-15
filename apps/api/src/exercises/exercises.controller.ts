@@ -22,6 +22,17 @@ export class ExercisesController {
     return this.svc.findByUnit(unitId)
   }
 
+  /** PUT /exercises/unit/:unitId/save-all — sostituisce in blocco le esercitazioni di un'unità */
+  @Put('unit/:unitId/save-all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'TEAM_ADMIN')
+  saveAll(
+    @Param('unitId') unitId: string,
+    @Body() body: { exercises: { title: string; description?: string; htmlUrl?: string; evdUrl?: string }[] },
+  ) {
+    return this.svc.saveAll(unitId, body.exercises || [])
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.svc.findOne(id)

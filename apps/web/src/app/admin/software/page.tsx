@@ -15,6 +15,7 @@ export default function AdminSoftwarePage() {
       fetchItems={api.software.findAll}
       onSave={(data) => api.software.create(data)}
       onUpdate={(id, data) => api.software.update(id, data)}
+      onDelete={(id) => api.software.remove(id)}
       formFields={[
         { key: 'name', label: 'Nome', type: 'text', required: true },
         { key: 'slug', label: 'Slug', type: 'text', required: true },

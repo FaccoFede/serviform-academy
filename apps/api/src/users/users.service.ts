@@ -11,7 +11,7 @@ export class UsersService {
       where: { deletedAt: null },
       select: {
         id: true, email: true, name: true, role: true,
-        lastLoginAt: true, createdAt: true,
+        lastLoginAt: true, createdAt: true, mustChangePassword: true,
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -51,8 +51,8 @@ export class UsersService {
   async create(data: { email: string; name?: string; password?: string; role?: string; companyId?: string }) {
     const { password, companyId, ...rest } = data
 
-    // Controlla email duplicata con messaggio chiaro
-    const existing = await this.prisma.user.findUnique({ where: { email: rest.email } })
+    // Controlla email duplicata con messaggio chiaro (esclude utenti soft-deleted)
+    const existing = await this.prisma.user.findFirst({ where: { email: rest.email, deletedAt: null } })
     if (existing) throw new Error('Email già in uso')
 
     const user = await this.prisma.user.create({

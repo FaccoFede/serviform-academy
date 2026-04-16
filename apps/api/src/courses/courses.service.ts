@@ -57,8 +57,8 @@ export class CoursesService {
   }
 
   findBySlug(slug: string) {
-    return this.prisma.course.findUnique({
-      where: { slug },
+    return this.prisma.course.findFirst({
+      where: { slug, deletedAt: null },
       include: {
         software: true,
         units: {
@@ -87,13 +87,13 @@ export class CoursesService {
   }
 
   async update(id: string, data: any) {
-    const c = await this.prisma.course.findUnique({ where: { id } })
+    const c = await this.prisma.course.findFirst({ where: { id, deletedAt: null } })
     if (!c) throw new NotFoundException('Corso non trovato')
     return this.prisma.course.update({ where: { id }, data })
   }
 
   async remove(id: string) {
-    const c = await this.prisma.course.findUnique({ where: { id } })
+    const c = await this.prisma.course.findFirst({ where: { id, deletedAt: null } })
     if (!c) throw new NotFoundException('Corso non trovato')
     return this.prisma.course.update({ where: { id }, data: { deletedAt: new Date() } })
   }

@@ -74,6 +74,7 @@ export const api = {
     findBySlug: (slug: string) => request<Software>('/software/' + slug),
     create: (data: any) => request('/software', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/software/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request('/software/' + id, { method: 'DELETE' }),
   },
   courses: {
     findAll: () => request<Course[]>('/courses'),

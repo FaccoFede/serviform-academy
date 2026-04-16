@@ -45,7 +45,7 @@ export default function AdminAnnouncementsPage() {
     finally { setSaving(false) }
   }
 
-  const del = async (id: string) => { if (!confirm('Eliminare?')) return; await api.announcements.remove(id); load() }
+  const del = async (id: string) => { if (!confirm('Eliminare?')) return; try { await api.announcements.remove(id); load() } catch (e: any) { setMsg({ t: e.message, ok: false }) } }
   const toggle = async (r: any) => { await api.announcements.update(r.id, { published: !r.published }); load() }
   const pin = async (r: any) => { await api.announcements.update(r.id, { isPinned: !r.isPinned }); load() }
 

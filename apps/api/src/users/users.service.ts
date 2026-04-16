@@ -51,9 +51,23 @@ export class UsersService {
   async create(data: { email: string; name?: string; password?: string; role?: string; companyId?: string }) {
     const { password, companyId, ...rest } = data
 
-    // Controlla email duplicata con messaggio chiaro (esclude utenti soft-deleted)
+    // Controlla email duplicata tra utenti attivi
     const existing = await this.prisma.user.findFirst({ where: { email: rest.email, deletedAt: null } })
     if (existing) throw new Error('Email già in uso')
+
+    // Se esiste un utente soft-deleted con la stessa email, rimuovilo fisicamente
+    // per liberare il vincolo di unicità e permettere la ricreazione
+    const softDeleted = await this.prisma.user.findFirst({ where: { email: rest.email, deletedAt: { not: null } } })
+    if (softDeleted) {
+      await this.prisma.$transaction([
+        this.prisma.userProgress.deleteMany({ where: { userId: softDeleted.id } }),
+        this.prisma.certificate.deleteMany({ where: { userId: softDeleted.id } }),
+        this.prisma.userCourseAssignment.deleteMany({ where: { userId: softDeleted.id } }),
+      ])
+      try { await (this.prisma as any).announcementRead.deleteMany({ where: { userId: softDeleted.id } }) } catch {}
+      try { await (this.prisma as any).companyMembership.deleteMany({ where: { userId: softDeleted.id } }) } catch {}
+      await this.prisma.user.delete({ where: { id: softDeleted.id } })
+    }
 
     const user = await this.prisma.user.create({
       data: {

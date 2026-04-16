@@ -44,6 +44,17 @@ export class CompaniesService {
   async create(data: any) {
     const existing = await this.prisma.company.findFirst({ where: { slug: data.slug, deletedAt: null } })
     if (existing) throw new ConflictException('Slug già esistente')
+
+    // Se esiste un'azienda soft-deleted con lo stesso slug, rimuovila fisicamente
+    const softDeleted = await this.prisma.company.findFirst({ where: { slug: data.slug, deletedAt: { not: null } } })
+    if (softDeleted) {
+      await this.prisma.$transaction([
+        this.prisma.companyMembership.deleteMany({ where: { companyId: softDeleted.id } }),
+        this.prisma.companyCourseAssignment.deleteMany({ where: { companyId: softDeleted.id } }),
+        this.prisma.companyInterest.deleteMany({ where: { companyId: softDeleted.id } }),
+        this.prisma.company.delete({ where: { id: softDeleted.id } }),
+      ])
+    }
     const scalars = pickCompanyScalars(data)
     const ids: string[] = Array.isArray(data.softwareIds) ? data.softwareIds.filter(Boolean) : []
     const company = await this.prisma.company.create({

@@ -70,7 +70,7 @@ export class CoursesService {
     })
   }
 
-  create(data: {
+  async create(data: {
     title: string
     slug: string
     description?: string
@@ -83,6 +83,27 @@ export class CoursesService {
     thumbnailUrl?: string
     issuesBadge?: boolean
   }) {
+    // Se esiste un corso soft-deleted con lo stesso slug, rimuovilo fisicamente
+    // per liberare il vincolo di unicità e permettere la ricreazione
+    const softDeleted = await this.prisma.course.findFirst({ where: { slug: data.slug, deletedAt: { not: null } } })
+    if (softDeleted) {
+      const unitIds = (await this.prisma.unit.findMany({
+        where: { courseId: softDeleted.id },
+        select: { id: true },
+      })).map(u => u.id)
+
+      await this.prisma.$transaction([
+        this.prisma.userProgress.deleteMany({ where: { unitId: { in: unitIds } } }),
+        this.prisma.exercise.deleteMany({ where: { unitId: { in: unitIds } } }),
+        this.prisma.guideReference.deleteMany({ where: { unitId: { in: unitIds } } }),
+        this.prisma.unit.deleteMany({ where: { courseId: softDeleted.id } }),
+        this.prisma.certificate.deleteMany({ where: { courseId: softDeleted.id } }),
+        this.prisma.userCourseAssignment.deleteMany({ where: { courseId: softDeleted.id } }),
+        this.prisma.companyCourseAssignment.deleteMany({ where: { courseId: softDeleted.id } }),
+        this.prisma.course.delete({ where: { id: softDeleted.id } }),
+      ])
+    }
+
     return this.prisma.course.create({ data: data as any })
   }
 

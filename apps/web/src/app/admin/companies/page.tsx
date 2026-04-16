@@ -42,8 +42,7 @@ export default function AdminCompaniesPage() {
 
   const del = async (id: string, name: string) => {
     if (!confirm(`Eliminare "${name}"?`)) return
-    await api.companies.remove(id)
-    load()
+    try { await api.companies.remove(id); load() } catch (e: any) { setMsg({ t: e.message, ok: false }) }
   }
 
   const toggleSoftware = (id: string) => {

@@ -76,7 +76,7 @@ export class UnitsService {
   }
 
   async findBySlug(courseSlug: string, unitSlug: string) {
-    const course = await this.prisma.course.findUnique({ where: { slug: courseSlug } })
+    const course = await this.prisma.course.findFirst({ where: { slug: courseSlug, deletedAt: null } })
     if (!course) throw new NotFoundException('Corso non trovato')
 
     const unit = await this.prisma.unit.findFirst({
@@ -183,7 +183,7 @@ export class UnitsService {
   }
 
   async update(id: string, data: any) {
-    const unit = await this.prisma.unit.findUnique({ where: { id } })
+    const unit = await this.prisma.unit.findFirst({ where: { id, deletedAt: null } })
     if (!unit) throw new NotFoundException('Unità non trovata')
 
     // ── VALIDAZIONE durata obbligatoria per LESSON/EXERCISE ───────────────
@@ -239,7 +239,7 @@ export class UnitsService {
   }
 
   async remove(id: string) {
-    const unit = await this.prisma.unit.findUnique({ where: { id } })
+    const unit = await this.prisma.unit.findFirst({ where: { id, deletedAt: null } })
     if (!unit) throw new NotFoundException('Unità non trovata')
     const result = await this.prisma.unit.update({ where: { id }, data: { deletedAt: new Date() } })
     await this.recomputeCourseDuration(unit.courseId)

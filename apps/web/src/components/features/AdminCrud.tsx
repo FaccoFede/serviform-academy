@@ -33,11 +33,13 @@ interface AdminCrudProps {
   emptyMessage?: string
   /** Callback chiamata quando si apre il form di modifica — usata per precaricare stati custom */
   onEdit?: (item: any) => void | Promise<void>
+  /** Azioni aggiuntive per riga (es. link a sezione collegata) */
+  extraActions?: (item: any) => React.ReactNode
 }
 
 export default function AdminCrud({
   title, columns, fetchItems, onDelete, onSave, onUpdate,
-  formFields, emptyMessage, onEdit,
+  formFields, emptyMessage, onEdit, extraActions,
 }: AdminCrudProps) {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -252,6 +254,7 @@ export default function AdminCrud({
                     </td>
                   ))}
                   <td className={styles.actions}>
+                    {extraActions && extraActions(item)}
                     {onUpdate && (
                       <button className={styles.editBtn} onClick={() => openEdit(item)}>Modifica</button>
                     )}

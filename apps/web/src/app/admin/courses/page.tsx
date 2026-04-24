@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import AdminCrud from '@/components/features/AdminCrud'
 import { api } from '@/lib/api'
 
@@ -9,6 +10,19 @@ import { api } from '@/lib/api'
  * thumbnailUrl: opzionale, se vuoto usa placeholder automatico dal brand software
  * duration: calcolata automaticamente dalla somma delle durate delle unità del corso
  */
+
+const publishStateLabel: Record<string, string> = {
+  HIDDEN: '⚫ Nascosto',
+  VISIBLE_LOCKED: '🔒 Bloccato',
+  PUBLISHED: '✅ Pubblicato',
+}
+
+const publishStateBadge: Record<string, React.CSSProperties> = {
+  HIDDEN: { background: '#F3F3F3', color: 'var(--muted)', border: '1px solid var(--border)' },
+  VISIBLE_LOCKED: { background: '#FFFBEB', color: '#92400E', border: '1px solid #FDE68A' },
+  PUBLISHED: { background: '#ECFDF5', color: '#065F46', border: '1px solid #6EE7B7' },
+}
+
 export default function AdminCoursesPage() {
   return (
     <AdminCrud
@@ -17,7 +31,7 @@ export default function AdminCoursesPage() {
         {
           key: 'thumbnailUrl',
           label: '',
-          render: (v: any, row: any) => v
+          render: (v: any) => v
             ? <img src={v} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border)' }} />
             : <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>auto</span>,
         },
@@ -28,11 +42,16 @@ export default function AdminCoursesPage() {
         {
           key: 'publishState',
           label: 'Stato',
-          render: (v: any) => ({
-            HIDDEN: '⚫ Nascosto',
-            VISIBLE_LOCKED: '🔒 Visibile bloccato',
-            PUBLISHED: '✅ Pubblicato',
-          }[v as string] || v),
+          render: (v: any) => (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+              fontFamily: 'var(--font-mono)',
+              ...(publishStateBadge[v as string] || { background: 'var(--surface)', color: 'var(--muted)', border: '1px solid var(--border)' }),
+            }}>
+              {publishStateLabel[v as string] || v}
+            </span>
+          ),
         },
         { key: 'software', label: 'Software', render: (_: any, row: any) => row.software?.name || '—' },
       ]}
@@ -40,6 +59,29 @@ export default function AdminCoursesPage() {
       onSave={(data) => api.courses.create(data)}
       onUpdate={(id, data) => api.courses.update(id, data)}
       onDelete={(id) => api.courses.remove(id)}
+      extraActions={(course) => (
+        <Link
+          href={`/admin/units?courseId=${course.id}`}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '5px 10px',
+            border: '1px solid var(--border)',
+            borderRadius: 7,
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--po)',
+            background: 'var(--white)',
+            textDecoration: 'none',
+            transition: 'all var(--t-color)',
+            fontFamily: 'var(--font-body)',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--po-light)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--po)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--white)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }}
+        >
+          Unità →
+        </Link>
+      )}
       formFields={[
         { key: 'title', label: 'Titolo modulo', type: 'text', required: true, placeholder: 'Es. Modulo 3D' },
         { key: 'slug', label: 'Slug (URL)', type: 'text', required: true, placeholder: 'Es. engview-3d' },

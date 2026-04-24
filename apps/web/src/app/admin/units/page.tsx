@@ -580,6 +580,13 @@ export default function AdminUnitsPage() {
     api.courses.findAll().then((list) => {
       setCourses(list)
       setLoadingCourses(false)
+      // Auto-select dal parametro URL ?courseId=
+      const params = new URLSearchParams(window.location.search)
+      const courseId = params.get('courseId')
+      if (courseId) {
+        const found = list.find((c: any) => c.id === courseId)
+        if (found) setSelectedCourse(found)
+      }
     })
   }, [])
 

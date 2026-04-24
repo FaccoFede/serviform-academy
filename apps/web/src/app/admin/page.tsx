@@ -1,10 +1,6 @@
 import Link from 'next/link'
 import styles from './AdminPage.module.css'
 
-/**
- * Home admin — raggruppa le sezioni per area funzionale.
- * Include le nuove aree: Catalogo Video, Catalogo Guide, Certificazioni.
- */
 const SECTIONS = [
   {
     group: 'Contenuti formativi',
@@ -41,6 +37,7 @@ const SECTIONS = [
     group: 'Progressi & Certificazioni',
     items: [
       { href: '/admin/certificates', label: 'Certificazioni', desc: 'Badge emessi automaticamente al completamento' },
+      { href: '/admin/imports', label: 'Import CSV', desc: 'Importa aziende e utenti da file CSV' },
     ],
   },
 ]
@@ -48,24 +45,33 @@ const SECTIONS = [
 export default function AdminPage() {
   return (
     <main className={styles.main}>
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        background: 'var(--red-light)', color: 'var(--red)',
+        borderRadius: 6, padding: '4px 10px', fontSize: 11,
+        fontWeight: 700, fontFamily: 'var(--font-mono)',
+        textTransform: 'uppercase', letterSpacing: 0.8,
+        marginBottom: 16,
+      }}>
+        ● Admin
+      </div>
       <h1 className={styles.title}>Pannello di amministrazione</h1>
       <p className={styles.desc}>Serviform Academy — gestione completa della piattaforma.</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 36, marginTop: 32 }}>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
         {SECTIONS.map((s) => (
           <div key={s.group}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                color: 'var(--muted)',
-                fontFamily: 'var(--font-mono)',
-                marginBottom: 14,
-                paddingBottom: 10,
-                borderBottom: '1px solid var(--border)',
-              }}
-            >
+            <div style={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+              color: 'var(--muted)',
+              fontFamily: 'var(--font-mono)',
+              marginBottom: 12,
+              paddingBottom: 8,
+              borderBottom: '1px solid var(--border)',
+            }}>
               {s.group}
             </div>
             <div className={styles.grid}>

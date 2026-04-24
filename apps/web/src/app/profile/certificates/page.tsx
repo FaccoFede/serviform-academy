@@ -4,6 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { getBrand } from '@/lib/brands'
+import { formatDate } from '@/lib/formatters'
+import { downloadCertificateA4 } from '@/lib/certificate'
 import styles from './CertificatesPage.module.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -24,98 +26,6 @@ interface Certificate {
       lightColor: string
     }
   }
-}
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('it-IT', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-// Placeholder di download — la generazione completa dell'attestato verrà
-// implementata in una sessione successiva. Manteniamo la logica canvas esistente
-// come anteprima PNG finché non arriverà il vero PDF.
-function downloadCertificate(cert: Certificate, userName: string) {
-  const canvas = document.createElement('canvas')
-  canvas.width = 1122
-  canvas.height = 794
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, 1122, 794)
-
-  ctx.strokeStyle = '#E63329'
-  ctx.lineWidth = 6
-  ctx.strokeRect(24, 24, 1074, 746)
-  ctx.strokeStyle = '#1E1E1E'
-  ctx.lineWidth = 1.5
-  ctx.strokeRect(32, 32, 1058, 730)
-
-  ctx.fillStyle = '#1E1E1E'
-  ctx.font = 'bold 18px Arial'
-  ctx.textAlign = 'center'
-  ctx.fillText('SERVIFORM ACADEMY', 561, 90)
-
-  ctx.strokeStyle = '#E63329'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(200, 110)
-  ctx.lineTo(922, 110)
-  ctx.stroke()
-
-  ctx.fillStyle = '#111111'
-  ctx.font = 'bold 36px Arial'
-  ctx.fillText('Attestato di completamento', 561, 175)
-
-  ctx.fillStyle = '#666666'
-  ctx.font = '18px Arial'
-  ctx.fillText('si certifica che', 561, 230)
-
-  ctx.fillStyle = '#E63329'
-  ctx.font = 'bold 44px Arial'
-  ctx.fillText(userName, 561, 300)
-
-  ctx.fillStyle = '#666666'
-  ctx.font = '18px Arial'
-  ctx.fillText('ha completato con successo il modulo formativo', 561, 355)
-
-  ctx.fillStyle = '#111111'
-  ctx.font = 'bold 30px Arial'
-  ctx.fillText(cert.course.title, 561, 415)
-
-  const details = [cert.course.software?.name, cert.course.level, cert.course.duration]
-    .filter(Boolean)
-    .join(' · ')
-  if (details) {
-    ctx.fillStyle = '#888888'
-    ctx.font = '16px Arial'
-    ctx.fillText(details, 561, 455)
-  }
-
-  ctx.fillStyle = '#444444'
-  ctx.font = '14px Arial'
-  ctx.fillText(`Emesso il ${formatDate(cert.issuedAt)}`, 561, 530)
-
-  ctx.fillStyle = '#aaaaaa'
-  ctx.font = '11px Arial'
-  ctx.fillText(`ID: ${cert.id}`, 561, 560)
-
-  ctx.fillStyle = '#888888'
-  ctx.font = '13px Arial'
-  ctx.fillText('Serviform S.r.l. · www.serviform.com', 561, 700)
-
-  canvas.toBlob(blob => {
-    if (!blob) return
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `attestato-${cert.course.slug}-${cert.id.slice(0, 8)}.png`
-    a.click()
-    URL.revokeObjectURL(url)
-  }, 'image/png')
 }
 
 export default function CertificatesPage() {
@@ -271,7 +181,7 @@ export default function CertificatesPage() {
                     <button
                       type="button"
                       className={styles.downloadBtn}
-                      onClick={() => downloadCertificate(cert, fullName)}
+                      onClick={() => downloadCertificateA4(cert, fullName)}
                     >
                       Scarica attestato
                     </button>

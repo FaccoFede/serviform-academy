@@ -3,9 +3,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { api } from '@/lib/api'
 import styles from './Login.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface Stats {
   software: number
@@ -30,8 +29,8 @@ export default function LoginPage() {
   // Carica statistiche reali dal backend
   useEffect(() => {
     Promise.allSettled([
-      fetch(API_URL + '/software').then(r => r.ok ? r.json() : []),
-      fetch(API_URL + '/courses').then(r => r.ok ? r.json() : []),
+      api.software.findAll(),
+      api.courses.findAll(),
     ]).then(([swRes, coRes]) => {
       const software = swRes.status === 'fulfilled' ? (swRes.value?.length ?? 4) : 4
       const courses = coRes.status === 'fulfilled' ? (coRes.value?.length ?? 0) : 0

@@ -2,9 +2,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { API_URL } from '@/lib/config'
 import styles from './CommunicationsPage.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string; icon: string }> = {
   NEWS:        { label: 'Novità',       color: '#067DB8', bg: '#E3F4FC', icon: '📰' },

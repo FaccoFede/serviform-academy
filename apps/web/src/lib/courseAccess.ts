@@ -1,21 +1,19 @@
-'use client'
-
 /**
- * CourseAccessBadge
+ * lib/courseAccess.ts — logica condivisa di accesso/progresso dei corsi.
  *
- * Risolve e mostra lo stato effettivo di un corso per l'utente corrente.
+ * Fonte unica per due cose che prima erano duplicate inline in più pagine:
+ *  1. `resolveCourseAccess()` — stato effettivo di un corso per l'utente
+ *     (nascosto / bloccato / scaduto / non assegnato / attivo / completato).
+ *  2. `countableUnits()` / `calculateRealProgress()` — le unità che contano
+ *     nel progresso (LESSON, EXERCISE) escludendo le unità OVERVIEW.
  *
- * Logica di risoluzione (in ordine di priorità):
- * 1. publishState === 'HIDDEN'         → corso invisibile (non mostrare mai)
- * 2. publishState === 'VISIBLE_LOCKED' → mostra ma bloccato, nessun progresso
- * 3. expiresAt && expired             → scaduto (bloccato + badge scadenza)
- * 4. !assigned                        → non assegnato (bloccato, no "miei corsi")
- * 5. publishState === 'PUBLISHED' && assigned → attivo
+ * REGOLE INVARIANTI:
+ *  - Le unità con `unitType === 'OVERVIEW'` NON contano nel progresso.
+ *  - I corsi non assegnati NON devono comparire in "I miei corsi".
+ *  - `publishState === 'HIDDEN'` → il corso non va mai mostrato.
  *
- * REGOLA CRITICA:
- * - Le unità con unitType === 'OVERVIEW' NON contano nel progresso
- * - I corsi non assegnati NON devono apparire in "I miei corsi"
- * - Le progress bar contano SOLO unità LESSON e EXERCISE completate
+ * NB: solo funzioni pure, niente JSX (il file è `.ts`). Eventuali badge UI
+ * vanno in un componente `.tsx` dedicato.
  */
 
 export type CourseAccessState =
@@ -80,43 +78,26 @@ export function resolveCourseAccess(params: {
 }
 
 /**
- * Calcola la percentuale di progresso escludendo le unità OVERVIEW (preview).
- * Solo LESSON e EXERCISE contano nel completamento reale.
+ * Unità "contabili": tutte tranne le OVERVIEW (anteprime).
+ * Usare questo helper ovunque servano "le lezioni reali" di un corso,
+ * invece di ripetere `.filter(u => u.unitType !== 'OVERVIEW')`.
  */
-export function calculateRealProgress(units: Array<{ id: string; unitType: string }>, completedIds: Set<string>): {
-  percent: number
-  completed: number
-  total: number
-} {
-  const countable = units.filter(u => u.unitType !== 'OVERVIEW')
+export function countableUnits<T extends { unitType?: string | null }>(units?: T[] | null): T[] {
+  if (!Array.isArray(units)) return []
+  return units.filter(u => u?.unitType !== 'OVERVIEW')
+}
+
+/**
+ * Percentuale di progresso reale: solo le unità contabili (LESSON/EXERCISE),
+ * escluse le OVERVIEW.
+ */
+export function calculateRealProgress(
+  units: Array<{ id: string; unitType?: string | null }>,
+  completedIds: Set<string>,
+): { percent: number; completed: number; total: number } {
+  const countable = countableUnits(units)
   const total = countable.length
   if (total === 0) return { percent: 0, completed: 0, total: 0 }
   const completed = countable.filter(u => completedIds.has(u.id)).length
   return { percent: Math.round((completed / total) * 100), completed, total }
-}
-
-interface BadgeProps {
-  state: CourseAccessState
-  label: string
-  color: string
-  bg: string
-  expiryLabel?: string
-}
-
-export function CourseAccessBadge({ state, label, color, bg, expiryLabel }: BadgeProps) {
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      <span style={{
-        fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
-        background: bg, color, fontFamily: 'var(--font-mono)', letterSpacing: '.3px',
-      }}>
-        {label}
-      </span>
-      {expiryLabel && (
-        <span style={{ fontSize: 10, color: '#D97706', fontFamily: 'var(--font-mono)' }}>
-          {expiryLabel}
-        </span>
-      )}
-    </span>
-  )
 }

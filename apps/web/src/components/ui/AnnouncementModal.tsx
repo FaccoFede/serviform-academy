@@ -1,9 +1,8 @@
 'use client'
 import { useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { api } from '@/lib/api'
 import styles from './AnnouncementModal.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string }> = {
   NEWS:        { label: 'Novità',       color: '#067DB8', bg: '#E8F4FB' },
@@ -34,10 +33,7 @@ export default function AnnouncementModal({ item, onClose }: Props) {
   // ── Segna come letta al momento dell'apertura ─────────────────────────
   useEffect(() => {
     if (!token || !item?.id) return
-    fetch(`${API_URL}/announcements/${item.id}/read`, {
-      method: 'PATCH',
-      headers: { Authorization: 'Bearer ' + token },
-    }).catch(() => {})
+    api.announcements.markRead(item.id).catch(() => {})
   }, [item?.id, token])
 
   // ── Chiudi con ESC ────────────────────────────────────────────────────

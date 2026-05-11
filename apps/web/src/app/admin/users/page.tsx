@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
+import { API_URL } from '@/lib/config'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
 const ROLE: Record<string, string> = { USER: 'Utente', ADMIN: 'Admin', TEAM_ADMIN: 'Team Admin' }
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 function Icon({ d, size = 13 }: { d: string; size?: number }) {
   return <svg viewBox="0 0 24 24" fill="none" width={size} height={size}><path d={d} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

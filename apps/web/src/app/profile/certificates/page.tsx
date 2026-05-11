@@ -6,9 +6,8 @@ import { useAuth } from '@/context/AuthContext'
 import { getBrand } from '@/lib/brands'
 import { formatDate } from '@/lib/formatters'
 import { downloadCertificateA4 } from '@/lib/certificate'
+import { api } from '@/lib/api'
 import styles from './CertificatesPage.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface Certificate {
   id: string
@@ -35,10 +34,7 @@ export default function CertificatesPage() {
 
   useEffect(() => {
     if (!token) return
-    fetch(API_URL + '/certificates/my', {
-      headers: { Authorization: 'Bearer ' + token },
-    })
-      .then(r => (r.ok ? r.json() : []))
+    api.certificates.my()
       .then(data => setCerts(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false))

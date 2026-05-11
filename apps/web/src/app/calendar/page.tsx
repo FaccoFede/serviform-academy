@@ -2,9 +2,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { API_URL } from '@/lib/config'
 import styles from './Calendar.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 const TYPE_LABELS: Record<string, string> = {
   WORKSHOP: 'Workshop', WEBINAR: 'Webinar', LIVE_SESSION: 'Sessione live',

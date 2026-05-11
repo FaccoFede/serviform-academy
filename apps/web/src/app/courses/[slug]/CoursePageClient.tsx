@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useProgress } from '@/context/ProgressContext'
 import { getBrand, LEVEL_COLORS } from '@/lib/brands'
+import { api } from '@/lib/api'
+import { countableUnits } from '@/lib/courseAccess'
 import styles from './CoursePage.module.css'
 
 const PREVIEW_UNITS = 2
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 export default function CoursePageClient({ course }: { course: any }) {
   const { user, token } = useAuth()
@@ -18,14 +19,13 @@ export default function CoursePageClient({ course }: { course: any }) {
   const brand = getBrand(course.software?.slug || '')
   const levelColor = LEVEL_COLORS[course.level || ''] || 'var(--muted)'
   const overviewUnit = course.units?.find((u: any) => u.unitType === 'OVERVIEW')
-  const lessonUnits = course.units?.filter((u: any) => u.unitType !== 'OVERVIEW') || []
+  const lessonUnits = countableUnits<any>(course.units)
   const isActive = course.publishState === 'PUBLISHED'
 
   useEffect(() => {
     if (!user || !token) return
     loadCompletedUnitsFromServer(course.slug)
-    fetch(`${API_URL}/progress/course/${course.slug}`, { headers: { Authorization: 'Bearer ' + token } })
-      .then(r => r.ok ? r.json() : null)
+    api.progress.getCourseProgress(course.slug)
       .then(d => { if (d) setServerProgress(d) })
       .catch(() => {})
   }, [user, token, course.slug])

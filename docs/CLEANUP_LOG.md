@@ -99,7 +99,78 @@ Verificato che il contenuto di ogni patch è **già applicato** al codice prima 
 
 ## Fase 2 — Riduzione duplicazione
 
-_(non ancora iniziata)_
+> Stato: **completata** — commit `<vedi git log>` su `claude/cleanup-codebase-IgpWW`.
+> Obiettivo: una sola via per parlare col backend, una sola fonte per `API_URL`,
+> un solo helper per il filtro "unità che contano nel progresso".
+
+### 2.1 — `API_URL`: fonte unica = `lib/config.ts`
+
+- `apps/web/src/lib/config.ts` è ora l'**unica fonte di verità** per `API_URL` (e per le altre costanti già presenti: `PREVIEW_UNIT_COUNT`, `DASHBOARD_MAX_ANNOUNCEMENTS`, `IMAGE_SPECS`, `USER_ROLES`, `PUBLISH_STATES`). Prima era un file *scritto ma non importato da nessuno*.
+- `apps/web/src/lib/api.ts`: ora fa `import { API_URL } from './config'`. Continua a esportare `API_BASE_URL` come **alias storico** (alcuni file lo importavano da `@/lib/api`) — documentato nel file; per nuovo codice usare `API_URL` da `@/lib/config`. Anche `multipart()` (vedi 2.3) e `resolveVideoUrl()` usano lo stesso `BASE_URL`.
+- Rimosse le **16 definizioni inline** `const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'`, sostituite con `import { API_URL } from '@/lib/config'`:
+  `components/ui/AnnouncementModal.tsx`, `app/catalog/page.tsx`, `app/catalog/CatalogClient.tsx`, `app/communications/page.tsx`, `app/communications-events/page.tsx`, `app/calendar/page.tsx`, `app/admin/users/page.tsx`, `app/admin/imports/page.tsx`, `app/newsroom/page.tsx`, `app/auth/login/page.tsx`, `app/profile/page.tsx`, `app/profile/certificates/page.tsx`, `app/courses/[slug]/CoursePageClient.tsx`, `app/dashboard/page.tsx`, `context/AuthContext.tsx`, `context/ProgressContext.tsx`. (Nei file in cui poi è stato migrato anche il `fetch()`, il `const API_URL` è semplicemente sparito.)
+- Comportamento invariato: il valore è identico (`process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'`).
+
+### 2.2 — `lib/api.ts` come unico client HTTP: nuovi metodi + migrazione `fetch()`
+
+`lib/api.ts` è ora l'unico modo previsto per chiamare il backend dal frontend. Aggiunti i metodi mancanti:
+- `multipart<T>(path, file, token, extraFields?)` — helper interno per gli upload `multipart/form-data` (NON imposta `Content-Type`, lascia che il browser metta il boundary).
+- `api.uploads.image(file, token)` — riscritto sopra `multipart()` (prima aveva l'URL hardcoded inline).
+- `api.imports.uploadCsv(file, type, token)` — nuovo (`POST /imports/csv`).
+- `api.announcements.markRead(id)` — nuovo (`PATCH /announcements/:id/read`).
+- `api.announcements.findPublic()` — nuovo (`GET /announcements/public`, senza auth).
+- `api.progress.getDashboard()` — nuovo (`GET /progress/dashboard`).
+
+`fetch()` diretti migrati a `api.*`:
+
+| File | Prima | Dopo |
+|---|---|---|
+| `app/catalog/page.tsx` (SSR) | `fetch('/courses')` | `api.courses.findAll()` |
+| `app/catalog/CatalogClient.tsx` | `fetch('/progress/course/:slug')` (in loop) | `api.progress.getCourseProgress(slug)` |
+| `app/courses/[slug]/CoursePageClient.tsx` | `fetch('/progress/course/:slug')` | `api.progress.getCourseProgress(slug)` |
+| `app/profile/certificates/page.tsx` | `fetch('/certificates/my')` | `api.certificates.my()` |
+| `app/dashboard/page.tsx` | 4× `fetch` (`/progress/dashboard`, `/announcements`, `/software`, `/courses/portal`) | `api.progress.getDashboard()`, `api.announcements.findPublished()`, `api.software.findAll()`, `api.courses.findForPortal()` (ognuna con `.catch()` per non bloccare le altre) |
+| `app/newsroom/page.tsx` | `fetch('/announcements'\|'/announcements/public')`, `fetch('/events')` | `api.announcements.findPublished()`/`findPublic()`, `api.events.findAll()` |
+| `app/auth/login/page.tsx` | `Promise.allSettled([fetch('/software'), fetch('/courses')])` | `Promise.allSettled([api.software.findAll(), api.courses.findAll()])` |
+| `app/admin/units/page.tsx` | 3× `fetch` su `/guides*` con `API_BASE_URL`+`authHeaders()` | `api.guides.removeAllByUnit`, `api.guides.create`, `api.guides.findByUnit` — rimosse le funzioni locali `getToken`/`authHeaders` e l'import inutilizzato `API_BASE_URL` |
+| `app/admin/imports/page.tsx` | `fetch('/imports/csv')` con `FormData` | `api.imports.uploadCsv(file, type, token)` — rimossa la funzione locale `authHeaders` |
+| `components/ui/AnnouncementModal.tsx` | `fetch('/announcements/:id/read')` | `api.announcements.markRead(id)` |
+| `context/ProgressContext.tsx` | 3× `fetch` (`/progress/course/:slug/completed-units`, `/progress/complete`, `/progress/viewed`) | `api.progress.getCompletedUnits`, `api.progress.complete`, `api.progress.viewed` |
+
+**Nota sul comportamento:** `lib/api.ts` su risposta 401 esegue logout + redirect a `/auth/login` (se non si è già su `/auth/*`). Per i `fetch()` migrati questo significa che un token scaduto, dove prima l'errore veniva ignorato in silenzio, ora porta al re-login — comportamento ritenuto corretto.
+
+### 2.3 — `fetch()` deliberatamente NON migrati (con motivazione)
+
+- `context/AuthContext.tsx` (`/auth/login`, `/auth/register`, `/auth/profile`) — è il "primitivo" di autenticazione; ha già il proprio wrapper che intercetta il 401 *solo* fuori dagli endpoint di login/register. Usarlo tramite `lib/api.ts` rischierebbe loop di redirect durante il caricamento iniziale del profilo. (Solo aggiornato per usare `API_URL` da `@/lib/config`.)
+- `app/profile/page.tsx` (`PATCH /auth/profile`, `PATCH /auth/change-password`) — `change-password` risponde **401** quando la password attuale è errata; con il client `lib/api.ts` (che su 401 fa logout) l'utente verrebbe sloggato per un semplice errore di battitura. Servirebbe prima distinguere "401 di sessione" da "401 di tentativo auth" nel `request()` di `api.ts` (intervento a sé). (Solo aggiornato per usare `API_URL` da `@/lib/config`.)
+- `app/admin/users/page.tsx` (`POST /auth/admin/reset-password/:id`) — **questo endpoint non esiste sul backend** (`grep "reset-password" apps/api/src` → nulla): la funzionalità è già rotta. Non migrata; segnalata qui per una decisione futura (implementare l'endpoint o rimuovere la UI).
+- `app/communications/page.tsx`, `app/communications-events/page.tsx`, `app/calendar/page.tsx` — pagine destinate a essere assorbite in `newsroom` in **Fase 3**: migrarne i `fetch()` sarebbe lavoro buttato. (Solo aggiornato `API_URL` → `@/lib/config`.)
+
+### 2.4 — Helper unico per "unità che contano nel progresso"
+
+- `apps/web/src/lib/courseAccess.ts` **riparato**: era un file `.ts` che però conteneva JSX (componente `CourseAccessBadge`) → non compilava (`tsc` falliva con errori di sintassi, ma il file non entrava nel build di Next perché non importato). Ora: rimosso il componente JSX morto, il file è TS valido e contiene solo funzioni pure. Header riscritto con le regole invarianti.
+- Aggiunto `countableUnits<T>(units)` — ritorna le unità tranne le `OVERVIEW`. `calculateRealProgress()` ora lo usa internamente.
+- Sostituite le copie inline `(...).filter(u => u.unitType !== 'OVERVIEW')`:
+  - `app/courses/[slug]/CoursePageClient.tsx`: `countableUnits<any>(course.units)`
+  - `app/catalog/CatalogClient.tsx`: `countableUnits<any>(course?.units).length`
+  - (`app/courses/[slug]/[unit]/UnitPageClient.tsx` aveva una terza copia, ma quel file è stato rimosso in Fase 1.)
+  - (`app/admin/units/page.tsx` ha due `if (unitType !== 'OVERVIEW')` su un singolo valore, non su un array: lasciati così.)
+
+### 2.5 — Effetto collaterale: errori TypeScript latenti risolti
+
+Fino a quando `lib/courseAccess.ts` aveva errori di sintassi, `tsc` interrompeva il type-check e *mascherava* 13 errori pre-esistenti: i callback di `AdminCrud` (`onSave`/`onUpdate`/`onDelete`) erano tipati `Promise<void>` ma le pagine passano funzioni che ritornano `Promise<unknown>` (il valore di ritorno di `api.*.create/update/remove`). Riparato `courseAccess.ts`, questi errori sono emersi. Risolti cambiando in `AdminCrud.tsx` i tipi dei callback in `Promise<unknown>` (il valore di ritorno non è usato). Risultato: `npx tsc --noEmit` su `apps/web` ora è **pulito (0 errori)** — meglio dello stato di Fase 1.
+
+### 2.6 — Verifiche eseguite a fine Fase 2
+
+- `apps/web`: `npx tsc --noEmit -p tsconfig.json` → **0 errori** (prima della Fase 2 c'erano 13 errori latenti — vedi 2.5).
+- `pnpm build` (next build): compila tutte le route; in questo ambiente fallisce ancora solo sull'ultimo step di font Google (no rete) — limite dell'ambiente, non del codice. Da rifare in locale con rete.
+- ⚠️ **Test UI manuale necessario** (non eseguibile qui): login, catalogo (+ progresso corsi), pagina corso, pagina unità, dashboard (KPI/ultimi corsi), profilo → certificati, newsroom (comunicazioni + eventi + "segna come letto"), pannello admin → unità (guide), admin → import CSV. Confrontare con il branch `backup/pre-cleanup-2026-05-11` in caso di anomalie.
+
+### 2.7 — Rimandato a fasi successive
+
+- Distinguere in `api.ts` il "401 di sessione" dal "401 di tentativo di autenticazione" (per poter migrare anche `profile/change-password` senza sloggare l'utente).
+- `lib/config.ts` esporta anche `PREVIEW_UNIT_COUNT`, ma `CoursePageClient.tsx` (e altre pagine) hanno ancora `const PREVIEW_UNITS = 2` inline: consolidare in un giro successivo.
+- Endpoint `reset-password` mancante in `admin/users` (vedi 2.3): decidere.
 
 ## Fase 3 — Consolidamento parti ambigue
 

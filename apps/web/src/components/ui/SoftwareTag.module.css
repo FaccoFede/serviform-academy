@@ -1,7 +1,0 @@
-.tag {
-  display: inline-flex; align-items: center;
-  padding: 3px 10px; border-radius: 6px;
-  font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.6px;
-}
-.sm { padding: 2px 8px; font-size: 9px; }

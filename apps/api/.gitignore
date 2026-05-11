@@ -46,6 +46,11 @@ lerna-debug.log*
 .temp
 .tmp
 
+# uploaded files (immagini/video caricati a runtime — non versionare)
+# NB: i .mp4 già tracciati in uploads/videos/ restano tracciati per scelta;
+# questa regola evita che NUOVI upload finiscano in git.
+uploads/
+
 # Runtime data
 pids
 *.pid

@@ -98,13 +98,6 @@ export const api = {
     reorder: (courseId: string, unitIds: string[]) =>
       request(`/units/course/${courseId}/reorder`, { method: 'POST', body: JSON.stringify({ unitIds }) }),
   },
-  videos: {
-    findAll: () => request<any[]>('/videos'),
-    findBySoftware: (slug: string) => request<any[]>('/videos/software/' + slug),
-    create: (data: any) => request('/videos', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => request('/videos/' + id, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request('/videos/' + id, { method: 'DELETE' }),
-  },
   exercises: {
     findAll: () => request<any[]>('/exercises'),
     findByUnit: (unitId: string) => request<any[]>('/exercises/unit/' + unitId),
@@ -126,12 +119,6 @@ export const api = {
     create: (data: any) => request('/events', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/events/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/events/' + id, { method: 'DELETE' }),
-  },
-  pricing: {
-    findAll: () => request<any[]>('/pricing'),
-    create: (data: any) => request('/pricing', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => request('/pricing/' + id, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request('/pricing/' + id, { method: 'DELETE' }),
   },
   guides: {
     findByUnit: (unitId: string) => request<any[]>('/guides/unit/' + unitId),

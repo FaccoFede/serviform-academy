@@ -99,7 +99,7 @@ Verificato che il contenuto di ogni patch è **già applicato** al codice prima 
 
 ## Fase 2 — Riduzione duplicazione
 
-> Stato: **completata** — commit `<vedi git log>` su `claude/cleanup-codebase-IgpWW`.
+> Stato: **completata** — commit `1f3c82e` su `claude/cleanup-codebase-IgpWW`.
 > Obiettivo: una sola via per parlare col backend, una sola fonte per `API_URL`,
 > un solo helper per il filtro "unità che contano nel progresso".
 

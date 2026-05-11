@@ -13,7 +13,8 @@ Convenzione: ogni voce indica **cosa**, **perché**, **rischio**, **come recuper
 
 ## Fase 1 — Pulizia sicura (rischio basso, nessun cambio di comportamento atteso)
 
-> Stato: **in corso**. Tutti gli elementi qui sotto sono stati verificati come *non referenziati*
+> Stato: **completata** — commit `6071735` su `claude/cleanup-codebase-IgpWW`.
+> Tutti gli elementi qui sotto sono stati verificati come *non referenziati*
 > nel codice (grep su `import` / uso del simbolo) prima della rimozione.
 
 ### 1.1 — Backend: moduli morti

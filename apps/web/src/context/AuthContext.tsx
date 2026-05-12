@@ -1,5 +1,6 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { API_URL } from '@/lib/config'
 
 interface User {
   id: string
@@ -22,7 +23,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 const TOKEN_KEY = 'sa_token'
 
 // Interceptor globale: cattura 401 SOLO se non è l'endpoint di login/register

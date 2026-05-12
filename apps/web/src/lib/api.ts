@@ -4,9 +4,20 @@
  * Se il server risponde 401 (token scaduto / utente non trovato):
  *   → cancella il token da localStorage
  *   → reindirizza a /auth/login
+ *
+ * NOTA: questo è l'UNICO modo previsto per parlare con il backend dal
+ * frontend. Niente `fetch()` diretto nelle pagine: se manca un endpoint,
+ * aggiungerlo qui sotto nel namespace corretto.
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-const BASE_URL = API_BASE_URL
+import { API_URL } from './config'
+
+/**
+ * URL base del backend. Alias storico di `API_URL` (vedi `@/lib/config`,
+ * unica fonte di verità): mantenuto perché alcuni moduli importano
+ * `API_BASE_URL` da qui. Per nuovo codice usare `API_URL` da `@/lib/config`.
+ */
+export const API_BASE_URL = API_URL
+const BASE_URL = API_URL
 
 /**
  * Risolve un URL video che può essere:
@@ -61,6 +72,35 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(msg)
   }
 
+  return res.json()
+}
+
+/**
+ * Upload multipart/form-data (file + eventuali campi extra).
+ * Non usa `request()` perché qui NON va impostato `Content-Type`
+ * (il browser aggiunge il boundary corretto da solo) e perché il token
+ * arriva esplicito dal chiamante (questi endpoint si usano da componenti
+ * che hanno già il token a portata di mano).
+ */
+async function multipart<T>(
+  path: string,
+  file: File,
+  token: string,
+  extraFields: Record<string, string> = {},
+): Promise<T> {
+  const fd = new FormData()
+  fd.append('file', file)
+  for (const [k, v] of Object.entries(extraFields)) fd.append(k, v)
+  const res = await fetch(BASE_URL + path, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token },
+    body: fd,
+  })
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}))
+    const msg = Array.isArray(e.message) ? e.message.join(', ') : (e.message || 'Upload fallito')
+    throw new Error(msg)
+  }
   return res.json()
 }
 
@@ -166,8 +206,13 @@ export const api = {
     removeUser: (id: string) => request('/assignments/user/' + id, { method: 'DELETE' }),
   },
   announcements: {
+    // /announcements: lista pubblicate con campo `read` per l'utente (richiede auth)
     findPublished: () => request<any[]>('/announcements'),
+    // /announcements/public: stessa lista senza auth (read sempre false)
+    findPublic: () => request<any[]>('/announcements/public'),
     findAll: () => request<any[]>('/announcements/admin/all'),
+    // Segna una comunicazione come letta per l'utente corrente (PATCH lato backend)
+    markRead: (id: string) => request('/announcements/' + id + '/read', { method: 'PATCH' }),
     create: (data: any) => request('/announcements', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/announcements/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/announcements/' + id, { method: 'DELETE' }),
@@ -179,6 +224,8 @@ export const api = {
     getCompletedUnits: (slug: string) => request<string[]>(`/progress/course/${slug}/completed-units`),
     getLastViewed: () => request<any>('/progress/last-viewed'),
     getAll: () => request<any[]>('/progress/all'),
+    // Dati aggregati per la pagina /dashboard (KPI, ultimi corsi, ecc.)
+    getDashboard: () => request<any>('/progress/dashboard'),
   },
   certificates: {
     issue: (slug: string) => request('/certificates/issue', { method: 'POST', body: JSON.stringify({ courseSlug: slug }) }),
@@ -196,20 +243,15 @@ export const api = {
     remove: (id: string) => request('/video-assets/' + id, { method: 'DELETE' }),
   },
   uploads: {
-  image: async (file: File, token: string) => {
-    const fd = new FormData()
-    fd.append('file', file)
-    const res = await fetch(
-      (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/uploads/image',
-      { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }
-    )
-    if (!res.ok) {
-      const e = await res.json().catch(() => ({}))
-      throw new Error(e.message || 'Upload fallito')
-    }
-    return res.json() as Promise<{ url: string; filename: string }>
+    // Carica un'immagine e ritorna { url, filename } da inserire nei contenuti.
+    image: (file: File, token: string) =>
+      multipart<{ url: string; filename: string }>('/uploads/image', file, token),
   },
-},
+  imports: {
+    // Import CSV massivo di aziende o utenti (type: 'companies' | 'users').
+    uploadCsv: (file: File, type: 'companies' | 'users', token: string) =>
+      multipart<any>('/imports/csv', file, token, { type }),
+  },
   auth: {
     login: (email: string, password: string) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     register: (email: string, password: string, name?: string) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),

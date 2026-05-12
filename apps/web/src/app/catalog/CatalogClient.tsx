@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getBrand } from '@/lib/brands'
+import { api } from '@/lib/api'
+import { countableUnits } from '@/lib/courseAccess'
 import styles from './Catalog.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 // ── prop rinominata da initialCourses → courses, allineata con page.tsx ──────
 export default function CatalogClient({ courses: rawCourses }: { courses: any[] }) {
@@ -25,11 +25,9 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
   // Carica il progresso di tutti i corsi se loggato
   useEffect(() => {
     if (!user || !token || courses.length === 0) return
-    const h = { Authorization: 'Bearer ' + token }
     courses.forEach(c => {
       if (!c?.slug) return
-      fetch(`${API_URL}/progress/course/${c.slug}`, { headers: h })
-        .then(r => r.ok ? r.json() : null)
+      api.progress.getCourseProgress(c.slug)
         .then(d => { if (d) setProgressMap(prev => ({ ...prev, [c.slug]: d })) })
         .catch(() => {})
     })
@@ -181,7 +179,7 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
               const isActive = course?.publishState === 'PUBLISHED'
               const hasProgress = prog && prog.percent > 0
               const isDone = prog && prog.percent >= 100
-              const unitCount = (course?.units || []).filter((u: any) => u?.unitType !== 'OVERVIEW').length
+              const unitCount = countableUnits<any>(course?.units).length
 
               return (
                 <CourseCard

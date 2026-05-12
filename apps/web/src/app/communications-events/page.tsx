@@ -3,9 +3,8 @@ import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { API_URL } from '@/lib/config'
 import styles from './CommunicationsEvents.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 const SECTIONS = [
   { key: 'ALL',         label: 'Tutte',            icon: 'M4 6h16M4 12h16M4 18h10' },

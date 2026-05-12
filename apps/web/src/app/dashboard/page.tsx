@@ -4,9 +4,8 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { getBrand } from '@/lib/brands'
+import { api } from '@/lib/api'
 import styles from './DashboardPage.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 const TYPE_LABELS: Record<string, string> = {
   NEWS: 'Novità', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar',
@@ -60,18 +59,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!token) return
-    const headers: any = { Authorization: 'Bearer ' + token }
+    // Tutte le chiamate passano da lib/api.ts (token + 401 gestiti lì).
+    // .catch() per-richiesta: una sezione che fallisce non blocca le altre.
     Promise.all([
-      fetch(`${API_URL}/progress/dashboard`, { headers, cache: 'no-store' })
-        .then(r => r.ok ? r.json() : {}),
-      fetch(`${API_URL}/announcements`, { headers })
-        .then(r => r.ok ? r.json() : []),
-      // Fetch software list (senza auth) per avere name/color/tagline dal DB
-      fetch(`${API_URL}/software`)
-        .then(r => r.ok ? r.json() : []),
-      // Corsi visibili per l'utente secondo le preferenze aziendali
-      fetch(`${API_URL}/courses/portal`, { headers, cache: 'no-store' })
-        .then(r => r.ok ? r.json() : []),
+      api.progress.getDashboard().catch(() => ({} as any)),
+      api.announcements.findPublished().catch(() => [] as any[]),
+      api.software.findAll().catch(() => [] as any[]),
+      api.courses.findForPortal().catch(() => [] as any[]),
     ])
       .then(([dashData, anns, softwares, portal]) => {
         setProgress(dashData.courses || [])

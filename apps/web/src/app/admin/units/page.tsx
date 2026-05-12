@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { api, API_BASE_URL } from '@/lib/api'
+import { api } from '@/lib/api'
 import AdminCrud from '@/components/features/AdminCrud'
 import styles from '../AdminPage.module.css'
 
@@ -18,18 +18,6 @@ import styles from '../AdminPage.module.css'
  *  • Selettore video dal catalogo o URL esterno — resolve relative URLs
  *    via API_BASE_URL.
  */
-
-function getToken() {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('sa_token')
-}
-
-function authHeaders() {
-  const token = getToken()
-  return token
-    ? { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }
-    : { 'Content-Type': 'application/json' }
-}
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -604,23 +592,16 @@ export default function AdminUnitsPage() {
 
   const saveGuidesForUnit = async (unitId: string) => {
     // Elimina tutte le guide esistenti e ricrea dal catalogo selezionato
-    await fetch(API_BASE_URL + '/guides/unit/' + unitId + '/all', {
-      method: 'DELETE',
-      headers: authHeaders() as any,
-    })
+    await api.guides.removeAllByUnit(unitId)
     for (let i = 0; i < editGuides.length; i++) {
       const g = editGuides[i]
-      await fetch(API_BASE_URL + '/guides', {
-        method: 'POST',
-        headers: authHeaders() as any,
-        body: JSON.stringify({
-          unitId,
-          catalogId: g.id,
-          zendeskId: g.zendeskId || '',
-          title: g.title,
-          url: g.url,
-          order: i,
-        }),
+      await api.guides.create({
+        unitId,
+        catalogId: g.id,
+        zendeskId: g.zendeskId || '',
+        title: g.title,
+        url: g.url,
+        order: i,
       })
     }
   }
@@ -738,12 +719,7 @@ export default function AdminUnitsPage() {
           fetchItems={async () => {
             const units = await api.units.findByCourse(selectedCourse.id)
             for (const u of units as any[]) {
-              try {
-                const res = await fetch(API_BASE_URL + '/guides/unit/' + u.id, { headers: authHeaders() as any })
-                u.guides = res.ok ? await res.json() : []
-              } catch {
-                u.guides = []
-              }
+              u.guides = await api.guides.findByUnit(u.id).catch(() => [])
             }
             return units
           }}

@@ -5,14 +5,7 @@ import Link from 'next/link'
 import styles from '../AdminPage.module.css'
 import tableStyles from '../companies/CompaniesAdmin.module.css'
 import importStyles from './ImportsAdmin.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-
-function authHeaders(contentType?: string) {
-  const token = localStorage.getItem('sa_token')
-  const base = token ? { Authorization: 'Bearer ' + token } : {}
-  return contentType ? { ...base, 'Content-Type': contentType } : base
-}
+import { api } from '@/lib/api'
 
 type ImportType = 'companies' | 'users'
 
@@ -74,18 +67,8 @@ export default function AdminImportsPage() {
     setUploading(true)
     setMsg(null)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', importType)
-
-      const res = await fetch(API_URL + '/imports/csv', {
-        method: 'POST',
-        headers: authHeaders() as any,
-        body: formData,
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Errore durante l\'importazione')
+      const token = localStorage.getItem('sa_token') || ''
+      const data = await api.imports.uploadCsv(file, importType, token)
 
       setResult(data)
       setMsg({ text: `Importazione completata: ${data.imported} importati, ${data.failed} falliti.`, type: data.failed > 0 ? 'error' : 'success' })

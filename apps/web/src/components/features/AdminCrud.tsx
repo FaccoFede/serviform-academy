@@ -26,9 +26,11 @@ interface AdminCrudProps {
   title: string
   columns: Column[]
   fetchItems: () => Promise<any[]>
-  onDelete?: (id: string) => Promise<void>
-  onSave?: (data: any) => Promise<void>
-  onUpdate?: (id: string, data: any) => Promise<void>
+  // Le callback possono ritornare qualsiasi cosa (es. l'oggetto creato dall'API):
+  // il valore di ritorno non viene usato, quindi accettiamo Promise<unknown>.
+  onDelete?: (id: string) => Promise<unknown>
+  onSave?: (data: any) => Promise<unknown>
+  onUpdate?: (id: string, data: any) => Promise<unknown>
   formFields: FormField[]
   emptyMessage?: string
   /** Callback chiamata quando si apre il form di modifica — usata per precaricare stati custom */

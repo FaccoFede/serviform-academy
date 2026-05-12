@@ -4,9 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
+import { api } from '@/lib/api'
 import styles from './Newsroom.module.css'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 // ── Metadati tipo comunicazione ───────────────────────────────────────────
 const TYPE_META: Record<string, { label: string; color: string }> = {
@@ -146,13 +145,9 @@ export default function NewsroomPage() {
 
   // ── Fetch comunicazioni ─────────────────────────────────────────────
   useEffect(() => {
-    const headers: any = {}
-    if (token) headers['Authorization'] = 'Bearer ' + token
-    const url = token
-      ? `${API_URL}/announcements`
-      : `${API_URL}/announcements/public`
-    fetch(url, { headers })
-      .then(r => r.ok ? r.json() : [])
+    // Loggato → /announcements (con stato "letto"); anonimo → /announcements/public
+    const load = token ? api.announcements.findPublished() : api.announcements.findPublic()
+    load
       .then(d => setItems(d || []))
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -160,8 +155,7 @@ export default function NewsroomPage() {
 
   // ── Fetch eventi ────────────────────────────────────────────────────
   useEffect(() => {
-    fetch(`${API_URL}/events`)
-      .then(r => r.ok ? r.json() : [])
+    api.events.findAll()
       .then(d => setEvents(d || []))
       .catch(() => {})
   }, [])

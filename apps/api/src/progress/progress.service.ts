@@ -95,7 +95,6 @@ export class ProgressService {
     const userAssignments = await this.prisma.userCourseAssignment.findMany({
       where: { userId },
       select: { courseId: true },
-<<<<<<< HEAD
     })
 
     // 2. Assegnazioni tramite azienda (via CompanyMembership)
@@ -131,45 +130,13 @@ export class ProgressService {
     //    ha già lavorato devono sempre comparire nella dashboard
     const courses = await this.prisma.course.findMany({
       where: { id: { in: allCourseIds } },
-=======
-    })
-
-    // 2. Assegnazioni tramite azienda (via CompanyMembership)
-    const membership = await this.prisma.companyMembership.findUnique({
-      where: { userId },
-      select: { companyId: true },
-    })
-    let companyCourseIds: string[] = []
-    if (membership) {
-      const companyAssignments = await this.prisma.companyCourseAssignment.findMany({
-        where: { companyId: membership.companyId },
-        select: { courseId: true },
-      })
-      companyCourseIds = companyAssignments.map(a => a.courseId)
-    }
-
-    // 3. Unione e deduplicazione
-    const allCourseIds = [...new Set([
-      ...userAssignments.map(a => a.courseId),
-      ...companyCourseIds,
-    ])]
-    if (!allCourseIds.length) return []
-
-    // 4. Fetch corsi con unità LESSON/EXERCISE
-    const courses = await this.prisma.course.findMany({
-      where: { id: { in: allCourseIds }, deletedAt: null },
->>>>>>> claude/fix-newsroom-css-import-PbPEV
       include: {
         software: true,
         units: { where: LESSON_FILTER, select: { id: true } },
       },
     })
 
-<<<<<<< HEAD
     // 6. Calcolo progresso per ciascun corso
-=======
-    // 5. Calcolo progresso per ciascun corso
->>>>>>> claude/fix-newsroom-css-import-PbPEV
     const results: any[] = []
     for (const course of courses) {
       const unitIds = course.units.map(u => u.id)

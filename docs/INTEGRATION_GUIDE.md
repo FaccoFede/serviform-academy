@@ -141,7 +141,7 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
 ```bash
 cd apps/api
 cat > .env << EOF
-DATABASE_URL=postgresql://serviform:serviform_dev@localhost:5432/serviform_academy
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
 JWT_SECRET=serviform-academy-jwt-secret-cambia-in-produzione
 CORS_ORIGIN=http://localhost:3000
 PORT=3001

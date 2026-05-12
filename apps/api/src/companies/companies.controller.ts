@@ -15,14 +15,4 @@ export class CompaniesController {
   @Post() create(@Body() body: any) { return this.svc.create(body) }
   @Put(':id') update(@Param('id') id: string, @Body() body: any) { return this.svc.update(id, body) }
   @Delete(':id') remove(@Param('id') id: string) { return this.svc.remove(id) }
-
-  /**
-   * PUT /companies/:id/preferences — imposta i Software visibili al portale.
-   * Body: { visibleSoftwareIds: string[] }
-   * Array vuoto = nessun filtro (vede tutti i contenuti).
-   */
-  @Put(':id/preferences')
-  setPreferences(@Param('id') id: string, @Body() body: { visibleSoftwareIds: string[] }) {
-    return this.svc.setVisibleSoftware(id, body.visibleSoftwareIds || [])
-  }
 }

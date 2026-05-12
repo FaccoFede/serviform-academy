@@ -8,7 +8,7 @@
 ## TASK-01 — Rimuovere i filtri software a livello di azienda
 
 **Priorità:** Alta  
-**Stato:** `[ ]`
+**Stato:** `[x]` — completato 2026-05-12
 
 ### Contesto
 

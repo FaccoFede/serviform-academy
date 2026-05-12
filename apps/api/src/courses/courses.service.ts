@@ -20,40 +20,8 @@ export class CoursesService {
     })
   }
 
-  /**
-   * Lista dei corsi visibili nel portale per un utente.
-   *
-   * Regole:
-   *  - se l'utente è ADMIN/TEAM_ADMIN → vede tutti i corsi (nessun filtro)
-   *  - se l'utente appartiene ad un'azienda con `visibleSoftwareIds` non vuoto
-   *    → restituisce solo i corsi dei software inclusi in quell'elenco
-   *  - in tutti gli altri casi → comportamento di default (tutti i corsi)
-   *
-   * ⚠ Questo filtro si applica SOLO ai corsi / contenuti formativi.
-   *    Comunicazioni ed Eventi non passano da qui e restano visibili a tutti.
-   */
-  async findVisibleForUser(userId: string, role: string) {
-    if (role === 'ADMIN' || role === 'TEAM_ADMIN') return this.findAll()
-
-    const membership = await this.prisma.companyMembership.findUnique({
-      where: { userId },
-      include: { company: { select: { visibleSoftwareIds: true } } },
-    })
-
-    const visibleIds = membership?.company?.visibleSoftwareIds || []
-    if (!visibleIds.length) return this.findAll()
-
-    return this.prisma.course.findMany({
-      where: {
-        deletedAt: null,
-        softwareId: { in: visibleIds },
-      },
-      include: {
-        software: true,
-        units: { where: { deletedAt: null }, orderBy: { order: 'asc' } },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+  findVisibleForUser(_userId: string, _role: string) {
+    return this.findAll()
   }
 
   findBySlug(slug: string) {

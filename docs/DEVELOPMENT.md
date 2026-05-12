@@ -96,7 +96,7 @@ Riferimento: `infra/.env.example`.
 ### Backend — `apps/api/.env`
 | Variabile | Default | Note |
 |---|---|---|
-| `DATABASE_URL` | `postgresql://serviform:serviform_dev@localhost:5432/serviform_academy` | Connessione PostgreSQL |
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/postgres` | Connessione PostgreSQL |
 | `JWT_SECRET` | `serviform-academy-jwt-secret-change-in-production` | **Cambiala in produzione** |
 | `PORT` | `3001` | Porta dell'API |
 | `CORS_ORIGIN` | `http://localhost:3000` | In dev il backend accetta comunque qualsiasi origin |

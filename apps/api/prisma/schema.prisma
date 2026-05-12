@@ -40,16 +40,10 @@ model Company {
   contractType        String?
   assistanceExpiresAt DateTime?
   notes               String?   @db.Text
-  // ID dei Software (prodotti Academy) i cui contenuti sono visibili
-  // all'azienda nel portale. Array vuoto = vede TUTTI i contenuti
-  // (comportamento di default, compatibile con le aziende esistenti).
-  // NOTA: questo filtro NON si applica alle Comunicazioni né agli Eventi.
-  visibleSoftwareIds  String[]  @default([])
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   deletedAt           DateTime?
   members             CompanyMembership[]
-  interests           CompanyInterest[]
   courseAssignments   CompanyCourseAssignment[]
 }
 
@@ -60,15 +54,6 @@ model CompanyMembership {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   company   Company  @relation(fields: [companyId], references: [id])
-}
-
-model CompanyInterest {
-  id         String   @id @default(uuid())
-  companyId  String
-  softwareId String
-  company    Company  @relation(fields: [companyId], references: [id])
-  software   Software @relation(fields: [softwareId], references: [id])
-  @@unique([companyId, softwareId])
 }
 
 model CompanyCourseAssignment {
@@ -156,7 +141,6 @@ model Software {
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
   courses    Course[]
-  interests  CompanyInterest[]
   videos     VideoPill[]
 }
 

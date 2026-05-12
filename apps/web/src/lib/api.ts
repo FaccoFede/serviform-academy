@@ -184,10 +184,6 @@ export const api = {
     create: (data: any) => request('/companies', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request('/companies/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request('/companies/' + id, { method: 'DELETE' }),
-    // Imposta i Software visibili nel portale per l'azienda.
-    // Array vuoto = nessun filtro → l'azienda vede tutti i contenuti.
-    setPreferences: (id: string, visibleSoftwareIds: string[]) =>
-      request(`/companies/${id}/preferences`, { method: 'PUT', body: JSON.stringify({ visibleSoftwareIds }) }),
   },
   users: {
     findAll: () => request<any[]>('/users'),

@@ -5,20 +5,9 @@ import { api } from '@/lib/api'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
-/**
- * Admin Aziende — include il pannello "Preferenze contenuti":
- * l'admin seleziona quali Software (EngView, Sysform, ProjectO, ServiformA…)
- * sono visibili nel portale per i membri dell'azienda.
- *
- * Regole:
- *  • Nessun Software selezionato = nessun filtro → l'azienda vede tutti i corsi.
- *  • La selezione filtra SOLO il catalogo corsi (/courses/portal).
- *  • Comunicazioni (announcements) ed Eventi restano sempre visibili a tutti.
- */
 export default function AdminCompaniesPage() {
   const [rows, setRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [softwareList, setSoftwareList] = useState<any[]>([])
   const [q, setQ] = useState('')
   const [show, setShow] = useState(false)
   const [edit, setEdit] = useState<any>(null)
@@ -31,18 +20,14 @@ export default function AdminCompaniesPage() {
     try { setRows(await api.companies.findAll()) } catch {} finally { setLoading(false) }
   }
 
-  useEffect(() => {
-    load()
-    api.software.findAll().then(setSoftwareList).catch(() => {})
-  }, [])
+  useEffect(() => { load() }, [])
 
-  const openNew = () => { setEdit(null); setForm({ visibleSoftwareIds: [] }); setMsg(null); setShow(true) }
+  const openNew = () => { setEdit(null); setForm({}); setMsg(null); setShow(true) }
   const openEdit = (r: any) => {
     setEdit(r)
     setForm({
       ...r,
       assistanceExpiresAt: r.assistanceExpiresAt?.slice(0, 10) || '',
-      visibleSoftwareIds: Array.isArray(r.visibleSoftwareIds) ? r.visibleSoftwareIds : [],
     })
     setMsg(null)
     setShow(true)
@@ -72,16 +57,6 @@ export default function AdminCompaniesPage() {
     try { await api.companies.remove(id); load() } catch (e: any) { setMsg({ t: e.message, ok: false }) }
   }
 
-  const toggleSoftware = (id: string) => {
-    const current: string[] = form.visibleSoftwareIds || []
-    setForm({
-      ...form,
-      visibleSoftwareIds: current.includes(id)
-        ? current.filter((x) => x !== id)
-        : [...current, id],
-    })
-  }
-
   const filtered = rows.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()))
 
   return (
@@ -90,7 +65,7 @@ export default function AdminCompaniesPage() {
         <div>
           <Link href="/admin" className={t.back}>← Admin</Link>
           <h1 className={styles.title}>Aziende</h1>
-          <p className={styles.desc}>{rows.length} aziende · filtri portale per software</p>
+          <p className={styles.desc}>{rows.length} aziende</p>
         </div>
         <button className={t.btnP} onClick={openNew}>+ Nuova azienda</button>
       </div>
@@ -121,13 +96,11 @@ export default function AdminCompaniesPage() {
                 <th>Scadenza assist.</th>
                 <th>Utenti</th>
                 <th>Corsi assegnati</th>
-                <th>Portale</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r) => {
-                const visible: string[] = Array.isArray(r.visibleSoftwareIds) ? r.visibleSoftwareIds : []
                 const expiry = r.assistanceExpiresAt ? new Date(r.assistanceExpiresAt) : null
                 const isExpired = expiry && expiry < new Date()
                 return (
@@ -154,17 +127,6 @@ export default function AdminCompaniesPage() {
                         {r._count?.courseAssignments ?? '—'}
                       </span>
                     </td>
-                    <td>
-                      {visible.length === 0 ? (
-                        <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                          tutti
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--po)' }}>
-                          {visible.length} software
-                        </span>
-                      )}
-                    </td>
                     <td className={t.actions}>
                       <button className={t.btnE} onClick={() => openEdit(r)}>Modifica</button>
                       <button className={t.btnD} onClick={() => del(r.id, r.name)}>Elimina</button>
@@ -174,7 +136,7 @@ export default function AdminCompaniesPage() {
               })}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={7} className={t.empty}>Nessuna azienda trovata.</td>
+                  <td colSpan={6} className={t.empty}>Nessuna azienda trovata.</td>
                 </tr>
               )}
             </tbody>
@@ -182,7 +144,6 @@ export default function AdminCompaniesPage() {
         </div>
       )}
 
-      {/* Modal creazione / modifica */}
       {show && (
         <div className={t.overlay}>
           <div className={t.modal} style={{ maxWidth: 600 }}>
@@ -238,42 +199,6 @@ export default function AdminCompaniesPage() {
                 value={form.notes || ''}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
-
-              {/* Preferenze software visibili nel portale */}
-              {softwareList.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <label className={t.lbl}>Software visibili nel portale</label>
-                  <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2, marginBottom: 10, lineHeight: 1.5 }}>
-                    Nessuna selezione = l'azienda vede tutti i corsi disponibili.
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {softwareList.map((sw: any) => {
-                      const selected = (form.visibleSoftwareIds || []).includes(sw.id)
-                      return (
-                        <button
-                          key={sw.id}
-                          type="button"
-                          onClick={() => toggleSoftware(sw.id)}
-                          style={{
-                            padding: '6px 14px',
-                            borderRadius: 7,
-                            border: `1.5px solid ${selected ? (sw.color || 'var(--ink)') : 'var(--border)'}`,
-                            background: selected ? (sw.lightColor || 'var(--surface)') : 'var(--white)',
-                            color: selected ? (sw.color || 'var(--ink)') : 'var(--muted)',
-                            fontSize: 12,
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            fontFamily: 'var(--font-body)',
-                            transition: 'all var(--t-color)',
-                          }}
-                        >
-                          {sw.name}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className={t.mftr}>

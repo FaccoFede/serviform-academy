@@ -1,5 +1,7 @@
 # Serviform Academy — Guida Integrazione Completa (Fasi 1-4)
 
+> ⚠️ **Documento storico.** Descrive la procedura con cui furono integrate le Fasi 1-4 (consegna iniziale a pacchetti). Non è più operativo: il codice è già nello stato risultante. Per sviluppare oggi vedi **[DEVELOPMENT.md](./DEVELOPMENT.md)** e l'indice **[README.md](./README.md)**. Conservato come riferimento storico.
+
 ## Contenuto del pacchetto: 93 file
 
 ### Fase 1 — Fondamenta

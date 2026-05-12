@@ -309,7 +309,7 @@ const bulkAssign = async () => {
 ## TASK-03 — Rinominare "Software" → "Categoria" in tutta l'UI
 
 **Priorità:** Media  
-**Stato:** `[ ]`
+**Stato:** `[x]` — completato 2026-05-12
 
 ### Contesto
 

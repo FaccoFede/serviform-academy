@@ -110,13 +110,6 @@ async function main() {
     },
   })
 
-  // Interesse EngView per la demo company
-  await prisma.companyInterest.upsert({
-    where: { companyId_softwareId: { companyId: demoCompany.id, softwareId: engview.id } },
-    update: {},
-    create: { companyId: demoCompany.id, softwareId: engview.id },
-  })
-
   // Assegnazione corso demo
   const engview3dCourse = await prisma.course.findUnique({ where: { slug: 'engview-3d' } })
   if (engview3dCourse) {

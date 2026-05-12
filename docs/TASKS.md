@@ -52,7 +52,7 @@ Eliminare completamente la logica di filtro software per le aziende. Tutte le az
 ## TASK-02 — Assegnazione bulk di corsi per azienda
 
 **Priorità:** Alta  
-**Stato:** `[ ]`
+**Stato:** `[x]` — completato 2026-05-12
 
 ### Contesto
 

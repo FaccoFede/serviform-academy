@@ -284,7 +284,7 @@ export default function DashboardPage() {
 
             <div className={styles.ctaBox}>
               <div className={styles.ctaTitle}>Esplora il catalogo</div>
-              <p className={styles.ctaDesc}>Scopri tutti i corsi disponibili per i software Serviform.</p>
+              <p className={styles.ctaDesc}>Scopri tutti i corsi disponibili per le categorie Serviform.</p>
               <Link href="/catalog" className={styles.ctaBtn}>Vai al catalogo →</Link>
             </div>
           </div>

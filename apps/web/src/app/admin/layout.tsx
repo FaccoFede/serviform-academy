@@ -13,7 +13,7 @@ const NAV = [
       { href: '/admin/courses', label: 'Corsi' },
       { href: '/admin/units', label: 'Unità' },
       { href: '/admin/exercises', label: 'Esercitazioni' },
-      { href: '/admin/software', label: 'Software' },
+      { href: '/admin/software', label: 'Categorie' },
     ],
   },
   {

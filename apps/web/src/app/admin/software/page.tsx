@@ -5,7 +5,7 @@ import { api } from '@/lib/api'
 export default function AdminSoftwarePage() {
   return (
     <AdminCrud
-      title="Software"
+      title="Categorie"
       columns={[
         { key: 'name', label: 'Nome' },
         { key: 'slug', label: 'Slug' },

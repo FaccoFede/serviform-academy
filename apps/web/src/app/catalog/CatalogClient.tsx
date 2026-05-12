@@ -108,7 +108,7 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
             {q && <button className={styles.searchClear} onClick={() => setQ('')}>×</button>}
           </div>
 
-          {/* Filtro software */}
+          {/* Filtro categoria */}
           <div className={styles.filterGroup}>
             {[{ slug: 'ALL', name: 'Tutti' }, ...softwares].map(s => {
               // Passa l'intero oggetto software come secondo arg per preferire i valori DB

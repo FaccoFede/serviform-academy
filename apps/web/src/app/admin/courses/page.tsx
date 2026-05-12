@@ -53,7 +53,7 @@ export default function AdminCoursesPage() {
             </span>
           ),
         },
-        { key: 'software', label: 'Software', render: (_: any, row: any) => row.software?.name || '—' },
+        { key: 'software', label: 'Categoria', render: (_: any, row: any) => row.software?.name || '—' },
       ]}
       fetchItems={api.courses.findAll}
       onSave={(data) => api.courses.create(data)}
@@ -89,7 +89,7 @@ export default function AdminCoursesPage() {
         { key: 'objective', label: 'Obiettivo pratico', type: 'textarea', placeholder: 'Cosa saprà fare l\'utente al termine...' },
         {
           key: 'softwareId',
-          label: 'Software',
+          label: 'Categoria',
           type: 'select',
           required: true,
           loadOptions: async () => {

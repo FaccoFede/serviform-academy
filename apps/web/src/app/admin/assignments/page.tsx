@@ -138,7 +138,7 @@ export default function AdminAssignmentsPage() {
               {loading ? <p>Caricamento...</p> : (
                 <div className={t.tableWrap}>
                   <table className={t.table}>
-                    <thead><tr><th>Corso</th><th>Software</th><th>Accesso</th><th>Scadenza</th><th></th></tr></thead>
+                    <thead><tr><th>Corso</th><th>Categoria</th><th>Accesso</th><th>Scadenza</th><th></th></tr></thead>
                     <tbody>
                       {asgn.map((a: any) => (
                         <tr key={a.id}>

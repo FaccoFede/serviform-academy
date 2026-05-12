@@ -28,7 +28,7 @@ export default function WhyPage() {
 
       <section className={styles.statsBand}>
         {[
-          { num: '3', label: 'Software' },
+          { num: '3', label: 'Categorie' },
           { num: '50+', label: 'Unità didattiche' },
           { num: '9', label: 'Video pillole' },
           { num: '12', label: 'Guide Zendesk' },
@@ -44,10 +44,10 @@ export default function WhyPage() {
         <h2 className={styles.featuresTitle}>Come funziona</h2>
         <div className={styles.featureGrid}>
           {[
-            { num: '01', title: 'Scegli il software', desc: 'Seleziona il prodotto Serviform su cui vuoi formarti: EngView, Sysform o ProjectO.' },
+            { num: '01', title: 'Scegli la categoria', desc: 'Seleziona il prodotto Serviform su cui vuoi formarti: EngView, Sysform o ProjectO.' },
             { num: '02', title: 'Segui il percorso', desc: 'Completa le unità didattiche in sequenza, con video, guide e contenuti interattivi.' },
             { num: '03', title: 'Pratica con le esercitazioni', desc: 'Metti in pratica ciò che hai imparato con esercitazioni guidate e checklist operative.' },
-            { num: '04', title: 'Ottieni il certificato', desc: 'Al completamento di tutte le unità ricevi il certificato di competenza sul software.' },
+            { num: '04', title: 'Ottieni il certificato', desc: 'Al completamento di tutte le unità ricevi il certificato di competenza sulla categoria.' },
           ].map((f, i) => (
             <div key={i} className={styles.featureCard}>
               <span className={styles.fcNum}>{f.num}</span>

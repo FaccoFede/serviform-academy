@@ -82,7 +82,7 @@ export default async function PublicHomePage() {
       {/* ── FAMIGLIE SOFTWARE ─────────────────────────────────── */}
       <section className={styles.section}>
         <div className={styles.inner}>
-          <div className={styles.sectionTag}>I software</div>
+          <div className={styles.sectionTag}>Le categorie</div>
           <h2 className={styles.sectionTitle}>Scegli la tua famiglia</h2>
           <div className={styles.familyGrid}>
             {families.map(f => {
@@ -159,7 +159,7 @@ export default async function PublicHomePage() {
           <h2 className={styles.sectionTitle}>Dalla registrazione alla certificazione</h2>
           <div className={styles.stepsGrid}>
             {[
-              { n: '01', t: 'Esplora', d: 'Sfoglia il catalogo per software o livello. Anteprima gratuita sulle prime unità.' },
+              { n: '01', t: 'Esplora', d: 'Sfoglia il catalogo per categoria o livello. Anteprima gratuita sulle prime unità.' },
               { n: '02', t: 'Studia', d: 'Unità brevi con contenuto HTML e video. Guide Zendesk integrate per ogni argomento.' },
               { n: '03', t: 'Certifica', d: 'Completa tutte le unità e ottieni il tuo attestato verificabile.' },
             ].map((s, i) => (

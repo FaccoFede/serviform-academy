@@ -56,7 +56,7 @@ export default function LoginPage() {
   }
 
   const statItems = [
-    { value: stats.software.toString(), label: 'software' },
+    { value: stats.software.toString(), label: 'categorie' },
     { value: stats.courses > 0 ? stats.courses + (stats.courses >= 10 ? '+' : '') : '—', label: 'corsi' },
     { value: stats.units > 0 ? stats.units + (stats.units >= 50 ? '+' : '') : '—', label: 'unità' },
   ]

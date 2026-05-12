@@ -10,6 +10,7 @@ import { Roles } from '../auth/decorators/roles.decorator'
 export class AssignmentsController {
   constructor(private readonly svc: AssignmentsService) {}
   @Get('company/:id') findByCompany(@Param('id') id: string) { return this.svc.findByCompany(id) }
+  @Post('company/:cid/bulk') bulkAssignToCompany(@Param('cid') cid: string, @Body() body: any, @Request() req: any) { return this.svc.bulkAssignToCompany(cid, body, req.user.id) }
   @Post('company/:cid/course/:rid') assignToCompany(@Param('cid') cid: string, @Param('rid') rid: string, @Body() body: any, @Request() req: any) { return this.svc.assignToCompany(cid, rid, body, req.user.id) }
   @Put('company/:id') updateCompany(@Param('id') id: string, @Body() body: any) { return this.svc.updateCompany(id, body) }
   @Delete('company/:id') removeCompany(@Param('id') id: string) { return this.svc.removeCompany(id) }

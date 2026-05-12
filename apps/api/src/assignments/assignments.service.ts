@@ -38,4 +38,25 @@ export class AssignmentsService {
     if (!a) throw new NotFoundException('Assegnazione non trovata')
     return this.prisma.userCourseAssignment.delete({ where: { id } })
   }
+
+  async bulkAssignToCompany(companyId: string, data: any, createdBy: string) {
+    const courses: Array<{ courseId: string; expiresAt?: string }> = data.courses || []
+    if (!courses.length) return { created: 0 }
+
+    const records = courses.map(({ courseId, expiresAt }) => ({
+      companyId,
+      courseId,
+      accessType: data.accessType ?? 'ACTIVE',
+      startsAt: new Date(),
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      notes: data.notes ?? null,
+      createdBy,
+    }))
+
+    const result = await this.prisma.companyCourseAssignment.createMany({
+      data: records,
+      skipDuplicates: true,
+    })
+    return { created: result.count }
+  }
 }

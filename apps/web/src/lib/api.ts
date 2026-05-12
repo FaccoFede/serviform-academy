@@ -194,6 +194,7 @@ export const api = {
   },
   assignments: {
     findByCompany: (id: string) => request<any[]>('/assignments/company/' + id),
+    bulkAssignToCompany: (companyId: string, body: object) => request(`/assignments/company/${companyId}/bulk`, { method: 'POST', body: JSON.stringify(body) }),
     assignToCompany: (cid: string, rid: string, data: any) => request(`/assignments/company/${cid}/course/${rid}`, { method: 'POST', body: JSON.stringify(data) }),
     updateCompany: (id: string, data: any) => request('/assignments/company/' + id, { method: 'PUT', body: JSON.stringify(data) }),
     removeCompany: (id: string) => request('/assignments/company/' + id, { method: 'DELETE' }),

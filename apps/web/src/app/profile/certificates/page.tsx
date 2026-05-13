@@ -125,24 +125,25 @@ export default function CertificatesPage() {
 
                   {/* Badge medaglia */}
                   <div className={styles.badgeWrap}>
-                    <div
-                      className={styles.badgeRing}
-                      style={{ background: familyLight, borderColor: familyColor }}
-                    >
+                    {cert.course.badgeUrl ? (
+                      /* Badge SVG caricato dall'admin: mostrato intatto a colori originali */
+                      <img
+                        src={cert.course.badgeUrl}
+                        alt={`Badge ${cert.course.title}`}
+                        width={108}
+                        height={108}
+                        style={{ objectFit: 'contain', display: 'block' }}
+                      />
+                    ) : (
+                      /* Fallback: medaglia generica con colori del software */
                       <div
-                        className={styles.badgeInner}
-                        style={{ background: `linear-gradient(140deg, ${familyColor}, #1E1E1E)` }}
+                        className={styles.badgeRing}
+                        style={{ background: familyLight, borderColor: familyColor }}
                       >
-                        {cert.course.badgeUrl ? (
-                          <img
-                            src={cert.course.badgeUrl}
-                            alt="badge"
-                            width={36}
-                            height={36}
-                            className={styles.badgeLogo}
-                            style={{ objectFit: 'contain' }}
-                          />
-                        ) : (
+                        <div
+                          className={styles.badgeInner}
+                          style={{ background: `linear-gradient(140deg, ${familyColor}, #1E1E1E)` }}
+                        >
                           <Image
                             src="/logo.svg"
                             alt=""
@@ -150,24 +151,24 @@ export default function CertificatesPage() {
                             height={36}
                             className={styles.badgeLogo}
                           />
-                        )}
+                        </div>
+                        <span
+                          className={styles.badgeCheck}
+                          style={{ background: familyColor }}
+                          aria-label="Completato"
+                        >
+                          <svg viewBox="0 0 14 14" fill="none" width={12} height={12}>
+                            <path
+                              d="M3 7.2l2.8 2.8L11 4.8"
+                              stroke="#fff"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
                       </div>
-                      <span
-                        className={styles.badgeCheck}
-                        style={{ background: familyColor }}
-                        aria-label="Completato"
-                      >
-                        <svg viewBox="0 0 14 14" fill="none" width={12} height={12}>
-                          <path
-                            d="M3 7.2l2.8 2.8L11 4.8"
-                            stroke="#fff"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                    </div>
+                    )}
                   </div>
 
                   {/* Body: famiglia + titolo + data */}

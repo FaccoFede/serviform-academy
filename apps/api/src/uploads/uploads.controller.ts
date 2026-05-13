@@ -45,4 +45,32 @@ export class UploadsController {
 
     return { url, filename, size: file.size, mimetype: file.mimetype }
   }
+
+  @Post('badge')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 1 * 1024 * 1024 },
+    }),
+  )
+  async uploadBadge(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nessun file ricevuto')
+    if (file.mimetype !== 'image/svg+xml') {
+      throw new BadRequestException(
+        `Tipo file non supportato: ${file.mimetype}. Usa SVG (image/svg+xml).`,
+      )
+    }
+
+    const badgeDir = path.resolve(UPLOAD_DIR, 'badges')
+    if (!fs.existsSync(badgeDir)) fs.mkdirSync(badgeDir, { recursive: true })
+
+    const filename = `badge_${crypto.randomUUID()}.svg`
+    fs.writeFileSync(path.join(badgeDir, filename), file.buffer)
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    const url = `${baseUrl}/uploads/badges/${filename}`
+
+    return { url, filename }
+  }
 }

@@ -153,6 +153,7 @@ model Course {
   available    Boolean     @default(true)
   publishState PublishState @default(PUBLISHED)
   thumbnailUrl String?
+  badgeUrl     String?
   // Quando true, al completamento del corso l'utente riceve automaticamente
   // un Certificato (= badge nel profilo)
   issuesBadge  Boolean     @default(true)

@@ -49,7 +49,8 @@ lerna-debug.log*
 # uploaded files (immagini/video caricati a runtime — non versionare)
 # NB: i .mp4 già tracciati in uploads/videos/ restano tracciati per scelta;
 # questa regola evita che NUOVI upload finiscano in git.
-uploads/
+# Ancorato a /uploads/ per non ignorare src/uploads/ (codice sorgente).
+/uploads/
 
 # Runtime data
 pids

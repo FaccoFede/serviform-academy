@@ -18,6 +18,7 @@ interface Certificate {
     slug: string
     level?: string
     duration?: string
+    badgeUrl?: string
     software?: {
       slug: string
       name: string
@@ -132,13 +133,24 @@ export default function CertificatesPage() {
                         className={styles.badgeInner}
                         style={{ background: `linear-gradient(140deg, ${familyColor}, #1E1E1E)` }}
                       >
-                        <Image
-                          src="/logo.svg"
-                          alt=""
-                          width={36}
-                          height={36}
-                          className={styles.badgeLogo}
-                        />
+                        {cert.course.badgeUrl ? (
+                          <img
+                            src={cert.course.badgeUrl}
+                            alt="badge"
+                            width={36}
+                            height={36}
+                            className={styles.badgeLogo}
+                            style={{ objectFit: 'contain' }}
+                          />
+                        ) : (
+                          <Image
+                            src="/logo.svg"
+                            alt=""
+                            width={36}
+                            height={36}
+                            className={styles.badgeLogo}
+                          />
+                        )}
                       </div>
                       <span
                         className={styles.badgeCheck}

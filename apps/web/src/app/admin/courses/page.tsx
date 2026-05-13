@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import AdminCrud from '@/components/features/AdminCrud'
 import { api } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 
 /**
  * Admin Corsi — gestione con publishState e thumbnailUrl configurabile.
@@ -24,6 +25,8 @@ const publishStateBadge: Record<string, React.CSSProperties> = {
 }
 
 export default function AdminCoursesPage() {
+  const { token } = useAuth()
+
   return (
     <AdminCrud
       title="Moduli / Corsi"
@@ -122,6 +125,17 @@ export default function AdminCoursesPage() {
           label: 'Anteprima immagine (URL opzionale)',
           type: 'text',
           placeholder: 'https://example.com/immagine.jpg — lascia vuoto per usare il placeholder automatico',
+        },
+        {
+          key: 'badgeUrl',
+          label: 'Badge SVG (caricato al completamento del corso)',
+          type: 'file-upload',
+          accept: '.svg,image/svg+xml',
+          onUpload: async (file: File) => {
+            if (!token) throw new Error('Non autenticato')
+            const res = await api.uploads.badge(file, token)
+            return res.url
+          },
         },
       ]}
     />

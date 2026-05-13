@@ -13,13 +13,17 @@ interface Column {
 interface FormField {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'number' | 'select' | 'richtext' | 'custom'
+  type: 'text' | 'textarea' | 'number' | 'select' | 'richtext' | 'custom' | 'file-upload'
   placeholder?: string
   required?: boolean
   options?: { value: string; label: string }[]
   loadOptions?: () => Promise<{ value: string; label: string }[]>
   /** Render personalizzato — usato quando type === 'custom' */
   customRender?: () => React.ReactNode
+  /** Usato quando type === 'file-upload': riceve il File e deve restituire l'URL pubblico */
+  onUpload?: (file: File) => Promise<string>
+  /** Filtro file accettati per l'input, es. '.svg,image/svg+xml' */
+  accept?: string
 }
 
 interface AdminCrudProps {
@@ -51,6 +55,7 @@ export default function AdminCrud({
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [dynamicOptions, setDynamicOptions] = useState<Record<string, { value: string; label: string }[]>>({})
+  const [fieldUploading, setFieldUploading] = useState<Record<string, boolean>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -178,6 +183,47 @@ export default function AdminCrud({
                 {/* ── CUSTOM render (VideoSelector, GuidesEditor, ecc.) ── */}
                 {f.type === 'custom' && f.customRender ? (
                   f.customRender()
+                ) : f.type === 'file-upload' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {formData[f.key] && (
+                      <img
+                        src={formData[f.key]}
+                        alt="badge preview"
+                        style={{ width: 64, height: 64, objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 8, padding: 4, background: '#fafafa' }}
+                      />
+                    )}
+                    <input
+                      type="file"
+                      accept={f.accept || '*/*'}
+                      disabled={fieldUploading[f.key]}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file || !f.onUpload) return
+                        setFieldUploading(prev => ({ ...prev, [f.key]: true }))
+                        try {
+                          const url = await f.onUpload(file)
+                          setFormData(prev => ({ ...prev, [f.key]: url }))
+                        } catch (err) {
+                          setMsg({ text: 'Upload fallito: ' + (err instanceof Error ? err.message : 'errore sconosciuto'), type: 'error' })
+                        } finally {
+                          setFieldUploading(prev => ({ ...prev, [f.key]: false }))
+                          e.target.value = ''
+                        }
+                      }}
+                    />
+                    {fieldUploading[f.key] && (
+                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>Caricamento…</span>
+                    )}
+                    {formData[f.key] && (
+                      <button
+                        type="button"
+                        style={{ fontSize: 11, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+                        onClick={() => setFormData(prev => ({ ...prev, [f.key]: '' }))}
+                      >
+                        Rimuovi badge
+                      </button>
+                    )}
+                  </div>
                 ) : f.type === 'select' ? (
                   <select
                     value={formData[f.key] || ''}

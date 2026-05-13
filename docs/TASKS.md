@@ -405,7 +405,7 @@ Eliminare completamente `contractType` e `assistanceExpiresAt` dallo schema Pris
 ## TASK-05 — Gestione certificazioni e badge (upload SVG su corso)
 
 **Priorità:** Media  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-13
 
 ### Contesto
 

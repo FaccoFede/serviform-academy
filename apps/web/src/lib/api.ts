@@ -105,7 +105,7 @@ async function multipart<T>(
 }
 
 export interface Software { id: string; name: string; slug: string; tagline?: string; color?: string; lightColor?: string }
-export interface Course { id: string; title: string; slug: string; description?: string; level?: string; duration?: string; available: boolean; publishState?: string; thumbnailUrl?: string; software?: Software; units?: Unit[] }
+export interface Course { id: string; title: string; slug: string; description?: string; level?: string; duration?: string; available: boolean; publishState?: string; thumbnailUrl?: string; badgeUrl?: string; software?: Software; units?: Unit[] }
 export interface Unit { id: string; title: string; slug: string; order: number; subtitle?: string; duration?: string; unitType: string; content?: string; videoUrl?: string; courseId: string; guide?: any; exercises?: any[] }
 
 export const api = {
@@ -243,6 +243,9 @@ export const api = {
     // Carica un'immagine e ritorna { url, filename } da inserire nei contenuti.
     image: (file: File, token: string) =>
       multipart<{ url: string; filename: string }>('/uploads/image', file, token),
+    // Carica un badge SVG per un corso — accetta solo image/svg+xml.
+    badge: (file: File, token: string) =>
+      multipart<{ url: string; filename: string }>('/uploads/badge', file, token),
   },
   imports: {
     // Import CSV massivo di aziende o utenti (type: 'companies' | 'users').

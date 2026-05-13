@@ -460,7 +460,7 @@ Nel rendering di ogni certificato, aggiungere la visualizzazione del badge: se `
 ## TASK-06 — Integrazione eventi nella Newsroom (rimozione pagina eventi separata)
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-13
 
 ### Contesto
 

@@ -61,6 +61,7 @@ export default function AdminEventsPage() {
         },
         { key: 'location', label: 'Luogo', type: 'text', placeholder: 'Online (Zoom)' },
         { key: 'maxSeats', label: 'Posti massimi', type: 'number' },
+        { key: 'bannerUrl', label: 'Banner (URL immagine)', type: 'text', placeholder: 'https://...' },
         { key: 'registrationUrl', label: 'URL iscrizione', type: 'text' },
         { key: 'recordingUrl', label: 'URL registrazione (post-evento)', type: 'text' },
         {

@@ -301,6 +301,7 @@ model Event {
   date            DateTime
   endDate         DateTime?
   location        String?
+  bannerUrl       String?
   maxSeats        Int?
   registrationUrl String?
   recordingUrl    String?

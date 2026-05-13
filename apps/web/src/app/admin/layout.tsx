@@ -34,8 +34,7 @@ const NAV = [
   {
     group: 'Comunicazioni',
     items: [
-      { href: '/admin/announcements', label: 'Comunicazioni' },
-      { href: '/admin/events', label: 'Calendario' },
+      { href: '/admin/announcements', label: 'Comunicazione & Eventi' },
     ],
   },
   {

@@ -5,7 +5,6 @@ function pickCompanyScalars(input: any) {
   const out: any = {}
   if (input.name !== undefined) out.name = input.name
   if (input.slug !== undefined) out.slug = input.slug
-  if (input.contractType !== undefined) out.contractType = input.contractType
   if (input.notes !== undefined) out.notes = input.notes
   return out
 }
@@ -48,12 +47,7 @@ export class CompaniesService {
     }
 
     const scalars = pickCompanyScalars(data)
-    return this.prisma.company.create({
-      data: {
-        ...scalars,
-        assistanceExpiresAt: data.assistanceExpiresAt ? new Date(data.assistanceExpiresAt) : undefined,
-      },
-    })
+    return this.prisma.company.create({ data: scalars })
   }
 
   async update(id: string, data: any) {
@@ -61,20 +55,9 @@ export class CompaniesService {
     if (!c) throw new NotFoundException('Azienda non trovata')
 
     const scalars = pickCompanyScalars(data)
-    const assistanceExpiresAt =
-      data.assistanceExpiresAt === null
-        ? null
-        : data.assistanceExpiresAt
-          ? new Date(data.assistanceExpiresAt)
-          : undefined
-
     return this.prisma.company.update({
       where: { id },
-      data: {
-        ...scalars,
-        ...(assistanceExpiresAt !== undefined && { assistanceExpiresAt }),
-        updatedAt: new Date(),
-      },
+      data: { ...scalars, updatedAt: new Date() },
     })
   }
 

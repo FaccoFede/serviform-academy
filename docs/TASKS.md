@@ -365,7 +365,7 @@ Il termine "Software" è usato come etichetta visibile agli utenti in tutto il p
 ## TASK-04 — Rimozione campi dall'anagrafica azienda
 
 **Priorità:** Media  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-13
 
 ### Contesto
 

@@ -34,12 +34,10 @@ enum Role {
 }
 
 model Company {
-  id                  String    @id @default(uuid())
-  name                String
-  slug                String    @unique
-  contractType        String?
-  assistanceExpiresAt DateTime?
-  notes               String?   @db.Text
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  notes     String?   @db.Text
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   deletedAt           DateTime?

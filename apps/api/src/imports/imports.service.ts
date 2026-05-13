@@ -31,8 +31,6 @@ export class ImportsService {
 
     const header = rows[0].map(h => h.toLowerCase())
     const nameIdx = header.indexOf('name')
-    const contractIdx = header.indexOf('contracttype')
-    const expiresIdx = header.indexOf('assistanceexpiresat')
     const notesIdx = header.indexOf('notes')
 
     if (nameIdx === -1) throw new BadRequestException('Colonna "name" obbligatoria mancante')
@@ -53,27 +51,16 @@ export class ImportsService {
         name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') +
         '-' + Date.now() + '-' + i
 
-      const expiresRaw = expiresIdx >= 0 ? row[expiresIdx]?.trim() : null
-      let assistanceExpiresAt: Date | null = null
-      if (expiresRaw && expiresRaw !== '' && expiresRaw !== '∞') {
-        const d = new Date(expiresRaw)
-        if (!isNaN(d.getTime())) assistanceExpiresAt = d
-      }
-
       try {
         await this.prisma.company.upsert({
           where: { slug },
           update: {
             name,
-            contractType: contractIdx >= 0 ? row[contractIdx]?.trim() || null : null,
-            assistanceExpiresAt,
             notes: notesIdx >= 0 ? row[notesIdx]?.trim() || null : null,
           },
           create: {
             name,
             slug,
-            contractType: contractIdx >= 0 ? row[contractIdx]?.trim() || null : null,
-            assistanceExpiresAt,
             notes: notesIdx >= 0 ? row[notesIdx]?.trim() || null : null,
           },
         })

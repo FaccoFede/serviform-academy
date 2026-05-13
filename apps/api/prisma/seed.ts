@@ -104,8 +104,6 @@ async function main() {
     create: {
       name: 'Demo Company S.r.l.',
       slug: 'demo-company',
-      contractType: 'Standard',
-      assistanceExpiresAt: new Date('2027-12-31'),
       notes: 'Azienda demo per test della piattaforma',
     },
   })

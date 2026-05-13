@@ -25,10 +25,7 @@ export default function AdminCompaniesPage() {
   const openNew = () => { setEdit(null); setForm({}); setMsg(null); setShow(true) }
   const openEdit = (r: any) => {
     setEdit(r)
-    setForm({
-      ...r,
-      assistanceExpiresAt: r.assistanceExpiresAt?.slice(0, 10) || '',
-    })
+    setForm({ ...r })
     setMsg(null)
     setShow(true)
   }
@@ -92,8 +89,6 @@ export default function AdminCompaniesPage() {
             <thead>
               <tr>
                 <th>Azienda</th>
-                <th>Contratto</th>
-                <th>Scadenza assist.</th>
                 <th>Utenti</th>
                 <th>Corsi assegnati</th>
                 <th></th>
@@ -101,22 +96,9 @@ export default function AdminCompaniesPage() {
             </thead>
             <tbody>
               {filtered.map((r) => {
-                const expiry = r.assistanceExpiresAt ? new Date(r.assistanceExpiresAt) : null
-                const isExpired = expiry && expiry < new Date()
                 return (
                   <tr key={r.id}>
                     <td className={t.tdBold}>{r.name}</td>
-                    <td>{r.contractType || '—'}</td>
-                    <td>
-                      {expiry ? (
-                        <span style={{ color: isExpired ? 'var(--red)' : 'inherit', fontWeight: isExpired ? 700 : undefined }}>
-                          {expiry.toLocaleDateString('it-IT')}
-                          {isExpired && ' ⚠'}
-                        </span>
-                      ) : (
-                        <span style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>∞</span>
-                      )}
-                    </td>
                     <td>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                         {r._count?.members ?? '—'}
@@ -136,7 +118,7 @@ export default function AdminCompaniesPage() {
               })}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={6} className={t.empty}>Nessuna azienda trovata.</td>
+                  <td colSpan={4} className={t.empty}>Nessuna azienda trovata.</td>
                 </tr>
               )}
             </tbody>
@@ -170,26 +152,6 @@ export default function AdminCompaniesPage() {
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                 disabled={!!edit}
                 placeholder="rossi-srl"
-              />
-
-              <label className={t.lbl}>Tipo contratto</label>
-              <select
-                className={t.inp}
-                value={form.contractType || ''}
-                onChange={(e) => setForm({ ...form, contractType: e.target.value })}
-              >
-                <option value="">—</option>
-                {['Standard', 'Enterprise', 'Trial', 'Personalizzato'].map((v) => (
-                  <option key={v}>{v}</option>
-                ))}
-              </select>
-
-              <label className={t.lbl}>Scadenza assistenza</label>
-              <input
-                className={t.inp}
-                type="date"
-                value={form.assistanceExpiresAt || ''}
-                onChange={(e) => setForm({ ...form, assistanceExpiresAt: e.target.value || null })}
               />
 
               <label className={t.lbl}>Note</label>

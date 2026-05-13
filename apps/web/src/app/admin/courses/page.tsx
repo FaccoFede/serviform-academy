@@ -128,7 +128,7 @@ export default function AdminCoursesPage() {
         },
         {
           key: 'badgeUrl',
-          label: 'Badge SVG (caricato al completamento del corso)',
+          label: 'Badge SVG — caricato al completamento del corso (viewBox quadrato, min 200×200)',
           type: 'file-upload',
           accept: '.svg,image/svg+xml',
           onUpload: async (file: File) => {

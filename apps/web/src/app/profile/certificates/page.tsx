@@ -130,8 +130,8 @@ export default function CertificatesPage() {
                       <img
                         src={cert.course.badgeUrl}
                         alt={`Badge ${cert.course.title}`}
-                        width={108}
-                        height={108}
+                        width={120}
+                        height={120}
                         style={{ objectFit: 'contain', display: 'block' }}
                       />
                     ) : (

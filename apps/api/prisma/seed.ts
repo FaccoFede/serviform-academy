@@ -1,9 +1,26 @@
 import { PrismaClient } from '@prisma/client'
+import * as bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
 
 async function main() {
   console.log('🌱 Seeding Serviform Academy v3...')
+
+  // ─── Utente admin di default ──────────────────────────────────────────────
+  const adminHash = await bcrypt.hash('Admin1234!', 12)
+  await prisma.user.upsert({
+    where: { email: 'admin@serviform.com' },
+    update: { role: 'ADMIN' },
+    create: {
+      email: 'admin@serviform.com',
+      name: 'Admin',
+      firstName: 'Admin',
+      lastName: 'Serviform',
+      passwordHash: adminHash,
+      role: 'ADMIN',
+    },
+  })
+  console.log('  ✓ Utente admin: admin@serviform.com / Admin1234!')
 
   // ─── Software (4 famiglie ufficiali) ──────────────────────────────────────
   const engview = await prisma.software.upsert({

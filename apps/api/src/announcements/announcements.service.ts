@@ -28,11 +28,15 @@ function sanitize(data: any): any {
   if ('publishedAt' in out) out.publishedAt = toDateOrNull(out.publishedAt)
 
   if ('published' in out) out.published = out.published === true || out.published === 'true'
-  if ('isPinned' in out) out.isPinned = out.isPinned === true || out.isPinned === 'true'
 
   // Normalizza content e bannerUrl: stringa vuota → null
   if ('content' in out && out.content === '') out.content = null
   if ('bannerUrl' in out && out.bannerUrl === '') out.bannerUrl = null
+
+  // Rimuove isPinned se presente (campo rimosso dallo schema in TASK-06-QUATER)
+  delete out.isPinned
+  // Rimuove publish (flag interno non presente nello schema)
+  delete out.publish
 
   return out
 }
@@ -59,7 +63,7 @@ export class AnnouncementsService {
 
     const items = await this.prisma.announcement.findMany({
       where,
-      orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }],
+      orderBy: [{ publishedAt: 'desc' }],
       include: userId
         ? { reads: { where: { userId }, select: { id: true } } }
         : undefined,
@@ -78,8 +82,8 @@ export class AnnouncementsService {
     if (section) where.section = section
     return this.prisma.announcement.findMany({
       where,
-      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
-    } as any)
+      orderBy: [{ createdAt: 'desc' }],
+    })
   }
 
   findOne(id: string) {
@@ -87,16 +91,17 @@ export class AnnouncementsService {
   }
 
   create(data: any, createdBy: string) {
+    const publish = data.publish === true || data.publish === 'true'
     const clean = sanitize(data)
     return this.prisma.announcement.create({
       data: {
         ...clean,
         body: clean.body || '',
         createdBy,
-        publishedAt: clean.published ? new Date() : null,
-        isPinned: clean.isPinned ?? false,
+        published: publish,
+        publishedAt: publish ? new Date() : null,
         section: clean.section ?? 'COMUNICAZIONE',
-      } as any,
+      },
     })
   }
 
@@ -104,16 +109,19 @@ export class AnnouncementsService {
     const a = await this.prisma.announcement.findUnique({ where: { id } })
     if (!a) throw new NotFoundException('Annuncio non trovato')
 
+    const publish = data.publish === true || data.publish === 'true'
     const clean = sanitize(data)
 
-    // Se viene pubblicato adesso e non aveva ancora publishedAt, impostalo
-    const extra = clean.published && !(a as any).publishedAt
-      ? { publishedAt: new Date() }
-      : {}
+    // Se viene pubblicato ora: imposta published=true e publishedAt se non già impostato
+    const extra: any = {}
+    if (publish) {
+      extra.published = true
+      if (!a.publishedAt) extra.publishedAt = new Date()
+    }
 
     return this.prisma.announcement.update({
       where: { id },
-      data: { ...clean, ...extra } as any,
+      data: { ...clean, ...extra },
     })
   }
 

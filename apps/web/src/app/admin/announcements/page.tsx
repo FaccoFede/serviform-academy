@@ -9,9 +9,6 @@ import t from '../table.module.css'
 // ── Dati statici ──────────────────────────────────────────────────────────
 const ANN_SECTIONS = [
   { v: 'COMUNICAZIONE', l: 'Comunicazione' },
-  { v: 'WEBINAR',       l: 'Webinar'       },
-  { v: 'WORKSHOP',      l: 'Workshop'      },
-  { v: 'EVENTO',        l: 'Evento'        },
 ]
 
 const ANN_TYPE_LABELS: Record<string, string> = {
@@ -23,6 +20,7 @@ const EVENT_TYPES = [
   { v: 'WEBINAR',      l: 'Webinar' },
   { v: 'WORKSHOP',     l: 'Workshop' },
   { v: 'LIVE_SESSION', l: 'Sessione live' },
+  { v: 'EVENTO',       l: 'Evento' },
 ]
 
 function fmtDate(d: string) {
@@ -33,7 +31,7 @@ function fmtDate(d: string) {
 type Tab = 'announcements' | 'events'
 
 const ANN_EMPTY = { title: '', body: '', section: 'COMUNICAZIONE', bannerUrl: '', content: '', expiresAt: '' }
-const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', endDate: '', location: '', bannerUrl: '', maxSeats: '', registrationUrl: '', recordingUrl: '', published: false }
+const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', endDate: '', location: '', bannerUrl: '', content: '', maxSeats: '' }
 
 // ─────────────────────────────────────────────────────────────────────────
 export default function AdminNewsroomPage() {
@@ -117,8 +115,7 @@ export default function AdminNewsroomPage() {
       date: r.date ? new Date(r.date).toISOString().slice(0, 16) : '',
       endDate: r.endDate ? new Date(r.endDate).toISOString().slice(0, 16) : '',
       location: r.location || '', bannerUrl: r.bannerUrl || '',
-      maxSeats: r.maxSeats ?? '', registrationUrl: r.registrationUrl || '',
-      recordingUrl: r.recordingUrl || '', published: r.published ?? true,
+      content: r.content || '', maxSeats: r.maxSeats ?? '',
     })
     setMsg(null); setShowEv(true)
   }
@@ -514,44 +511,66 @@ export default function AdminNewsroomPage() {
                 placeholder="Online (Zoom), Milano..."
               />
 
-              <label className={t.lbl}>URL Banner/Copertina</label>
+              <label className={t.lbl}>
+                Banner / Copertina
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
+                  1200×400 px consigliati · JPEG, PNG o WebP · max 2 MB
+                </span>
+              </label>
               <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={uploadingBanner}
                 className={t.inp}
-                value={formEv.bannerUrl || ''}
-                onChange={e => setFormEv({ ...formEv, bannerUrl: e.target.value })}
-                placeholder="https://..."
+                style={{ padding: '6px 8px', cursor: 'pointer' }}
+                onChange={async e => {
+                  const file = e.target.files?.[0]
+                  if (!file || !token) return
+                  setUploadingBanner(true)
+                  try {
+                    const { url } = await api.uploads.banner(file, token)
+                    setFormEv((f: any) => ({ ...f, bannerUrl: url }))
+                  } catch (err: any) {
+                    setMsg({ t: err.message || 'Errore upload banner', ok: false })
+                  } finally {
+                    setUploadingBanner(false)
+                    e.target.value = ''
+                  }
+                }}
               />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label className={t.lbl}>URL iscrizione</label>
-                  <input
-                    className={t.inp}
-                    value={formEv.registrationUrl || ''}
-                    onChange={e => setFormEv({ ...formEv, registrationUrl: e.target.value })}
-                    placeholder="https://..."
+              {uploadingBanner && (
+                <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>Caricamento in corso...</p>
+              )}
+              {formEv.bannerUrl && (
+                <div style={{ marginTop: 8 }}>
+                  <img
+                    src={formEv.bannerUrl}
+                    alt="Preview banner"
+                    style={{ maxWidth: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', display: 'block' }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setFormEv((f: any) => ({ ...f, bannerUrl: '' }))}
+                    style={{ marginTop: 4, fontSize: 12, color: '#E63329', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)' }}
+                  >
+                    Rimuovi banner
+                  </button>
                 </div>
-                <div>
-                  <label className={t.lbl}>URL registrazione (post-evento)</label>
-                  <input
-                    className={t.inp}
-                    value={formEv.recordingUrl || ''}
-                    onChange={e => setFormEv({ ...formEv, recordingUrl: e.target.value })}
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
+              )}
 
-              <div style={{ marginTop: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!formEv.published}
-                    onChange={e => setFormEv({ ...formEv, published: e.target.checked })}
-                  />
-                  Visibile nella Newsroom
-                </label>
+              <label className={t.lbl}>Contenuto articolo (HTML)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <textarea
+                  value={formEv.content || ''}
+                  onChange={e => setFormEv({ ...formEv, content: e.target.value })}
+                  placeholder={'<h3>Titolo</h3>\n<p>Testo...</p>'}
+                  style={{ minHeight: 140, padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, outline: 'none', resize: 'vertical' }}
+                />
+                <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', overflow: 'auto', background: 'var(--surface)', minHeight: 140, fontSize: 13, lineHeight: 1.7 }}>
+                  {formEv.content
+                    ? <div dangerouslySetInnerHTML={{ __html: formEv.content }} style={{ color: 'var(--muted-dark)' }}/>
+                    : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
+                </div>
               </div>
             </div>
             <div className={t.mftr}>

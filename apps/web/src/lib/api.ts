@@ -246,6 +246,9 @@ export const api = {
     // Carica un badge SVG per un corso — accetta solo image/svg+xml.
     badge: (file: File, token: string) =>
       multipart<{ url: string; filename: string }>('/uploads/badge', file, token),
+    // Carica un banner/copertina per comunicazioni — JPEG, PNG, WebP, max 2 MB.
+    banner: (file: File, token: string) =>
+      multipart<{ url: string; filename: string }>('/uploads/banner', file, token),
   },
   imports: {
     // Import CSV massivo di aziende o utenti (type: 'companies' | 'users').

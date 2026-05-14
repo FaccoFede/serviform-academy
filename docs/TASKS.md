@@ -590,7 +590,7 @@ const ANN_SECTIONS = [
 ## TASK-06-TER — Upload diretto banner/copertina per comunicazioni
 
 **Priorità:** Media  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-14
 
 ### Contesto
 

@@ -22,7 +22,8 @@ function parseOptionalDate(value: unknown): Date | undefined {
 
 // ─── Sanitizzazione payload evento ──────────────────────────────────────────
 function sanitizeEventPayload(data: any) {
-  const { date, endDate, maxSeats, published, ...rest } = data
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { date, endDate, maxSeats, published, registrationUrl: _reg, recordingUrl: _rec, isRegistrable: _reg2, availableSeats: _av, registrations: _regs, ...rest } = data
 
   const sanitized: any = {
     ...rest,
@@ -105,7 +106,9 @@ export class EventsService {
 
     try {
       // Per l'update, la date è opzionale
-      const sanitized: any = { ...data }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { registrationUrl: _reg, recordingUrl: _rec, isRegistrable: _ir, availableSeats: _av, registrations: _regs, ...cleanData } = data
+      const sanitized: any = { ...cleanData }
       if (data.date !== undefined) {
         sanitized.date = parseDate(data.date, 'date')
       }

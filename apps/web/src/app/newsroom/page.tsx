@@ -6,9 +6,6 @@ import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { api } from '@/lib/api'
 import styles from './Newsroom.module.css'
 
-// ── Sezioni di tipo evento (Announcement) ────────────────────────────────
-const EVENT_SECTIONS = ['WEBINAR', 'WORKSHOP', 'EVENTO']
-
 // ── Metadati tipo comunicazione ───────────────────────────────────────────
 const TYPE_META: Record<string, { label: string; color: string }> = {
   COMUNICAZIONE: { label: 'Comunicazione', color: '#067DB8' },
@@ -136,31 +133,7 @@ function EventCard({ ev }: { ev: any }) {
           </p>
         )}
         <div className={styles.eventCardActions}>
-          {ev.registrationUrl && !isPast && (
-            <a
-              href={ev.registrationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.eventCardCta}
-              onClick={e => e.stopPropagation()}
-            >
-              Iscriviti →
-            </a>
-          )}
-          {ev.recordingUrl && (
-            <a
-              href={ev.recordingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.eventCardCta}
-              onClick={e => e.stopPropagation()}
-            >
-              Accedi →
-            </a>
-          )}
-          {!ev.registrationUrl && !ev.recordingUrl && (
-            <span className={styles.annCardCta} style={{ color: meta.color }}>Evento →</span>
-          )}
+          <span className={styles.annCardCta} style={{ color: meta.color }}>Evento →</span>
         </div>
       </div>
     </div>
@@ -198,13 +171,12 @@ export default function NewsroomPage() {
   // ── Statistiche KPI ─────────────────────────────────────────────────
   const stats = useMemo(() => {
     const now = new Date()
-    const annEvents = items.filter(a => EVENT_SECTIONS.includes(a.section)).length
     const futureEvents = events.filter(e => new Date(e.date) >= now).length
     return {
       total:   items.length,
       unread:  items.filter(a => !a.read).length,
       pinned:  items.filter(a => a.isPinned).length,
-      webinar: futureEvents + annEvents,
+      webinar: futureEvents,
     }
   }, [items, events])
 
@@ -219,8 +191,7 @@ export default function NewsroomPage() {
       const evs = events
         .filter(e => new Date(e.date) >= now)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      const annEvs = items.filter(a => EVENT_SECTIONS.includes(a.section))
-      return { filteredItems: annEvs, filteredEvents: evs }
+      return { filteredItems: [], filteredEvents: evs }
     }
 
     let out = items

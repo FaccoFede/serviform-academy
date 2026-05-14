@@ -293,29 +293,26 @@ model VideoPill {
 }
 
 model Event {
-  id              String    @id @default(uuid())
-  title           String
-  description     String?   @db.Text
-  eventType       EventType @default(WEBINAR)
-  date            DateTime
-  endDate         DateTime?
-  location        String?
-  bannerUrl       String?
-  maxSeats        Int?
-  registrationUrl String?
-  recordingUrl    String?
-  published       Boolean   @default(true)
-  isRegistrable   Boolean   @default(false)
-  availableSeats  Int?
-  registrations   Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  title       String
+  description String?   @db.Text
+  content     String?   @db.Text
+  eventType   EventType @default(WEBINAR)
+  date        DateTime
+  endDate     DateTime?
+  location    String?
+  bannerUrl   String?
+  maxSeats    Int?
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 enum EventType {
   WORKSHOP
   WEBINAR
   LIVE_SESSION
+  EVENTO
 }
 
 model PricingPackage {

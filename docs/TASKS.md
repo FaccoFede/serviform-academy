@@ -686,7 +686,7 @@ Sostituire il campo `bannerUrl` (input text) con:
 ## TASK-06-QUATER — Revisione form: primo piano datetime + pulsanti Salva/Pubblica
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-14
 
 ### Contesto
 

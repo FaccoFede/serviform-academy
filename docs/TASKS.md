@@ -528,7 +528,7 @@ Le card evento devono essere visivamente coerenti con `AnnCard` e includere:
 ## TASK-06-BIS — Fix classificazione tipo contenuto e revisione campo "Sezione"
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-14
 
 ### Contesto
 

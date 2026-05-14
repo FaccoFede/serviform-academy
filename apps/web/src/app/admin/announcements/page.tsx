@@ -32,7 +32,7 @@ function fmtDate(d: string) {
 // ── Tipi form ─────────────────────────────────────────────────────────────
 type Tab = 'announcements' | 'events'
 
-const ANN_EMPTY = { title: '', body: '', section: 'COMUNICAZIONE', published: false, isPinned: false, bannerUrl: '', content: '', expiresAt: '' }
+const ANN_EMPTY = { title: '', body: '', section: 'COMUNICAZIONE', bannerUrl: '', content: '', expiresAt: '' }
 const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', endDate: '', location: '', bannerUrl: '', maxSeats: '', registrationUrl: '', recordingUrl: '', published: false }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -81,18 +81,18 @@ export default function AdminNewsroomPage() {
     setEditAnn(r)
     setFormAnn({
       title: r.title, body: r.body || '', section: r.section || 'COMUNICAZIONE',
-      published: r.published, isPinned: r.isPinned || false,
       bannerUrl: r.bannerUrl || '', content: r.content || '',
-      expiresAt: r.expiresAt?.slice(0, 10) || '',
+      expiresAt: r.expiresAt ? new Date(r.expiresAt).toISOString().slice(0, 16) : '',
     })
     setMsg(null); setShowAnn(true)
   }
-  const saveAnn = async () => {
+  const handleSaveAnn = async (publish: boolean) => {
     if (!formAnn.title?.trim()) { setMsg({ t: 'Il titolo è obbligatorio.', ok: false }); return }
     setSaving(true)
     try {
-      if (editAnn) await api.announcements.update(editAnn.id, formAnn)
-      else await api.announcements.create(formAnn)
+      const payload = { ...formAnn, publish }
+      if (editAnn) await api.announcements.update(editAnn.id, payload)
+      else await api.announcements.create(payload)
       setMsg({ t: editAnn ? 'Aggiornato.' : 'Creato.', ok: true })
       setShowAnn(false); loadAnn()
     } catch (e: any) { setMsg({ t: e.message, ok: false }) }
@@ -103,8 +103,7 @@ export default function AdminNewsroomPage() {
     try { await api.announcements.remove(id); loadAnn() }
     catch (e: any) { setMsg({ t: e.message, ok: false }) }
   }
-  const togglePublishAnn = async (r: any) => { await api.announcements.update(r.id, { published: !r.published }); loadAnn() }
-  const togglePinAnn     = async (r: any) => { await api.announcements.update(r.id, { isPinned: !r.isPinned }); loadAnn() }
+
 
   // ── Handlers eventi ────────────────────────────────────────────────────
   const openNewEv = () => {
@@ -213,7 +212,6 @@ export default function AdminNewsroomPage() {
                   <th>Titolo</th>
                   <th>Sezione</th>
                   <th>Stato</th>
-                  <th>Pin</th>
                   <th>Banner</th>
                   <th></th>
                 </tr>
@@ -228,20 +226,9 @@ export default function AdminNewsroomPage() {
                       </span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => togglePublishAnn(r)}
-                        style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}
-                      >
-                        {r.published ? '● Pubbl.' : '○ Bozza'}
-                      </button>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => togglePinAnn(r)}
-                        style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.isPinned ? '#FFF7ED' : 'var(--surface)', color: r.isPinned ? '#D97706' : 'var(--muted)' }}
-                      >
-                        {r.isPinned ? '★ In primo piano' : '☆ Normale'}
-                      </button>
+                      <span style={{ padding: '3px 10px', borderRadius: 6, display: 'inline-block', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}>
+                        {r.published ? '● Pubblicata' : '○ Bozza'}
+                      </span>
                     </td>
                     <td>
                       {r.bannerUrl
@@ -255,7 +242,7 @@ export default function AdminNewsroomPage() {
                   </tr>
                 ))}
                 {!annRows.length && (
-                  <tr><td colSpan={6} className={t.empty}>Nessuna comunicazione.</td></tr>
+                  <tr><td colSpan={5} className={t.empty}>Nessuna comunicazione.</td></tr>
                 )}
               </tbody>
             </table>
@@ -419,37 +406,26 @@ export default function AdminNewsroomPage() {
                 </div>
               </div>
 
-              <label className={t.lbl}>Scadenza (vuoto = mai)</label>
+              <label className={t.lbl}>
+                Data e ora di scadenza primo piano
+                <small style={{ display: 'block', color: 'var(--muted)', fontWeight: 400, marginTop: 2 }}>
+                  Lascia vuoto per non mettere in primo piano. Se compilato, la comunicazione appare in primo piano fino a questa data e ora.
+                </small>
+              </label>
               <input
                 className={t.inp}
-                type="date"
+                type="datetime-local"
                 value={formAnn.expiresAt || ''}
-                onChange={e => setFormAnn({ ...formAnn, expiresAt: e.target.value || null })}
+                onChange={e => setFormAnn({ ...formAnn, expiresAt: e.target.value || '' })}
               />
-
-              <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!formAnn.published}
-                    onChange={e => setFormAnn({ ...formAnn, published: e.target.checked })}
-                  />
-                  Pubblica subito
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!formAnn.isPinned}
-                    onChange={e => setFormAnn({ ...formAnn, isPinned: e.target.checked })}
-                  />
-                  In primo piano
-                </label>
-              </div>
             </div>
             <div className={t.mftr}>
               <button className={t.btnS} onClick={() => setShowAnn(false)}>Annulla</button>
-              <button className={t.btnP} onClick={saveAnn} disabled={saving}>
-                {saving ? 'Salvo...' : 'Salva'}
+              <button className={t.btnS} onClick={() => handleSaveAnn(false)} disabled={saving} style={{ marginLeft: 'auto' }}>
+                {saving ? 'Salvo...' : 'Salva bozza'}
+              </button>
+              <button className={t.btnP} onClick={() => handleSaveAnn(true)} disabled={saving}>
+                {saving ? 'Salvo...' : 'Pubblica'}
               </button>
             </div>
           </div>

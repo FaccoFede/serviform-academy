@@ -525,6 +525,268 @@ Le card evento devono essere visivamente coerenti con `AnnCard` e includere:
 
 ---
 
+## TASK-06-BIS — Fix classificazione tipo contenuto e revisione campo "Sezione"
+
+**Priorità:** Alta  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+A seguito di TASK-06, la creazione di una comunicazione dalla card "Comunicazioni & Eventi" non classifica correttamente il tipo di contenuto. Il problema ha due radici:
+
+1. Il dropdown "Sezione" nel form admin (`apps/web/src/app/admin/announcements/page.tsx`) espone i valori `NEWS | EVENTS | PRESS | RULES` — nessuno di questi corrisponde a "Webinar" o "Workshop", quindi un amministratore che vuole creare un webinar non ha l'opzione corretta.
+
+2. Il KPI "Webinar e eventi" nella Newsroom (`apps/web/src/app/newsroom/page.tsx`) conta esclusivamente i record del modello `Event` (via `events.filter(e => new Date(e.date) >= new Date()).length`). Gli `Announcement` con `section = 'EVENTS'` non vengono mai conteggiati → il contatore rimane a zero → il pulsante filtro appare inattivo.
+
+### Obiettivo
+
+1. Aggiornare i valori del campo `section` degli `Announcement` per includere le tipologie corrette
+2. Aggiornare il KPI e il filtro "Webinar e eventi" in Newsroom affinché includa anche gli `Announcement` con sezione di tipo evento
+
+### Interventi
+
+#### Backend — Schema e service
+
+| File | Intervento |
+|---|---|
+| `apps/api/prisma/schema.prisma` | Nel modello `Announcement`, il campo `section String @default("COMUNICAZIONE")` rimane String (i valori ammessi cambiano). Aggiornare anche il default. La migrazione deve includere un `UPDATE` per rimappare i vecchi valori: `NEWS` → `COMUNICAZIONE`, `EVENTS` → `EVENTO`, `PRESS` → `COMUNICAZIONE`, `RULES` → `COMUNICAZIONE`. Nessun fallback da mantenere: i vecchi valori vengono sostituiti. |
+| `apps/api/src/announcements/announcements.service.ts` | Nel metodo `findPublished(section?, userId?)`, verificare che il filtro `section` funzioni esattamente con i nuovi valori. Aggiungere una costante/array `EVENT_SECTIONS = ['WEBINAR', 'WORKSHOP', 'EVENTO']` da usare come lista canonica nei filtri. |
+
+#### Frontend — Admin form
+
+**File:** `apps/web/src/app/admin/announcements/page.tsx`
+
+Aggiornare la costante `ANN_SECTIONS` (riga ~9) con i nuovi valori:
+
+```typescript
+const ANN_SECTIONS = [
+  { v: 'COMUNICAZIONE', l: 'Comunicazione' },
+  { v: 'WEBINAR',       l: 'Webinar'       },
+  { v: 'WORKSHOP',      l: 'Workshop'      },
+  { v: 'EVENTO',        l: 'Evento'        },
+]
+```
+
+> **Nota:** i valori precedenti `NEWS`, `EVENTS`, `PRESS`, `RULES` vengono sostituiti dalla migrazione — nessun fallback necessario nel rendering.
+
+#### Frontend — Newsroom
+
+**File:** `apps/web/src/app/newsroom/page.tsx`
+
+- **KPI "Webinar e eventi"**: il contatore deve sommare `events.filter(e => new Date(e.date) >= now).length` **+** `announcements.filter(a => EVENT_SECTIONS.includes(a.section) && new Date(a.publishedAt) >= ...` (oppure: announcements con section IN ['WEBINAR','WORKSHOP','EVENTO'])
+- **Filtro `filter === 'EVENTS'`**: la variabile `filteredItems` deve includere anche gli `Announcement` con `section` in `['WEBINAR', 'WORKSHOP', 'EVENTO']`, mescolati agli `Event` futuri e ordinati per data
+- **Rendering card**: nel loop `filteredItems` aggiungere un branch che mostra `AnnCard` con un badge colorato diverso a seconda della sezione (es. WEBINAR → verde, WORKSHOP → arancio, EVENTO → blu)
+
+### Acceptance criteria
+
+- [ ] Il dropdown "Sezione" mostra: Comunicazione, Webinar, Workshop, Evento
+- [ ] Un Announcement creato con sezione "Webinar" è conteggiato nel KPI "Webinar e eventi"
+- [ ] Il filtro "Webinar e eventi" nella Newsroom mostra sia gli `Event` futuri che gli `Announcement` con sezione webinar/workshop/evento
+- [ ] La migrazione ha rimappato tutti i vecchi valori di `section` ai nuovi (nessun record con NEWS/EVENTS/PRESS/RULES residui)
+- [ ] La migrazione Prisma è applicata senza errori
+
+---
+
+## TASK-06-TER — Upload diretto banner/copertina per comunicazioni
+
+**Priorità:** Media  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+Il campo `bannerUrl` nel form admin di una comunicazione (`apps/web/src/app/admin/announcements/page.tsx`) è attualmente un `<input type="text">` dove l'admin deve incollare manualmente un URL. Questo richiede che l'immagine sia già ospitata da qualche parte, rendendo il flusso scomodo.
+
+Il backend ha già un modulo di upload (introdotto in TASK-05 per i badge SVG): `apps/api/src/uploads/`. L'obiettivo è riutilizzarlo o estenderlo per gestire immagini banner (JPEG/PNG/WebP), con dimensione ideale indicata nell'UI.
+
+### Obiettivo
+
+1. Aggiungere o estendere l'endpoint di upload per accettare immagini banner
+2. Sostituire il campo testo `bannerUrl` con un file picker che carica l'immagine e salva l'URL restituito
+3. Mostrare una preview inline dell'immagine caricata
+4. Indicare le dimensioni consigliate direttamente nell'interfaccia
+
+### Interventi
+
+#### Backend — Upload endpoint
+
+**File:** `apps/api/src/uploads/uploads.controller.ts` (o modulo esistente)
+
+Se l'endpoint `POST /uploads/badge` accetta solo `image/svg+xml`, aggiungere un endpoint separato:
+
+```typescript
+@Post('banner')
+@UseInterceptors(FileInterceptor('file'))
+uploadBanner(@UploadedFile() file: Express.Multer.File) {
+  // Accetta: image/jpeg, image/png, image/webp
+  // Dimensione massima consigliata: 1200×400 px, max 2 MB
+  // Salva in public/banners/<uuid>.<ext>
+  // Restituisce { url: '/banners/<filename>' }
+}
+```
+
+Validare lato backend: MIME type deve essere `image/jpeg | image/png | image/webp`. Rifiutare altri tipi con `400 Bad Request`.
+
+**File:** `apps/web/src/lib/api.ts`
+
+Aggiungere nel namespace `uploads` (o crearlo se assente):
+
+```typescript
+uploadBanner: (file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return postForm('/uploads/banner', fd) as Promise<{ url: string }>
+},
+```
+
+#### Frontend — Admin form comunicazioni
+
+**File:** `apps/web/src/app/admin/announcements/page.tsx`
+
+Sostituire il campo `bannerUrl` (input text) con:
+
+```tsx
+<label>
+  Banner / Copertina
+  <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: 8 }}>
+    Dimensione consigliata: 1200×400 px · JPEG, PNG o WebP · max 2 MB
+  </span>
+  <input
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    onChange={async e => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      const { url } = await api.uploads.uploadBanner(file)
+      setForm(f => ({ ...f, bannerUrl: url }))
+    }}
+  />
+  {form.bannerUrl && (
+    <img
+      src={form.bannerUrl}
+      alt="Preview banner"
+      style={{ marginTop: 8, maxWidth: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 4 }}
+    />
+  )}
+</label>
+```
+
+> Mantenere anche un link "Rimuovi" che imposta `bannerUrl = ''` per permettere la cancellazione della copertina.
+
+### Acceptance criteria
+
+- [ ] L'endpoint `POST /uploads/banner` accetta JPEG, PNG, WebP e rifiuta altri formati con errore esplicito
+- [ ] Il form admin mostra un file picker con indicazione delle dimensioni consigliate
+- [ ] Dopo il caricamento compare una preview inline dell'immagine
+- [ ] L'URL del file salvato viene persistito correttamente nel campo `bannerUrl` dell'`Announcement`
+- [ ] È possibile rimuovere il banner impostando `bannerUrl = ''`
+- [ ] Nessuna regressione per i record esistenti con `bannerUrl` URL esterno (continuano a funzionare)
+
+---
+
+## TASK-06-QUATER — Revisione form: primo piano datetime + pulsanti Salva/Pubblica
+
+**Priorità:** Alta  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+Il form admin di creazione/modifica comunicazione (`apps/web/src/app/admin/announcements/page.tsx`) presenta tre problemi UX emersi dopo TASK-06:
+
+1. **Campo "Scadenza"** (`expiresAt`, `<input type="date">`): la label è ambigua e non supporta l'orario. Deve diventare "Data e ora di scadenza primo piano" con `<input type="datetime-local">`. La semantica è: se vuoto → comunicazione mai in primo piano; se compilato → appare in primo piano fino a quella data e ora.
+
+2. **Flag "In primo piano"** (`isPinned`): ridondante con la logica data/ora. Da rimuovere dal form e dallo schema.
+
+3. **Checkbox "Pubblica subito"** (`published`): UX incoerente. Deve essere rimossa e sostituita con due azioni esplicite: **Salva** (bozza, non pubblicata) e **Pubblica** (salva e pubblica immediatamente).
+
+> **Coordinamento con TASK-07**: TASK-07 modifica la semantica backend di `expiresAt` (split dashboard/newsroom). Questo task riguarda solo il form admin. I due task possono essere implementati indipendentemente ma dovrebbero essere coordinati nel testing.
+
+### Interventi
+
+#### Backend — Schema
+
+| File | Intervento |
+|---|---|
+| `apps/api/prisma/schema.prisma` | Rimuovere il campo `isPinned Boolean @default(false)` dal modello `Announcement`. Generare e applicare la migrazione. |
+| `apps/api/src/announcements/announcements.service.ts` | Rimuovere ogni riferimento a `isPinned` nei metodi `create()`, `update()`, `findPublished()`. Verificare che `publishedAt` venga impostato a `new Date()` quando si pubblica e a `null` quando si salva come bozza. Se esiste logica `isPinned` nell'ordinamento, sostituirla con ordinamento per `publishedAt desc`. |
+
+#### Backend — Logica pubblicazione
+
+Il metodo `update()` (o `create()`) deve gestire due comportamenti distinti in base a un flag `publish: boolean` nel payload:
+
+```typescript
+// Se publish = true: pubblica immediatamente
+if (data.publish) {
+  updateData.published = true
+  updateData.publishedAt = new Date()
+}
+// Se publish = false (Salva): salva come bozza, non modifica published/publishedAt
+```
+
+Aggiornare il DTO/controller per accettare `publish?: boolean` nel body.
+
+**File:** `apps/web/src/lib/api.ts` — nessun intervento necessario se il client già invia tutto il body; verificare solo che `publish` venga propagato.
+
+#### Frontend — Admin form
+
+**File:** `apps/web/src/app/admin/announcements/page.tsx`
+
+**1. Campo primo piano:**
+
+```tsx
+// Prima:
+<label>Scadenza<input type="date" value={form.expiresAt} .../></label>
+
+// Dopo:
+<label>
+  Data e ora di scadenza primo piano
+  <small style={{ display: 'block', color: '#6b7280' }}>
+    Lascia vuoto per non mettere in primo piano.
+    Se compilato, la comunicazione appare in primo piano fino a questa data e ora.
+  </small>
+  <input type="datetime-local" value={form.expiresAt} .../>
+</label>
+```
+
+Aggiornare `ANN_EMPTY` di conseguenza: `expiresAt: ''`.
+
+**2. Rimozione `isPinned`:**
+
+Rimuovere il campo `isPinned` da `ANN_EMPTY`, dalla `<form>`, e dalla funzione `openEdit()`. Rimuovere il `<label>` relativo.
+
+**3. Pulsanti Salva / Pubblica:**
+
+Rimuovere il checkbox `published` / "Pubblica subito" da form e da `ANN_EMPTY`.
+
+Aggiungere due pulsanti distinti nella barra azioni:
+
+```tsx
+{/* Sostituisce il singolo pulsante "Salva" */}
+<button type="button" onClick={() => handleSave(false)}>
+  Salva bozza
+</button>
+<button type="button" onClick={() => handleSave(true)} style={{ marginLeft: 8 }}>
+  Pubblica
+</button>
+```
+
+La funzione `handleSave(publish: boolean)` invia il payload con il flag `publish` al backend.
+
+Nella tabella della lista comunicazioni, aggiungere un indicatore visivo di stato: `published = true` → badge "Pubblicata", `published = false` → badge "Bozza".
+
+### Acceptance criteria
+
+- [ ] Il campo "Scadenza" è sostituito da "Data e ora di scadenza primo piano" con `datetime-local`
+- [ ] Il checkbox "In primo piano" (`isPinned`) è rimosso dal form e dallo schema
+- [ ] Il checkbox "Pubblica subito" è rimosso
+- [ ] Sono presenti due pulsanti distinti: "Salva bozza" e "Pubblica"
+- [ ] Cliccando "Salva bozza" la comunicazione viene salvata con `published = false`
+- [ ] Cliccando "Pubblica" la comunicazione viene salvata con `published = true` e `publishedAt = now()`
+- [ ] La migrazione per la rimozione di `isPinned` è applicata senza errori
+- [ ] I record esistenti con `isPinned = true` non generano errori dopo la migrazione
+- [ ] La lista comunicazioni mostra un badge Bozza/Pubblicata per ogni record
+
+---
+
 ## TASK-07 — Gestione comunicazioni nella dashboard utente (logica scadenza)
 
 **Priorità:** Alta  
@@ -551,7 +813,7 @@ Attualmente la dashboard mostra le prime 4 comunicazioni non scadute, ma non le 
 | File | Intervento |
 |---|---|
 | `apps/api/src/announcements/announcements.service.ts` | Nel metodo `findPublished()` (riga 50), rimuovere la clausola `OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]` dal `where`. La Newsroom vede tutto il pubblicato. |
-| `apps/api/src/announcements/announcements.service.ts` | Aggiungere un nuovo metodo `findDashboard(userId?: string)` che mantiene il filtro `expiresAt > now` (o `expiresAt: null`), ordinato per `isPinned desc, publishedAt desc`, con il campo `read`. Questo metodo sarà chiamato solo dalla dashboard. |
+| `apps/api/src/announcements/announcements.service.ts` | Aggiungere un nuovo metodo `findDashboard(userId?: string)` che mantiene il filtro `expiresAt > now` (o `expiresAt: null`), ordinato per `publishedAt desc`, con il campo `read`. **Nota:** `isPinned` è rimosso dallo schema da TASK-06-QUATER — non usarlo nell'ordinamento. |
 | `apps/api/src/announcements/announcements.controller.ts` | Aggiungere un endpoint `GET /announcements/dashboard` che chiama `findDashboard(req.user.id)` (richiede auth). |
 | `apps/web/src/lib/api.ts` | Aggiungere `findDashboard: () => request<any[]>('/announcements/dashboard')` nel namespace `announcements`. |
 

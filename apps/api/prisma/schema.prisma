@@ -102,7 +102,7 @@ model Announcement {
   publishedAt DateTime?
   expiresAt   DateTime?
   isPinned    Boolean            @default(false)
-  section     String             @default("NEWS")
+  section     String             @default("COMUNICAZIONE")
   bannerUrl   String?
   content     String?            @db.Text
   createdBy   String?

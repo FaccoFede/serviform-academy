@@ -787,97 +787,220 @@ Nella tabella della lista comunicazioni, aggiungere un indicatore visivo di stat
 
 ---
 
-## TASK-07 — Gestione comunicazioni nella dashboard utente (logica scadenza)
+## TASK-09 — Pulizia e revisione admin Comunicazioni ed Eventi
 
 **Priorità:** Alta  
 **Stato:** `[ ]` — da fare
 
 ### Contesto
 
-Il comportamento attuale è: `findPublished()` filtra le comunicazioni con `expiresAt > now`, il che fa scomparire le comunicazioni scadute **sia** dalla dashboard **sia** dalla Newsroom. Questo è sbagliato.
+A seguito dell'integrazione eventi nella Newsroom (TASK-06 e successive), il pannello admin presenta due problemi di coerenza:
 
-Il campo `expiresAt` ha un significato preciso: indica la data entro cui la comunicazione rimane "in primo piano" nella home dell'utente (dashboard). Superata quella data, la comunicazione deve sparire dalla dashboard ma continuare ad essere consultabile nella Newsroom, che funge da archivio storico completo.
+1. **Admin Comunicazioni**: il dropdown "Sezione" contiene ancora le voci WEBINAR, WORKSHOP, EVENTO (aggiunte in TASK-06-BIS). Queste tipologie appartengono ora esclusivamente alla gestione eventi e devono essere rimosse dalle comunicazioni.
 
-Attualmente la dashboard mostra le prime 4 comunicazioni non scadute, ma non le card — usa un layout testo compatto. Anche questo va aggiornato: le comunicazioni in dashboard devono usare card coerenti con quelle della Newsroom.
+2. **Admin Eventi**: il form contiene campi non più necessari (`registrationUrl`, `recordingUrl`, flag `visibleInNewsroom`) e manca di funzionalità ora standard in tutto il portale (upload banner, campo contenuto HTML/articolo).
 
 ### Obiettivo
 
-1. **Newsroom:** rimuovere il filtro `expiresAt` da `findPublished()` — tutte le comunicazioni pubblicate devono essere visibili nello storico, indipendentemente dalla scadenza
-2. **Dashboard:** mostrare solo le comunicazioni la cui `expiresAt` è ancora futura (o nulla), visualizzate come card coerenti con la Newsroom
-3. La semantica di `expiresAt` diventa esplicita: "fino a quando la comunicazione appare in dashboard", non "fino a quando esiste nel sistema"
+**Comunicazioni:**
+- Rimuovere le sezioni evento (WEBINAR, WORKSHOP, EVENTO) dalla costante `ANN_SECTIONS` — restano solo le sezioni di tipo comunicazione pura (es. `COMUNICAZIONE`)
+- Aggiornare eventuale logica frontend che usa queste sezioni come filtro
+
+**Eventi:**
+- Rimuovere dal form: `registrationUrl` (URL iscrizione), `recordingUrl` (URL registrazione), flag `visibleInNewsroom`
+- Aggiungere al form: upload banner (come per le comunicazioni, riutilizzando `POST /uploads/banner`)
+- Aggiungere al form: campo contenuto HTML/articolo (come nelle comunicazioni)
+- Mantenere nel form: Titolo, Descrizione, Tipo, Data, Luogo
+- Verificare che il campo `Tipo` dell'evento includa i valori migrati (WEBINAR, WORKSHOP, EVENTO, ecc.) ora rimossi dalle comunicazioni
 
 ### File coinvolti
 
-#### Backend
+#### Backend — Schema eventi
 
 | File | Intervento |
 |---|---|
-| `apps/api/src/announcements/announcements.service.ts` | Nel metodo `findPublished()` (riga 50), rimuovere la clausola `OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]` dal `where`. La Newsroom vede tutto il pubblicato. |
-| `apps/api/src/announcements/announcements.service.ts` | Aggiungere un nuovo metodo `findDashboard(userId?: string)` che mantiene il filtro `expiresAt > now` (o `expiresAt: null`), ordinato per `publishedAt desc`, con il campo `read`. **Nota:** `isPinned` è rimosso dallo schema da TASK-06-QUATER — non usarlo nell'ordinamento. |
-| `apps/api/src/announcements/announcements.controller.ts` | Aggiungere un endpoint `GET /announcements/dashboard` che chiama `findDashboard(req.user.id)` (richiede auth). |
-| `apps/web/src/lib/api.ts` | Aggiungere `findDashboard: () => request<any[]>('/announcements/dashboard')` nel namespace `announcements`. |
+| `apps/api/prisma/schema.prisma` | Nel modello `Event`: rimuovere `registrationUrl String?` e `recordingUrl String?` se presenti. Rimuovere `visibleInNewsroom Boolean @default(false)` se presente. Aggiungere `bannerUrl String?` se non già presente (era previsto in TASK-06). Aggiungere `content String?` per il contenuto HTML. Generare e applicare la migrazione. |
+| `apps/api/src/events/events.service.ts` | Allineare i metodi `create()` e `update()`: rimuovere i campi eliminati, aggiungere `bannerUrl` e `content`. |
 
-#### Frontend — Dashboard
+#### Frontend — Admin Comunicazioni
 
-**File:** `apps/web/src/app/dashboard/page.tsx`
+**File:** `apps/web/src/app/admin/announcements/page.tsx`
 
-- Sostituire la chiamata `api.announcements.findPublished()` con `api.announcements.findDashboard()` nel `Promise.all` dell'`useEffect`
-- **Sostituire il layout card comunicazioni**: attualmente ogni comunicazione è un `<button className={styles.annCard}>` con layout testo compatto. Il nuovo layout deve usare card coerenti con la Newsroom (immagine/banner, badge tipo colorato, titolo, corpo troncato), impilate verticalmente o in griglia
+Aggiornare la costante `ANN_SECTIONS` rimuovendo le voci evento:
 
-Riferimento alla struttura `AnnCard` in `apps/web/src/app/newsroom/page.tsx` (righe ~39-84) — importarla o replicarne il markup nel dashboard.
+```typescript
+// Prima (TASK-06-BIS):
+const ANN_SECTIONS = [
+  { v: 'COMUNICAZIONE', l: 'Comunicazione' },
+  { v: 'WEBINAR',       l: 'Webinar'       },
+  { v: 'WORKSHOP',      l: 'Workshop'      },
+  { v: 'EVENTO',        l: 'Evento'        },
+]
+
+// Dopo:
+const ANN_SECTIONS = [
+  { v: 'COMUNICAZIONE', l: 'Comunicazione' },
+]
+```
+
+> **Nota migrazione dati:** gli `Announcement` già creati con sezione WEBINAR/WORKSHOP/EVENTO restano validi nel DB — la rimozione riguarda solo il form di creazione. Valutare se eseguire una migrazione SQL per rimappare i record esistenti su `COMUNICAZIONE` o lasciarli invariati (dipende da quanti record esistono).
+
+Verificare e aggiornare la costante `EVENT_SECTIONS` in `announcements.service.ts` e nel filtro Newsroom: se quella costante veniva usata per identificare gli announcement di tipo evento, il filtro va coordinato con la nuova logica (ora gli eventi-tipo sono solo nel modello `Event`, non in `Announcement`).
+
+#### Frontend — Admin Eventi
+
+**File:** `apps/web/src/app/admin/events/page.tsx`
+
+1. **Rimuovere** i campi `registrationUrl`, `recordingUrl` e il flag `visibleInNewsroom` dal `formFields` e dallo state iniziale.
+
+2. **Aggiungere** il campo upload banner con preview (stesso pattern di TASK-06-TER per le comunicazioni):
+
+```tsx
+<label>
+  Banner / Copertina
+  <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: 8 }}>
+    Dimensione consigliata: 1200×400 px · JPEG, PNG o WebP · max 2 MB
+  </span>
+  <input
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    onChange={async e => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      const { url } = await api.uploads.uploadBanner(file)
+      setForm(f => ({ ...f, bannerUrl: url }))
+    }}
+  />
+  {form.bannerUrl && (
+    <img src={form.bannerUrl} alt="Preview banner"
+      style={{ marginTop: 8, maxWidth: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 4 }} />
+  )}
+</label>
+```
+
+3. **Aggiungere** il campo contenuto HTML/articolo. Usare lo stesso componente editor già presente per le comunicazioni (verificare se si tratta di un `<textarea>` plain o di un rich-text editor — replicare lo stesso approccio per coerenza).
+
+4. **Verificare** che il campo `Tipo` dell'evento abbia valori adeguati (es. `WEBINAR`, `WORKSHOP`, `SESSIONE_LIVE`, `ALTRO`) ora che queste tipologie non sono più gestibili come Announcement.
+
+#### Frontend — Newsroom (coordinamento)
+
+**File:** `apps/web/src/app/newsroom/page.tsx`
+
+Verificare che il filtro `filter === 'EVENTS'` e il KPI "Webinar e eventi" non dipendano più dagli `Announcement` con sezione WEBINAR/WORKSHOP/EVENTO (rimossi). Se sì, aggiornare la logica affinché consideri solo i record del modello `Event`.
 
 ### Acceptance criteria
 
-- [ ] La Newsroom mostra **tutte** le comunicazioni pubblicate, incluse quelle con `expiresAt` passato
-- [ ] La dashboard mostra solo comunicazioni la cui `expiresAt` è futura (o nulla)
-- [ ] Le comunicazioni nella dashboard sono visualizzate come card con banner, tipo, titolo e corpo
-- [ ] Nessuna regressione nella logica "letto/non letto" (il campo `read` è preservato)
-- [ ] L'endpoint `/announcements/dashboard` è protetto da autenticazione
+- [ ] Il dropdown "Sezione" nel form comunicazioni contiene solo tipologie di comunicazione (senza WEBINAR/WORKSHOP/EVENTO)
+- [ ] Il form admin eventi non contiene più i campi `registrationUrl`, `recordingUrl`, `visibleInNewsroom`
+- [ ] Il form admin eventi ha un file picker per il banner con preview inline
+- [ ] Il form admin eventi ha un campo per il contenuto HTML/articolo
+- [ ] I campi mantenuti negli eventi sono: Titolo, Descrizione, Tipo, Data, Luogo, Banner, Contenuto
+- [ ] La migrazione Prisma è applicata senza errori
+- [ ] La Newsroom non presenta comportamenti anomali nel filtro eventi a seguito delle modifiche
 
 ---
 
-## TASK-08 — Sezione eventi imminenti nella dashboard utente
+## TASK-10 — Fix bug gestione primo piano (datetime e logica pin)
 
-**Priorità:** Media  
+**Priorità:** Alta  
 **Stato:** `[ ]` — da fare
 
 ### Contesto
 
-La dashboard utente non mostra attualmente alcuna informazione sugli eventi in programma. L'utente deve navigare manualmente alla Newsroom (o a `/calendar`) per scoprire i prossimi webinar o workshop. L'obiettivo è aggiungere nella dashboard una sezione che mostri gli eventi previsti nei successivi 30 giorni, così l'utente può avere immediatamente il quadro della formazione programmata nel breve periodo.
+La funzionalità "primo piano" — introdotta con TASK-06-QUATER — non funziona correttamente. Sono stati rilevati due problemi distinti:
 
-### Obiettivo
+1. **Bug timezone orario:** il campo `datetime-local` nel form admin salva un orario diverso da quello inserito. Il problema è quasi certamente un disallineamento timezone: il browser produce una stringa locale (es. `2026-05-20T10:00`) che il backend interpreta come UTC, causando uno scarto di 1-2 ore in lettura/scrittura.
 
-Aggiungere nella dashboard una nuova sezione "Prossimi eventi" che mostra gli eventi futuri (da oggi a +30 giorni), ordinati cronologicamente, visualizzati come card compatte.
+2. **Logica primo piano non attiva:** comunicazioni ed eventi vengono inseriti con una data di scadenza primo piano compilata, ma non appaiono effettivamente "in primo piano" nella dashboard o nella Newsroom. La logica che determina se un elemento è "in primo piano" (basata su `expiresAt`) probabilmente non viene applicata nel rendering.
 
-### File coinvolti
+### Interventi
 
-#### Backend / API (se necessario)
+#### Bug 1 — Timezone datetime-local
 
-L'endpoint `GET /events/upcoming` esiste già (`api.events.findUpcoming()`). Se restituisce tutti gli eventi futuri senza limite temporale, il filtro a 30 giorni può essere applicato lato client. In alternativa si può aggiungere un parametro query `?days=30` al backend per ottimizzare.
+**File:** `apps/web/src/app/admin/announcements/page.tsx`
 
-| File | Intervento |
-|---|---|
-| `apps/api/src/events/events.service.ts` | (Opzionale) Aggiungere un parametro `days?: number` a `findUpcoming()` per filtrare gli eventi entro N giorni dalla data corrente. |
-| `apps/web/src/lib/api.ts` | (Opzionale) Aggiornare `findUpcoming` per accettare un parametro opzionale `days`: `findUpcoming: (days?: number) => request<any[]>('/events/upcoming' + (days ? '?days=' + days : ''))`. |
+Il campo `datetime-local` restituisce una stringa nel formato `YYYY-MM-DDTHH:mm` senza informazione di fuso orario. Prima di inviare al backend, convertire esplicitamente in ISO 8601 con timezone:
 
-#### Frontend — Dashboard
+```typescript
+// Conversione prima di inviare il form:
+const expiresAtISO = form.expiresAt
+  ? new Date(form.expiresAt).toISOString()  // converte da locale a UTC ISO
+  : null
 
-**File:** `apps/web/src/app/dashboard/page.tsx`
+// In lettura (popolamento form da record esistente):
+// Convertire da UTC ISO a stringa locale per datetime-local:
+const toLocalDatetime = (iso: string) => {
+  const d = new Date(iso)
+  const offset = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16)
+}
+```
 
-- Aggiungere nello state: `const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])`
-- Nel `Promise.all` dell'`useEffect`, aggiungere `api.events.findUpcoming()` e salvare il risultato in `upcomingEvents`
-- Filtrare client-side: `const next30 = upcomingEvents.filter(e => { const d = new Date(e.date); const limit = new Date(); limit.setDate(limit.getDate() + 30); return d >= new Date() && d <= limit; })`
-- Aggiungere nella colonna destra della dashboard (dopo le comunicazioni) una nuova `<section>` con:
-  - Header: titolo "Prossimi eventi" + link "Tutti →" verso `/newsroom`
-  - Lista delle card evento (se `next30.length > 0`), altrimenti messaggio "Nessun evento in programma nei prossimi 30 giorni."
-  - Ogni card mostra: data formattata (giorno + mese), tipo evento con badge colorato, titolo, luogo (se presente), pulsante "Iscriviti" (se `registrationUrl` presente)
-- La sezione va mostrata solo se `next30.length > 0` (per non occupare spazio inutilmente)
+Applicare la stessa correzione al form admin eventi se ha anch'esso un campo datetime.
+
+**File:** `apps/api/src/announcements/announcements.service.ts`
+
+Verificare che il backend tratti `expiresAt` come UTC. Se Prisma/PostgreSQL salvano già in UTC e il problema è solo nella serializzazione frontend, l'intervento backend potrebbe non essere necessario — verificare prima.
+
+#### Bug 2 — Logica primo piano non attiva
+
+Identificare dove nel codice viene determinato se una comunicazione/evento è "in primo piano". La semantica definita in TASK-06-QUATER è: un elemento è in primo piano se `expiresAt` è valorizzato e la data non è ancora scaduta.
+
+Verificare i seguenti punti:
+
+- **Dashboard** (`apps/web/src/app/dashboard/page.tsx`): il rendering delle card comunicazioni mostra visivamente gli elementi "in primo piano" in modo diverso? Se sì, verificare che la condizione `expiresAt && new Date(expiresAt) > new Date()` sia applicata correttamente.
+- **Newsroom** (`apps/web/src/app/newsroom/page.tsx`): esiste un ordinamento o un badge "in primo piano"? Verificare che la logica utilizzi `expiresAt` e non il campo `isPinned` (rimosso in TASK-06-QUATER).
+- **Backend** (`findDashboard` o `findPublished`): verificare che le query non escludano per errore gli elementi con `expiresAt` futuro.
+
+> **Nota:** dopo TASK-06-QUATER il campo `isPinned` è stato rimosso dallo schema. Se in qualche file è rimasto un riferimento a `isPinned` come condizione per il "primo piano", va sostituito con la logica `expiresAt`.
 
 ### Acceptance criteria
 
-- [ ] La dashboard mostra una sezione "Prossimi eventi" con gli eventi nei successivi 30 giorni
-- [ ] Gli eventi sono ordinati cronologicamente (dal più vicino al più lontano)
-- [ ] Ogni card mostra: data, tipo (badge), titolo, luogo, pulsante iscrizione se disponibile
-- [ ] Se non ci sono eventi nei 30 giorni successivi, la sezione non compare (o mostra un messaggio neutro)
-- [ ] Il link "Tutti →" porta alla Newsroom
-- [ ] Nessuna regressione sulle sezioni esistenti della dashboard
+- [ ] Il campo "Data e ora scadenza primo piano" salva e mostra l'orario corretto (nessuno scarto dovuto al timezone)
+- [ ] Una comunicazione con `expiresAt` futuro appare visivamente "in primo piano" nella dashboard/Newsroom
+- [ ] Una comunicazione con `expiresAt` passato non appare più in primo piano ma rimane visibile nello storico
+- [ ] Lo stesso comportamento si applica agli eventi (se hanno il campo `expiresAt`)
+- [ ] Nessun riferimento residuo a `isPinned` nella logica di primo piano
+
+---
+
+## TASK-11 — Revisione logo pagina Login
+
+**Priorità:** Bassa  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+Il logo presente nella pagina di login (`/auth/login`) non è corretto: è diverso dal logo mostrato nella barra superiore del portale. Deve essere allineato per coerenza visiva, aggiungendo anche la dicitura testuale "Serviform Academy".
+
+### Obiettivo
+
+1. Sostituire il logo nella pagina di login con lo stesso asset usato nella barra superiore (header/navbar)
+2. Affiancare o sovrapporre al logo la dicitura "Serviform Academy"
+
+### Interventi
+
+**File:** `apps/web/src/app/auth/login/page.tsx`
+
+1. Individuare quale componente/asset viene usato come logo nella barra superiore (verificare `apps/web/src/components/` o il layout principale). Usare lo stesso.
+
+2. Aggiungere la dicitura "Serviform Academy" accanto o sotto al logo. La resa grafica deve essere coerente con quella della navbar — verificare font, peso e colore usati nell'header.
+
+Esempio struttura:
+
+```tsx
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+  <img src="/logo.svg" alt="Serviform Academy" style={{ height: 48 }} />
+  <span style={{ fontWeight: 600, fontSize: '1.1rem', color: '#1e3a5f' }}>
+    Serviform Academy
+  </span>
+</div>
+```
+
+> Adattare lo stile al sistema di design esistente (classi CSS o styled components già in uso nella pagina login).
+
+### Acceptance criteria
+
+- [ ] Il logo nella pagina login è identico a quello della barra superiore
+- [ ] La dicitura "Serviform Academy" è visibile nella pagina login, accanto o sotto al logo
+- [ ] La resa grafica è coerente con il resto del portale (font, colori, dimensioni)

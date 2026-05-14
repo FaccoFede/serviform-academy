@@ -5,145 +5,542 @@ import { api } from '@/lib/api'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
-const SECTIONS = [
+// ── Dati statici ──────────────────────────────────────────────────────────
+const ANN_SECTIONS = [
   { v: 'NEWS',   l: 'Novità' },
-  { v: 'EVENTS', l: 'Eventi' },
-  { v: 'PRESS',  l: 'Comunicati' },
-  { v: 'RULES',  l: 'Regole' },
+  { v: 'EVENTS', l: 'Evento' },
+  { v: 'PRESS',  l: 'Comunicato' },
+  { v: 'RULES',  l: 'Regola' },
 ]
 
-function Icon({ d, size = 14 }: { d: string; size?: number }) {
-  return <svg viewBox="0 0 24 24" fill="none" width={size} height={size} style={{flexShrink:0}}><path d={d} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+const ANN_TYPE_LABELS: Record<string, string> = {
+  NEWS: 'Novità', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar',
+  MAINTENANCE: 'Manutenzione', EVENTS: 'Evento', PRESS: 'Comunicato', RULES: 'Regola',
 }
 
-export default function AdminAnnouncementsPage() {
-  const [rows, setRows] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [show, setShow] = useState(false)
-  const [edit, setEdit] = useState<any>(null)
-  const [form, setForm] = useState<any>({ section: 'NEWS', published: false, isPinned: false })
+const EVENT_TYPES = [
+  { v: 'WEBINAR',      l: 'Webinar' },
+  { v: 'WORKSHOP',     l: 'Workshop' },
+  { v: 'LIVE_SESSION', l: 'Sessione live' },
+]
+
+function fmtDate(d: string) {
+  return d ? new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+}
+
+// ── Tipi form ─────────────────────────────────────────────────────────────
+type Tab = 'announcements' | 'events'
+
+const ANN_EMPTY = { title: '', body: '', section: 'NEWS', published: false, isPinned: false, bannerUrl: '', content: '', expiresAt: '' }
+const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', endDate: '', location: '', bannerUrl: '', maxSeats: '', registrationUrl: '', recordingUrl: '', published: false }
+
+// ─────────────────────────────────────────────────────────────────────────
+export default function AdminNewsroomPage() {
+  const [tab, setTab] = useState<Tab>('announcements')
+
+  // ── Stato comunicazioni ──────────────────────────────────────────────
+  const [annRows,    setAnnRows]    = useState<any[]>([])
+  const [annLoading, setAnnLoading] = useState(true)
+  const [showAnn,    setShowAnn]    = useState(false)
+  const [editAnn,    setEditAnn]    = useState<any>(null)
+  const [formAnn,    setFormAnn]    = useState<any>(ANN_EMPTY)
+
+  // ── Stato eventi ─────────────────────────────────────────────────────
+  const [evRows,    setEvRows]    = useState<any[]>([])
+  const [evLoading, setEvLoading] = useState(true)
+  const [showEv,    setShowEv]    = useState(false)
+  const [editEv,    setEditEv]    = useState<any>(null)
+  const [formEv,    setFormEv]    = useState<any>(EV_EMPTY)
+
+  // ── Stato condiviso ───────────────────────────────────────────────────
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null)
 
-  const load = async () => { setLoading(true); try { setRows(await api.announcements.findAll()) } catch {} finally { setLoading(false) } }
-  useEffect(() => { load() }, [])
-
-  const openNew = () => { setEdit(null); setForm({ section: 'NEWS', published: false, isPinned: false }); setMsg(null); setShow(true) }
-  const openEdit = (r: any) => {
-    setEdit(r)
-    setForm({ title: r.title, body: r.body, section: r.section || 'NEWS', published: r.published, isPinned: r.isPinned || false, bannerUrl: r.bannerUrl || '', content: r.content || '', expiresAt: r.expiresAt?.slice(0, 10) || '' })
-    setMsg(null); setShow(true)
+  // ── Fetch ─────────────────────────────────────────────────────────────
+  const loadAnn = async () => {
+    setAnnLoading(true)
+    try { setAnnRows(await api.announcements.findAll()) } catch {}
+    finally { setAnnLoading(false) }
+  }
+  const loadEv = async () => {
+    setEvLoading(true)
+    try { setEvRows(await api.events.findAllAdmin()) } catch {}
+    finally { setEvLoading(false) }
   }
 
-  const save = async () => {
+  useEffect(() => { loadAnn(); loadEv() }, [])
+
+  // ── Handlers comunicazioni ─────────────────────────────────────────────
+  const openNewAnn = () => {
+    setEditAnn(null); setFormAnn(ANN_EMPTY); setMsg(null); setShowAnn(true)
+  }
+  const openEditAnn = (r: any) => {
+    setEditAnn(r)
+    setFormAnn({
+      title: r.title, body: r.body || '', section: r.section || 'NEWS',
+      published: r.published, isPinned: r.isPinned || false,
+      bannerUrl: r.bannerUrl || '', content: r.content || '',
+      expiresAt: r.expiresAt?.slice(0, 10) || '',
+    })
+    setMsg(null); setShowAnn(true)
+  }
+  const saveAnn = async () => {
+    if (!formAnn.title?.trim()) { setMsg({ t: 'Il titolo è obbligatorio.', ok: false }); return }
     setSaving(true)
     try {
-      if (edit) await api.announcements.update(edit.id, form)
-      else await api.announcements.create(form)
-      setMsg({ t: edit ? 'Aggiornato.' : 'Creato.', ok: true }); setShow(false); load()
+      if (editAnn) await api.announcements.update(editAnn.id, formAnn)
+      else await api.announcements.create(formAnn)
+      setMsg({ t: editAnn ? 'Aggiornato.' : 'Creato.', ok: true })
+      setShowAnn(false); loadAnn()
     } catch (e: any) { setMsg({ t: e.message, ok: false }) }
     finally { setSaving(false) }
   }
+  const delAnn = async (id: string) => {
+    if (!confirm('Eliminare questa comunicazione?')) return
+    try { await api.announcements.remove(id); loadAnn() }
+    catch (e: any) { setMsg({ t: e.message, ok: false }) }
+  }
+  const togglePublishAnn = async (r: any) => { await api.announcements.update(r.id, { published: !r.published }); loadAnn() }
+  const togglePinAnn     = async (r: any) => { await api.announcements.update(r.id, { isPinned: !r.isPinned }); loadAnn() }
 
-  const del = async (id: string) => { if (!confirm('Eliminare?')) return; try { await api.announcements.remove(id); load() } catch (e: any) { setMsg({ t: e.message, ok: false }) } }
-  const toggle = async (r: any) => { await api.announcements.update(r.id, { published: !r.published }); load() }
-  const pin = async (r: any) => { await api.announcements.update(r.id, { isPinned: !r.isPinned }); load() }
+  // ── Handlers eventi ────────────────────────────────────────────────────
+  const openNewEv = () => {
+    setEditEv(null); setFormEv(EV_EMPTY); setMsg(null); setShowEv(true)
+  }
+  const openEditEv = (r: any) => {
+    setEditEv(r)
+    setFormEv({
+      title: r.title, description: r.description || '',
+      eventType: r.eventType || 'WEBINAR',
+      date: r.date ? new Date(r.date).toISOString().slice(0, 16) : '',
+      endDate: r.endDate ? new Date(r.endDate).toISOString().slice(0, 16) : '',
+      location: r.location || '', bannerUrl: r.bannerUrl || '',
+      maxSeats: r.maxSeats ?? '', registrationUrl: r.registrationUrl || '',
+      recordingUrl: r.recordingUrl || '', published: r.published ?? true,
+    })
+    setMsg(null); setShowEv(true)
+  }
+  const saveEv = async () => {
+    if (!formEv.title?.trim()) { setMsg({ t: 'Il titolo è obbligatorio.', ok: false }); return }
+    if (!formEv.date)          { setMsg({ t: 'La data è obbligatoria.', ok: false }); return }
+    setSaving(true)
+    try {
+      const payload = { ...formEv, published: !!formEv.published }
+      if (editEv) await api.events.update(editEv.id, payload)
+      else await api.events.create(payload)
+      setMsg({ t: editEv ? 'Aggiornato.' : 'Creato.', ok: true })
+      setShowEv(false); loadEv()
+    } catch (e: any) { setMsg({ t: e.message, ok: false }) }
+    finally { setSaving(false) }
+  }
+  const delEv = async (id: string) => {
+    if (!confirm('Eliminare questo evento?')) return
+    try { await api.events.remove(id); loadEv() }
+    catch (e: any) { setMsg({ t: e.message, ok: false }) }
+  }
+  const togglePublishEv = async (r: any) => { await api.events.update(r.id, { published: !r.published }); loadEv() }
 
-  const sectionLabel = (s: string) => SECTIONS.find(x => x.v === s)?.l || s
+  const isLoading = tab === 'announcements' ? annLoading : evLoading
 
   return (
     <main className={styles.main}>
+      {/* ── Header ──────────────────────────────────────────────────── */}
       <div className={t.hdr}>
         <div>
           <Link href="/admin" className={t.back}>← Admin</Link>
           <h1 className={styles.title}>Comunicazione &amp; Eventi</h1>
-          <p className={styles.desc}>{rows.length} comunicazioni</p>
+          <p className={styles.desc}>
+            {tab === 'announcements'
+              ? `${annRows.length} comunicazioni`
+              : `${evRows.length} eventi`}
+          </p>
         </div>
-        <button className={t.btnP} onClick={openNew}>+ Nuova comunicazione</button>
+        <button
+          className={t.btnP}
+          onClick={tab === 'announcements' ? openNewAnn : openNewEv}
+        >
+          + {tab === 'announcements' ? 'Nuova comunicazione' : 'Nuovo evento'}
+        </button>
       </div>
-      {msg && <div className={msg.ok ? t.ok : t.err}>{msg.t}<button onClick={() => setMsg(null)}>×</button></div>}
-      {loading ? <p style={{ color: 'var(--muted)', fontSize: 14 }}>Caricamento...</p> : (
-        <div className={t.tableWrap}>
-          <table className={t.table}>
-            <thead><tr><th>Titolo</th><th>Sezione</th><th>Stato</th><th>Pin</th><th>Banner</th><th></th></tr></thead>
-            <tbody>
-              {rows.map(r => (
-                <tr key={r.id}>
-                  <td className={t.tdBold}>{r.title}</td>
-                  <td><span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{sectionLabel(r.section || 'NEWS')}</span></td>
-                  <td>
-                    <button onClick={() => toggle(r)} style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}>
-                      {r.published ? '● Pubbl.' : '○ Bozza'}
-                    </button>
-                  </td>
-                  <td>
-                    <button onClick={() => pin(r)} style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.isPinned ? '#FFF7ED' : 'var(--surface)', color: r.isPinned ? '#D97706' : 'var(--muted)' }}>
-                      {r.isPinned ? '★ In primo piano' : '☆ Normale'}
-                    </button>
-                  </td>
-                  <td>{r.bannerUrl ? <span style={{ color: '#059669', fontSize: 12, fontWeight: 700 }}>✓ Sì</span> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>}</td>
-                  <td className={t.actions}>
-                    <button className={t.btnE} onClick={() => openEdit(r)}>Modifica</button>
-                    <button className={t.btnD} onClick={() => del(r.id)}>Elimina</button>
-                  </td>
-                </tr>
-              ))}
-              {!rows.length && <tr><td colSpan={6} className={t.empty}>Nessuna comunicazione.</td></tr>}
-            </tbody>
-          </table>
+
+      {/* ── Messaggi ────────────────────────────────────────────────── */}
+      {msg && (
+        <div className={msg.ok ? t.ok : t.err}>
+          {msg.t}
+          <button onClick={() => setMsg(null)}>×</button>
         </div>
       )}
-      {show && (
+
+      {/* ── Tab bar ─────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>
+        {(['announcements', 'events'] as Tab[]).map(k => (
+          <button
+            key={k}
+            onClick={() => { setTab(k); setMsg(null) }}
+            style={{
+              padding: '8px 18px',
+              fontSize: 13,
+              fontWeight: 700,
+              fontFamily: 'var(--font-body)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: tab === k ? 'var(--ink)' : 'var(--muted)',
+              borderBottom: tab === k ? '2px solid var(--red)' : '2px solid transparent',
+              marginBottom: -2,
+              transition: 'color 150ms',
+            }}
+          >
+            {k === 'announcements' ? 'Comunicazioni' : 'Eventi'}
+          </button>
+        ))}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          TAB — COMUNICAZIONI
+         ══════════════════════════════════════════════════════════════ */}
+      {tab === 'announcements' && (
+        annLoading ? (
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>Caricamento...</p>
+        ) : (
+          <div className={t.tableWrap}>
+            <table className={t.table}>
+              <thead>
+                <tr>
+                  <th>Titolo</th>
+                  <th>Sezione</th>
+                  <th>Stato</th>
+                  <th>Pin</th>
+                  <th>Banner</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {annRows.map(r => (
+                  <tr key={r.id}>
+                    <td className={t.tdBold}>{r.title}</td>
+                    <td>
+                      <span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                        {ANN_SECTIONS.find(s => s.v === r.section)?.l || r.section || 'NEWS'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => togglePublishAnn(r)}
+                        style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}
+                      >
+                        {r.published ? '● Pubbl.' : '○ Bozza'}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => togglePinAnn(r)}
+                        style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.isPinned ? '#FFF7ED' : 'var(--surface)', color: r.isPinned ? '#D97706' : 'var(--muted)' }}
+                      >
+                        {r.isPinned ? '★ In primo piano' : '☆ Normale'}
+                      </button>
+                    </td>
+                    <td>
+                      {r.bannerUrl
+                        ? <span style={{ color: '#059669', fontSize: 12, fontWeight: 700 }}>✓ Sì</span>
+                        : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>}
+                    </td>
+                    <td className={t.actions}>
+                      <button className={t.btnE} onClick={() => openEditAnn(r)}>Modifica</button>
+                      <button className={t.btnD} onClick={() => delAnn(r.id)}>Elimina</button>
+                    </td>
+                  </tr>
+                ))}
+                {!annRows.length && (
+                  <tr><td colSpan={6} className={t.empty}>Nessuna comunicazione.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          TAB — EVENTI
+         ══════════════════════════════════════════════════════════════ */}
+      {tab === 'events' && (
+        evLoading ? (
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>Caricamento...</p>
+        ) : (
+          <div className={t.tableWrap}>
+            <table className={t.table}>
+              <thead>
+                <tr>
+                  <th>Titolo</th>
+                  <th>Tipo</th>
+                  <th>Data</th>
+                  <th>Luogo</th>
+                  <th>Stato</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {evRows.map(r => (
+                  <tr key={r.id}>
+                    <td className={t.tdBold}>{r.title}</td>
+                    <td>
+                      <span style={{ padding: '2px 8px', borderRadius: 4, background: '#ECFDF5', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#059669' }}>
+                        {EVENT_TYPES.find(e => e.v === r.eventType)?.l || r.eventType}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+                      {fmtDate(r.date)}
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--muted)' }}>{r.location || '—'}</td>
+                    <td>
+                      <button
+                        onClick={() => togglePublishEv(r)}
+                        style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}
+                      >
+                        {r.published ? '● Pubbl.' : '○ Bozza'}
+                      </button>
+                    </td>
+                    <td className={t.actions}>
+                      <button className={t.btnE} onClick={() => openEditEv(r)}>Modifica</button>
+                      <button className={t.btnD} onClick={() => delEv(r.id)}>Elimina</button>
+                    </td>
+                  </tr>
+                ))}
+                {!evRows.length && (
+                  <tr><td colSpan={6} className={t.empty}>Nessun evento.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL — COMUNICAZIONE
+         ══════════════════════════════════════════════════════════════ */}
+      {showAnn && (
         <div className={t.overlay}>
           <div className={t.modal} style={{ maxWidth: 640 }}>
-            <div className={t.mhdr}><h2>{edit ? 'Modifica' : 'Nuova'} comunicazione</h2><button onClick={() => setShow(false)}>×</button></div>
+            <div className={t.mhdr}>
+              <h2>{editAnn ? 'Modifica' : 'Nuova'} comunicazione</h2>
+              <button onClick={() => setShowAnn(false)}>×</button>
+            </div>
             <div className={t.mbody}>
               {msg && <div className={msg.ok ? t.ok : t.err}>{msg.t}</div>}
 
               <label className={t.lbl}>Titolo *</label>
-              <input className={t.inp} value={form.title || ''} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Titolo comunicazione..."/>
+              <input
+                className={t.inp}
+                value={formAnn.title || ''}
+                onChange={e => setFormAnn({ ...formAnn, title: e.target.value })}
+                placeholder="Titolo comunicazione..."
+              />
 
-              <label className={t.lbl}>Testo breve *</label>
-              <textarea className={t.ta} rows={2} value={form.body || ''} onChange={e => setForm({ ...form, body: e.target.value })} placeholder="Descrizione breve..."/>
+              <label className={t.lbl}>Testo breve (estratto visibile in lista)</label>
+              <textarea
+                className={t.ta}
+                rows={2}
+                value={formAnn.body || ''}
+                onChange={e => setFormAnn({ ...formAnn, body: e.target.value })}
+                placeholder="Breve descrizione mostrata nelle card..."
+              />
 
               <label className={t.lbl}>Sezione</label>
-              <select className={t.inp} value={form.section} onChange={e => setForm({ ...form, section: e.target.value })}>
-                {SECTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+              <select
+                className={t.inp}
+                value={formAnn.section}
+                onChange={e => setFormAnn({ ...formAnn, section: e.target.value })}
+              >
+                {ANN_SECTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
               </select>
 
               <label className={t.lbl}>URL Banner/Copertina</label>
-              <input className={t.inp} value={form.bannerUrl || ''} onChange={e => setForm({ ...form, bannerUrl: e.target.value })} placeholder="https://..."/>
+              <input
+                className={t.inp}
+                value={formAnn.bannerUrl || ''}
+                onChange={e => setFormAnn({ ...formAnn, bannerUrl: e.target.value })}
+                placeholder="https://..."
+              />
 
               <label className={t.lbl}>Contenuto articolo (HTML)</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <textarea
-                  value={form.content || ''}
-                  onChange={e => setForm({ ...form, content: e.target.value })}
+                  value={formAnn.content || ''}
+                  onChange={e => setFormAnn({ ...formAnn, content: e.target.value })}
                   placeholder={'<h3>Titolo</h3>\n<p>Testo...</p>'}
                   style={{ minHeight: 160, padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, outline: 'none', resize: 'vertical' }}
                 />
                 <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', overflow: 'auto', background: 'var(--surface)', minHeight: 160, fontSize: 13, lineHeight: 1.7 }}>
-                  {form.content ? <div dangerouslySetInnerHTML={{ __html: form.content }} style={{ color: 'var(--muted-dark)' }}/> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
+                  {formAnn.content
+                    ? <div dangerouslySetInnerHTML={{ __html: formAnn.content }} style={{ color: 'var(--muted-dark)' }}/>
+                    : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
                 </div>
               </div>
 
               <label className={t.lbl}>Scadenza (vuoto = mai)</label>
-              <input className={t.inp} type="date" value={form.expiresAt || ''} onChange={e => setForm({ ...form, expiresAt: e.target.value || null })}/>
+              <input
+                className={t.inp}
+                type="date"
+                value={formAnn.expiresAt || ''}
+                onChange={e => setFormAnn({ ...formAnn, expiresAt: e.target.value || null })}
+              />
 
               <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={!!form.published} onChange={e => setForm({ ...form, published: e.target.checked })}/>
+                  <input
+                    type="checkbox"
+                    checked={!!formAnn.published}
+                    onChange={e => setFormAnn({ ...formAnn, published: e.target.checked })}
+                  />
                   Pubblica subito
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={!!form.isPinned} onChange={e => setForm({ ...form, isPinned: e.target.checked })}/>
+                  <input
+                    type="checkbox"
+                    checked={!!formAnn.isPinned}
+                    onChange={e => setFormAnn({ ...formAnn, isPinned: e.target.checked })}
+                  />
                   In primo piano
                 </label>
               </div>
             </div>
             <div className={t.mftr}>
-              <button className={t.btnS} onClick={() => setShow(false)}>Annulla</button>
-              <button className={t.btnP} onClick={save} disabled={saving}>{saving ? 'Salvo...' : 'Salva'}</button>
+              <button className={t.btnS} onClick={() => setShowAnn(false)}>Annulla</button>
+              <button className={t.btnP} onClick={saveAnn} disabled={saving}>
+                {saving ? 'Salvo...' : 'Salva'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL — EVENTO
+         ══════════════════════════════════════════════════════════════ */}
+      {showEv && (
+        <div className={t.overlay}>
+          <div className={t.modal} style={{ maxWidth: 600 }}>
+            <div className={t.mhdr}>
+              <h2>{editEv ? 'Modifica' : 'Nuovo'} evento</h2>
+              <button onClick={() => setShowEv(false)}>×</button>
+            </div>
+            <div className={t.mbody}>
+              {msg && <div className={msg.ok ? t.ok : t.err}>{msg.t}</div>}
+
+              <label className={t.lbl}>Titolo *</label>
+              <input
+                className={t.inp}
+                value={formEv.title || ''}
+                onChange={e => setFormEv({ ...formEv, title: e.target.value })}
+                placeholder="Titolo evento..."
+              />
+
+              <label className={t.lbl}>Descrizione</label>
+              <textarea
+                className={t.ta}
+                rows={3}
+                value={formEv.description || ''}
+                onChange={e => setFormEv({ ...formEv, description: e.target.value })}
+                placeholder="Descrizione dell'evento..."
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className={t.lbl}>Tipo *</label>
+                  <select
+                    className={t.inp}
+                    value={formEv.eventType}
+                    onChange={e => setFormEv({ ...formEv, eventType: e.target.value })}
+                  >
+                    {EVENT_TYPES.map(et => <option key={et.v} value={et.v}>{et.l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={t.lbl}>Posti massimi</label>
+                  <input
+                    className={t.inp}
+                    type="number"
+                    value={formEv.maxSeats || ''}
+                    onChange={e => setFormEv({ ...formEv, maxSeats: e.target.value })}
+                    placeholder="es. 50"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className={t.lbl}>Data inizio * (es. 2026-06-15T09:00)</label>
+                  <input
+                    className={t.inp}
+                    type="datetime-local"
+                    value={formEv.date || ''}
+                    onChange={e => setFormEv({ ...formEv, date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className={t.lbl}>Data fine (opzionale)</label>
+                  <input
+                    className={t.inp}
+                    type="datetime-local"
+                    value={formEv.endDate || ''}
+                    onChange={e => setFormEv({ ...formEv, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <label className={t.lbl}>Luogo</label>
+              <input
+                className={t.inp}
+                value={formEv.location || ''}
+                onChange={e => setFormEv({ ...formEv, location: e.target.value })}
+                placeholder="Online (Zoom), Milano..."
+              />
+
+              <label className={t.lbl}>URL Banner/Copertina</label>
+              <input
+                className={t.inp}
+                value={formEv.bannerUrl || ''}
+                onChange={e => setFormEv({ ...formEv, bannerUrl: e.target.value })}
+                placeholder="https://..."
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className={t.lbl}>URL iscrizione</label>
+                  <input
+                    className={t.inp}
+                    value={formEv.registrationUrl || ''}
+                    onChange={e => setFormEv({ ...formEv, registrationUrl: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <label className={t.lbl}>URL registrazione (post-evento)</label>
+                  <input
+                    className={t.inp}
+                    value={formEv.recordingUrl || ''}
+                    onChange={e => setFormEv({ ...formEv, recordingUrl: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!formEv.published}
+                    onChange={e => setFormEv({ ...formEv, published: e.target.checked })}
+                  />
+                  Visibile nella Newsroom
+                </label>
+              </div>
+            </div>
+            <div className={t.mftr}>
+              <button className={t.btnS} onClick={() => setShowEv(false)}>Annulla</button>
+              <button className={t.btnP} onClick={saveEv} disabled={saving}>
+                {saving ? 'Salvo...' : 'Salva'}
+              </button>
             </div>
           </div>
         </div>

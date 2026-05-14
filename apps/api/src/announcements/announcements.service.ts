@@ -89,6 +89,7 @@ export class AnnouncementsService {
     return this.prisma.announcement.create({
       data: {
         ...clean,
+        body: clean.body || '',
         createdBy,
         publishedAt: clean.published ? new Date() : null,
         isPinned: clean.isPinned ?? false,

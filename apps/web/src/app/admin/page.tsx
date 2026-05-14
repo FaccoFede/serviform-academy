@@ -29,8 +29,7 @@ const SECTIONS = [
   {
     group: 'Comunicazione & Eventi',
     items: [
-      { href: '/admin/announcements', label: 'Comunicazioni', desc: 'Novità, comunicati, regole' },
-      { href: '/admin/events', label: 'Calendario eventi', desc: 'Workshop, webinar e sessioni live' },
+      { href: '/admin/announcements', label: 'Comunicazione & Eventi', desc: 'Comunicazioni, webinar, workshop e sessioni live' },
     ],
   },
   {

@@ -1,7 +1,6 @@
 'use client'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { api } from '@/lib/api'
@@ -18,6 +17,12 @@ const TYPE_META: Record<string, { label: string; color: string }> = {
   RULES:       { label: 'Regola',       color: '#D97706' },
 }
 
+const EVENT_TYPE_META: Record<string, { label: string; color: string }> = {
+  WORKSHOP:     { label: 'Workshop',      color: '#059669' },
+  WEBINAR:      { label: 'Webinar',       color: '#059669' },
+  LIVE_SESSION: { label: 'Sessione live', color: '#059669' },
+}
+
 function formatDate(d: string) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('it-IT', {
@@ -25,24 +30,16 @@ function formatDate(d: string) {
   })
 }
 
-function formatDateShort(d: string) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('it-IT', {
-    day: '2-digit', month: 'short',
-  })
-}
-
 // ── Tipo filtro attivo ────────────────────────────────────────────────────
-type FilterKey = 'ALL' | 'UNREAD' | 'PINNED'
+type FilterKey = 'ALL' | 'UNREAD' | 'PINNED' | 'EVENTS'
 
 // ── Card singola comunicazione ────────────────────────────────────────────
 function AnnCard({ item, onClick }: { item: any; onClick: () => void }) {
-  const meta  = TYPE_META[item.type] || { label: item.type, color: '#888' }
-  const bg    = meta.color + '18'
+  const meta = TYPE_META[item.type] || { label: item.type, color: '#888' }
+  const bg   = meta.color + '18'
 
   return (
     <button className={styles.annCard} onClick={onClick}>
-      {/* Immagine: se presente mostrala, altrimenti placeholder stesso aspect-ratio */}
       <div className={styles.annCardImg}>
         {item.bannerUrl
           ? <img src={item.bannerUrl} alt="" className={styles.annCardImgEl} />
@@ -83,69 +80,100 @@ function AnnCard({ item, onClick }: { item: any; onClick: () => void }) {
   )
 }
 
-// ── Calendario mini inline ────────────────────────────────────────────────
-function MiniCalendar({
-  year, month, eventDays, onDayClick, selectedDay,
-}: {
-  year: number
-  month: number
-  eventDays: Set<number>
-  onDayClick: (day: number) => void
-  selectedDay: number | null
-}) {
-  const firstDay  = new Date(year, month, 1).getDay()
-  const daysCount = new Date(year, month + 1, 0).getDate()
-  // Lunedì primo (0=lun … 6=dom)
-  const offset    = (firstDay + 6) % 7
-  const cells     = Array.from({ length: offset + daysCount }, (_, i) =>
-    i < offset ? null : i - offset + 1
-  )
+// ── Card singolo evento ───────────────────────────────────────────────────
+function EventCard({ ev }: { ev: any }) {
+  const meta = EVENT_TYPE_META[ev.eventType] || { label: ev.eventType, color: '#059669' }
+  const bg   = meta.color + '18'
+  const isPast = new Date(ev.date) < new Date()
 
   return (
-    <div className={styles.calGrid}>
-      {['L','M','M','G','V','S','D'].map((d, i) => (
-        <span key={i} className={styles.calDayLabel}>{d}</span>
-      ))}
-      {cells.map((day, i) => (
-        <button
-          key={i}
-          className={[
-            styles.calDayCell,
-            day === null           ? styles.calDayEmpty    : '',
-            day !== null && eventDays.has(day) ? styles.calDayEvent    : '',
-            day !== null && day === selectedDay ? styles.calDaySelected : '',
-          ].join(' ')}
-          onClick={() => day !== null && onDayClick(day)}
-          disabled={day === null}
-        >
-          {day ?? ''}
-        </button>
-      ))}
+    <div className={[styles.annCard, styles.eventCardWrap].join(' ')}>
+      <div className={styles.annCardImg}>
+        {ev.bannerUrl
+          ? <img src={ev.bannerUrl} alt="" className={styles.annCardImgEl} />
+          : <div className={[styles.annCardImgPlaceholder, styles.eventImgPlaceholder].join(' ')} />
+        }
+        {isPast && (
+          <span className={styles.pinnedBadge} style={{ background: 'rgba(0,0,0,.55)' }}>
+            Concluso
+          </span>
+        )}
+      </div>
+
+      <div className={styles.annCardBody}>
+        <div className={styles.annCardMeta}>
+          <span
+            className={styles.annCardType}
+            style={{ background: bg, color: meta.color }}
+          >
+            {meta.label}
+          </span>
+          <span className={styles.annCardDate}>
+            {formatDate(ev.date)}
+          </span>
+        </div>
+        <h3 className={styles.annCardTitle}>{ev.title}</h3>
+        {ev.description && (
+          <p className={styles.annCardDesc}>
+            {ev.description.slice(0, 120)}{ev.description.length > 120 ? '…' : ''}
+          </p>
+        )}
+        {ev.location && (
+          <p className={styles.eventCardLocation}>
+            <svg viewBox="0 0 14 14" fill="none" width={11} height={11} style={{ flexShrink: 0 }}>
+              <path d="M7 1a4 4 0 010 8C4.5 9 2 6.5 2 5a5 5 0 0110 0c0 1.5-2.5 4-5 4z"
+                stroke="currentColor" strokeWidth="1.2"/>
+              <circle cx="7" cy="5" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+            </svg>
+            {ev.location}
+          </p>
+        )}
+        <div className={styles.eventCardActions}>
+          {ev.registrationUrl && !isPast && (
+            <a
+              href={ev.registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.eventCardCta}
+              onClick={e => e.stopPropagation()}
+            >
+              Iscriviti →
+            </a>
+          )}
+          {ev.recordingUrl && (
+            <a
+              href={ev.recordingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.eventCardCta}
+              onClick={e => e.stopPropagation()}
+            >
+              Accedi →
+            </a>
+          )}
+          {!ev.registrationUrl && !ev.recordingUrl && (
+            <span className={styles.annCardCta} style={{ color: meta.color }}>Evento →</span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
 
 // ── Componente principale ─────────────────────────────────────────────────
 export default function NewsroomPage() {
-  const { token }   = useAuth()
-  const router      = useRouter()
+  const { token } = useAuth()
 
-  const [items,       setItems]       = useState<any[]>([])
-  const [events,      setEvents]      = useState<any[]>([])
-  const [loading,     setLoading]     = useState(true)
-  const [filter,      setFilter]      = useState<FilterKey>('ALL')
-  const [q,           setQ]           = useState('')
-  const [sortBy,      setSortBy]      = useState<'date' | 'type'>('date')
-  const [selected,    setSelected]    = useState<any>(null)
-  // Calendario
-  const now          = new Date()
-  const [calYear,    setCalYear]      = useState(now.getFullYear())
-  const [calMonth,   setCalMonth]     = useState(now.getMonth())
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [items,   setItems]   = useState<any[]>([])
+  const [events,  setEvents]  = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter,  setFilter]  = useState<FilterKey>('ALL')
+  const [q,       setQ]       = useState('')
+  const [sortBy,  setSortBy]  = useState<'date' | 'type'>('date')
+  const [selected, setSelected] = useState<any>(null)
 
   // ── Fetch comunicazioni ─────────────────────────────────────────────
   useEffect(() => {
-    // Loggato → /announcements (con stato "letto"); anonimo → /announcements/public
     const load = token ? api.announcements.findPublished() : api.announcements.findPublic()
     load
       .then(d => setItems(d || []))
@@ -165,17 +193,27 @@ export default function NewsroomPage() {
     total:   items.length,
     unread:  items.filter(a => !a.read).length,
     pinned:  items.filter(a => a.isPinned).length,
-    webinar: events.filter(e => {
-      const d = new Date(e.date)
-      return d >= new Date()
-    }).length,
+    webinar: events.filter(e => new Date(e.date) >= new Date()).length,
   }), [items, events])
 
   // ── Lista filtrata ────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
+  // Quando filter === 'EVENTS' mostra solo eventi futuri come card evento.
+  // Quando filter === 'ALL' mostra comunicazioni + eventi futuri misti per data.
+  // Negli altri filtri (UNREAD/PINNED) mostra solo comunicazioni filtrate.
+  const { filteredItems, filteredEvents } = useMemo(() => {
+    const now = new Date()
+
+    if (filter === 'EVENTS') {
+      const evs = events
+        .filter(e => new Date(e.date) >= now)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      return { filteredItems: [], filteredEvents: evs }
+    }
+
     let out = items
     if (filter === 'UNREAD') out = out.filter(a => !a.read)
     if (filter === 'PINNED') out = out.filter(a => a.isPinned)
+
     if (q) {
       const ql = q.toLowerCase()
       out = out.filter(a =>
@@ -185,54 +223,24 @@ export default function NewsroomPage() {
     if (sortBy === 'type') {
       out = [...out].sort((a, b) => (a.type || '').localeCompare(b.type || ''))
     }
-    return out
-  }, [items, filter, q, sortBy])
 
-  // ── Giorni con eventi nel mese selezionato ─────────────────────────
-  const eventDays = useMemo(() => {
-    const s = new Set<number>()
-    events.forEach(e => {
-      const d = new Date(e.date)
-      if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-        s.add(d.getDate())
-      }
-    })
-    return s
-  }, [events, calYear, calMonth])
+    // In modalità ALL: includi anche eventi futuri nella lista
+    if (filter === 'ALL' && !q) {
+      const upcomingEvs = events
+        .filter(e => new Date(e.date) >= now)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      return { filteredItems: out, filteredEvents: upcomingEvs }
+    }
 
-  // ── Prossimi eventi (tutti i futuri, max 6) ──────────────────────
-  const upcomingEvents = useMemo(() => {
-    const now = new Date()
-    return events
-      .filter(e => new Date(e.date) >= now)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 6)
-  }, [events])
+    return { filteredItems: out, filteredEvents: [] }
+  }, [items, events, filter, q, sortBy])
 
-  // ── Mese corrente navigazione ─────────────────────────────────────
-  const monthLabel = new Date(calYear, calMonth).toLocaleDateString('it-IT', {
-    month: 'long', year: 'numeric',
-  })
-
-  function prevMonth() {
-    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11) }
-    else setCalMonth(m => m - 1)
-    setSelectedDay(null)
-  }
-  function nextMonth() {
-    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0) }
-    else setCalMonth(m => m + 1)
-    setSelectedDay(null)
-  }
+  const isEmpty = filteredItems.length === 0 && filteredEvents.length === 0
 
   // ── Data oggi ─────────────────────────────────────────────────────
   const today = new Date().toLocaleDateString('it-IT', {
     weekday: 'long', day: 'numeric', month: 'long',
   })
-
-  const TYPE_LABELS_EVENT: Record<string, string> = {
-    WORKSHOP: 'Workshop', WEBINAR: 'Webinar', LIVE_SESSION: 'Sessione live',
-  }
 
   return (
     <div className={styles.page}>
@@ -268,7 +276,7 @@ export default function NewsroomPage() {
         {/* ── KPI come filtri ─────────────────────────────────────────── */}
         <div className={styles.kpiRow}>
 
-          {/* 1. Comunicati da leggere → filtra non letti */}
+          {/* 1. Comunicati da leggere */}
           <button
             className={[styles.kpiCard, filter === 'UNREAD' ? styles.kpiCardActive : ''].join(' ')}
             onClick={() => setFilter(f => f === 'UNREAD' ? 'ALL' : 'UNREAD')}
@@ -289,7 +297,7 @@ export default function NewsroomPage() {
             </div>
           </button>
 
-          {/* 2. Comunicati in primo piano → filtra isPinned */}
+          {/* 2. Comunicati in primo piano */}
           <button
             className={[styles.kpiCard, filter === 'PINNED' ? styles.kpiCardActive : ''].join(' ')}
             onClick={() => setFilter(f => f === 'PINNED' ? 'ALL' : 'PINNED')}
@@ -310,10 +318,10 @@ export default function NewsroomPage() {
             </div>
           </button>
 
-          {/* 3. Webinar e eventi → redirect /calendar */}
+          {/* 3. Webinar e eventi → filtra inline (non più redirect) */}
           <button
-            className={styles.kpiCard}
-            onClick={() => router.push('/calendar')}
+            className={[styles.kpiCard, filter === 'EVENTS' ? styles.kpiCardActive : ''].join(' ')}
+            onClick={() => setFilter(f => f === 'EVENTS' ? 'ALL' : 'EVENTS')}
           >
             <div className={styles.kpiTop}>
               <span className={styles.kpiLabel}>Webinar e eventi</span>
@@ -327,11 +335,11 @@ export default function NewsroomPage() {
             </div>
             <div className={styles.kpiVal}>
               <span className={styles.kpiNum}>{stats.webinar}</span>
-              <span className={styles.kpiSub}>in calendario</span>
+              <span className={styles.kpiSub}>in programma</span>
             </div>
           </button>
 
-          {/* 4. Totale comunicazioni → rimuove filtri */}
+          {/* 4. Totale comunicazioni */}
           <button
             className={[styles.kpiCard, filter === 'ALL' && !q ? styles.kpiCardActive : ''].join(' ')}
             onClick={() => { setFilter('ALL'); setQ('') }}
@@ -353,51 +361,70 @@ export default function NewsroomPage() {
           </button>
         </div>
 
-        {/* ── Toolbar ricerca + ordinamento ──────────────────────────── */}
-        <div className={styles.toolbar}>
-          <div className={styles.searchBox}>
-            <svg viewBox="0 0 20 20" fill="none" width={15} height={15}>
-              <circle cx="9" cy="9" r="6" stroke="var(--muted,#888)" strokeWidth="1.4"/>
-              <path d="M14 14l3 3" stroke="var(--muted,#888)" strokeWidth="1.4" strokeLinecap="round"/>
-            </svg>
-            <input
-              className={styles.searchInput}
-              placeholder="Cerca comunicazione…"
-              value={q}
-              onChange={e => setQ(e.target.value)}
-            />
-            {q && (
-              <button className={styles.searchClear} onClick={() => setQ('')}>
-                <svg viewBox="0 0 12 12" fill="none" width={11} height={11}>
-                  <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                </svg>
-              </button>
-            )}
+        {/* ── Toolbar ricerca + ordinamento (nascosta in modalità EVENTS) */}
+        {filter !== 'EVENTS' && (
+          <div className={styles.toolbar}>
+            <div className={styles.searchBox}>
+              <svg viewBox="0 0 20 20" fill="none" width={15} height={15}>
+                <circle cx="9" cy="9" r="6" stroke="var(--muted,#888)" strokeWidth="1.4"/>
+                <path d="M14 14l3 3" stroke="var(--muted,#888)" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+              <input
+                className={styles.searchInput}
+                placeholder="Cerca comunicazione…"
+                value={q}
+                onChange={e => setQ(e.target.value)}
+              />
+              {q && (
+                <button className={styles.searchClear} onClick={() => setQ('')}>
+                  <svg viewBox="0 0 12 12" fill="none" width={11} height={11}>
+                    <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+            <div className={styles.sortBox}>
+              <span className={styles.sortLabel}>Ordina per</span>
+              <select
+                className={styles.sortSelect}
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as 'date' | 'type')}
+              >
+                <option value="date">più recente</option>
+                <option value="type">tipo</option>
+              </select>
+            </div>
           </div>
-          <div className={styles.sortBox}>
-            <span className={styles.sortLabel}>Ordina per</span>
-            <select
-              className={styles.sortSelect}
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value as 'date' | 'type')}
-            >
-              <option value="date">più recente</option>
-              <option value="type">tipo</option>
-            </select>
-          </div>
-        </div>
+        )}
 
-        {/* ── Lista comunicazioni ─────────────────────────────────────── */}
+        {/* ── Intestazione sezione eventi (solo in modalità EVENTS) */}
+        {filter === 'EVENTS' && (
+          <div className={styles.eventsSectionBar}>
+            <h2 className={styles.eventsSectionBarTitle}>Prossimi eventi e webinar</h2>
+            <button
+              className={styles.eventsSectionBarReset}
+              onClick={() => setFilter('ALL')}
+            >
+              ← Tutte le comunicazioni
+            </button>
+          </div>
+        )}
+
+        {/* ── Lista comunicazioni + eventi ──────────────────────────────── */}
         {loading ? (
           <div className={styles.skeletonGrid}>
             {[1,2,3,4,5,6].map(i => (
               <div key={i} className={styles.skeletonCard} style={{ animationDelay: `${i * 0.07}s` }} />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : isEmpty ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>📭</div>
-            <p className={styles.emptyText}>Nessuna comunicazione trovata.</p>
+            <p className={styles.emptyText}>
+              {filter === 'EVENTS'
+                ? 'Nessun evento in programma.'
+                : 'Nessuna comunicazione trovata.'}
+            </p>
             {(filter !== 'ALL' || q) && (
               <button className={styles.emptyReset} onClick={() => { setFilter('ALL'); setQ('') }}>
                 Mostra tutte
@@ -406,82 +433,16 @@ export default function NewsroomPage() {
           </div>
         ) : (
           <div className={styles.annGrid}>
-            {filtered.map(item => (
-              <AnnCard key={item.id} item={item} onClick={() => setSelected(item)} />
+            {/* Comunicazioni */}
+            {filteredItems.map(item => (
+              <AnnCard key={`ann-${item.id}`} item={item} onClick={() => setSelected(item)} />
+            ))}
+            {/* Card evento */}
+            {filteredEvents.map(ev => (
+              <EventCard key={`ev-${ev.id}`} ev={ev} />
             ))}
           </div>
         )}
-
-        {/* ── Sezione calendario ed eventi ────────────────────────────── */}
-        <div className={styles.calSection}>
-
-          {/* Colonna sinistra — Calendario */}
-          <div className={styles.calCol}>
-            <div className={styles.calHeader}>
-              <button className={styles.calNavBtn} onClick={prevMonth} aria-label="Mese precedente">
-                <svg viewBox="0 0 14 14" fill="none" width={14} height={14}>
-                  <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <span className={styles.calMonthLabel}>{monthLabel}</span>
-              <button className={styles.calNavBtn} onClick={nextMonth} aria-label="Mese successivo">
-                <svg viewBox="0 0 14 14" fill="none" width={14} height={14}>
-                  <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            <MiniCalendar
-              year={calYear}
-              month={calMonth}
-              eventDays={eventDays}
-              onDayClick={setSelectedDay}
-              selectedDay={selectedDay}
-            />
-            <div className={styles.calLegend}>
-              <span className={styles.calLegendDot} />
-              <span className={styles.calLegendText}>Giorno con evento</span>
-            </div>
-          </div>
-
-          {/* Colonna destra — Prossimi eventi */}
-          <div className={styles.eventsCol}>
-            <div className={styles.eventsSectionHeader}>
-              <h3 className={styles.eventsSectionTitle}>Prossimi eventi</h3>
-            </div>
-
-            {upcomingEvents.length === 0 ? (
-              <div className={styles.eventsEmpty}>Nessun evento in programma.</div>
-            ) : (
-              <div className={styles.eventsList}>
-                {upcomingEvents.map(ev => (
-                  <div key={ev.id} className={styles.eventCard}>
-                    <div className={styles.eventCardDate}>
-                      <span className={styles.eventCardDay}>
-                        {new Date(ev.date).toLocaleDateString('it-IT', { day: '2-digit' })}
-                      </span>
-                      <span className={styles.eventCardMonth}>
-                        {new Date(ev.date).toLocaleDateString('it-IT', { month: 'short' })}
-                      </span>
-                    </div>
-                    <div className={styles.eventCardBody}>
-                      <span className={styles.eventCardType}>
-                        {TYPE_LABELS_EVENT[ev.eventType] || ev.eventType}
-                      </span>
-                      <div className={styles.eventCardTitle}>{ev.title}</div>
-                      {ev.location && (
-                        <div className={styles.eventCardLocation}>{ev.location}</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Link href="/calendar" className={styles.allEventsLink}>
-              Tutti gli eventi →
-            </Link>
-          </div>
-        </div>
 
       </div>
 

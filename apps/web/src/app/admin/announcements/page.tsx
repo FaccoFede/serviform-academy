@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
@@ -36,6 +37,7 @@ const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', 
 
 // ─────────────────────────────────────────────────────────────────────────
 export default function AdminNewsroomPage() {
+  const { token } = useAuth()
   const [tab, setTab] = useState<Tab>('announcements')
 
   // ── Stato comunicazioni ──────────────────────────────────────────────
@@ -54,6 +56,7 @@ export default function AdminNewsroomPage() {
 
   // ── Stato condiviso ───────────────────────────────────────────────────
   const [saving, setSaving] = useState(false)
+  const [uploadingBanner, setUploadingBanner] = useState(false)
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null)
 
   // ── Fetch ─────────────────────────────────────────────────────────────
@@ -354,13 +357,52 @@ export default function AdminNewsroomPage() {
                 {ANN_SECTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
               </select>
 
-              <label className={t.lbl}>URL Banner/Copertina</label>
+              <label className={t.lbl}>
+                Banner / Copertina
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
+                  1200×400 px consigliati · JPEG, PNG o WebP · max 2 MB
+                </span>
+              </label>
               <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={uploadingBanner}
                 className={t.inp}
-                value={formAnn.bannerUrl || ''}
-                onChange={e => setFormAnn({ ...formAnn, bannerUrl: e.target.value })}
-                placeholder="https://..."
+                style={{ padding: '6px 8px', cursor: 'pointer' }}
+                onChange={async e => {
+                  const file = e.target.files?.[0]
+                  if (!file || !token) return
+                  setUploadingBanner(true)
+                  try {
+                    const { url } = await api.uploads.banner(file, token)
+                    setFormAnn((f: any) => ({ ...f, bannerUrl: url }))
+                  } catch (err: any) {
+                    setMsg({ t: err.message || 'Errore upload banner', ok: false })
+                  } finally {
+                    setUploadingBanner(false)
+                    e.target.value = ''
+                  }
+                }}
               />
+              {uploadingBanner && (
+                <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>Caricamento in corso...</p>
+              )}
+              {formAnn.bannerUrl && (
+                <div style={{ marginTop: 8 }}>
+                  <img
+                    src={formAnn.bannerUrl}
+                    alt="Preview banner"
+                    style={{ maxWidth: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', display: 'block' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormAnn((f: any) => ({ ...f, bannerUrl: '' }))}
+                    style={{ marginTop: 4, fontSize: 12, color: '#E63329', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)' }}
+                  >
+                    Rimuovi banner
+                  </button>
+                </div>
+              )}
 
               <label className={t.lbl}>Contenuto articolo (HTML)</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>

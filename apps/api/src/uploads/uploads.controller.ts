@@ -73,4 +73,34 @@ export class UploadsController {
 
     return { url, filename }
   }
+
+  @Post('banner')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  async uploadBanner(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nessun file ricevuto')
+    const ALLOWED_BANNER_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!ALLOWED_BANNER_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Tipo file non supportato: ${file.mimetype}. Usa JPEG, PNG o WebP.`,
+      )
+    }
+
+    const bannerDir = path.resolve(UPLOAD_DIR, 'banners')
+    if (!fs.existsSync(bannerDir)) fs.mkdirSync(bannerDir, { recursive: true })
+
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg'
+    const filename = `banner_${crypto.randomUUID()}${ext}`
+    fs.writeFileSync(path.join(bannerDir, filename), file.buffer)
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    const url = `${baseUrl}/uploads/banners/${filename}`
+
+    return { url, filename }
+  }
 }

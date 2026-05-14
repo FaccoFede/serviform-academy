@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 
+export const EVENT_SECTIONS = ['WEBINAR', 'WORKSHOP', 'EVENTO']
+
 /**
  * Converte una stringa data in Date | null.
  * Se la stringa è vuota, null, undefined o non è una data valida → restituisce null.
@@ -93,7 +95,7 @@ export class AnnouncementsService {
         createdBy,
         publishedAt: clean.published ? new Date() : null,
         isPinned: clean.isPinned ?? false,
-        section: clean.section ?? 'NEWS',
+        section: clean.section ?? 'COMUNICAZIONE',
       } as any,
     })
   }

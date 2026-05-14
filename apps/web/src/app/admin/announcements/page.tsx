@@ -7,15 +7,15 @@ import t from '../table.module.css'
 
 // ── Dati statici ──────────────────────────────────────────────────────────
 const ANN_SECTIONS = [
-  { v: 'NEWS',   l: 'Novità' },
-  { v: 'EVENTS', l: 'Evento' },
-  { v: 'PRESS',  l: 'Comunicato' },
-  { v: 'RULES',  l: 'Regola' },
+  { v: 'COMUNICAZIONE', l: 'Comunicazione' },
+  { v: 'WEBINAR',       l: 'Webinar'       },
+  { v: 'WORKSHOP',      l: 'Workshop'      },
+  { v: 'EVENTO',        l: 'Evento'        },
 ]
 
 const ANN_TYPE_LABELS: Record<string, string> = {
-  NEWS: 'Novità', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar',
-  MAINTENANCE: 'Manutenzione', EVENTS: 'Evento', PRESS: 'Comunicato', RULES: 'Regola',
+  COMUNICAZIONE: 'Comunicazione', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar',
+  MAINTENANCE: 'Manutenzione', WORKSHOP: 'Workshop', EVENTO: 'Evento',
 }
 
 const EVENT_TYPES = [
@@ -31,7 +31,7 @@ function fmtDate(d: string) {
 // ── Tipi form ─────────────────────────────────────────────────────────────
 type Tab = 'announcements' | 'events'
 
-const ANN_EMPTY = { title: '', body: '', section: 'NEWS', published: false, isPinned: false, bannerUrl: '', content: '', expiresAt: '' }
+const ANN_EMPTY = { title: '', body: '', section: 'COMUNICAZIONE', published: false, isPinned: false, bannerUrl: '', content: '', expiresAt: '' }
 const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', endDate: '', location: '', bannerUrl: '', maxSeats: '', registrationUrl: '', recordingUrl: '', published: false }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ export default function AdminNewsroomPage() {
   const openEditAnn = (r: any) => {
     setEditAnn(r)
     setFormAnn({
-      title: r.title, body: r.body || '', section: r.section || 'NEWS',
+      title: r.title, body: r.body || '', section: r.section || 'COMUNICAZIONE',
       published: r.published, isPinned: r.isPinned || false,
       bannerUrl: r.bannerUrl || '', content: r.content || '',
       expiresAt: r.expiresAt?.slice(0, 10) || '',
@@ -221,7 +221,7 @@ export default function AdminNewsroomPage() {
                     <td className={t.tdBold}>{r.title}</td>
                     <td>
                       <span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                        {ANN_SECTIONS.find(s => s.v === r.section)?.l || r.section || 'NEWS'}
+                        {ANN_SECTIONS.find(s => s.v === r.section)?.l || r.section || 'COMUNICAZIONE'}
                       </span>
                     </td>
                     <td>

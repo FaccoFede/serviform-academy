@@ -6,15 +6,22 @@ import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { api } from '@/lib/api'
 import styles from './Newsroom.module.css'
 
+// ── Sezioni di tipo evento (Announcement) ────────────────────────────────
+const EVENT_SECTIONS = ['WEBINAR', 'WORKSHOP', 'EVENTO']
+
 // ── Metadati tipo comunicazione ───────────────────────────────────────────
 const TYPE_META: Record<string, { label: string; color: string }> = {
-  NEWS:        { label: 'Novità',       color: '#067DB8' },
-  NEW_COURSE:  { label: 'Nuovo corso',  color: '#E63329' },
-  WEBINAR:     { label: 'Webinar',      color: '#059669' },
-  MAINTENANCE: { label: 'Manutenzione', color: '#D97706' },
-  EVENTS:      { label: 'Evento',       color: '#059669' },
-  PRESS:       { label: 'Comunicato',   color: '#7C3AED' },
-  RULES:       { label: 'Regola',       color: '#D97706' },
+  COMUNICAZIONE: { label: 'Comunicazione', color: '#067DB8' },
+  NEW_COURSE:    { label: 'Nuovo corso',   color: '#E63329' },
+  WEBINAR:       { label: 'Webinar',       color: '#059669' },
+  MAINTENANCE:   { label: 'Manutenzione',  color: '#D97706' },
+  WORKSHOP:      { label: 'Workshop',      color: '#D97706' },
+  EVENTO:        { label: 'Evento',        color: '#059669' },
+  // legacy — per eventuali record non ancora migrati
+  NEWS:          { label: 'Novità',        color: '#067DB8' },
+  EVENTS:        { label: 'Evento',        color: '#059669' },
+  PRESS:         { label: 'Comunicato',    color: '#7C3AED' },
+  RULES:         { label: 'Regola',        color: '#D97706' },
 }
 
 const EVENT_TYPE_META: Record<string, { label: string; color: string }> = {
@@ -35,7 +42,7 @@ type FilterKey = 'ALL' | 'UNREAD' | 'PINNED' | 'EVENTS'
 
 // ── Card singola comunicazione ────────────────────────────────────────────
 function AnnCard({ item, onClick }: { item: any; onClick: () => void }) {
-  const meta = TYPE_META[item.type] || { label: item.type, color: '#888' }
+  const meta = TYPE_META[item.section] || TYPE_META[item.type] || { label: item.section || item.type, color: '#888' }
   const bg   = meta.color + '18'
 
   return (
@@ -189,12 +196,17 @@ export default function NewsroomPage() {
   }, [])
 
   // ── Statistiche KPI ─────────────────────────────────────────────────
-  const stats = useMemo(() => ({
-    total:   items.length,
-    unread:  items.filter(a => !a.read).length,
-    pinned:  items.filter(a => a.isPinned).length,
-    webinar: events.filter(e => new Date(e.date) >= new Date()).length,
-  }), [items, events])
+  const stats = useMemo(() => {
+    const now = new Date()
+    const annEvents = items.filter(a => EVENT_SECTIONS.includes(a.section)).length
+    const futureEvents = events.filter(e => new Date(e.date) >= now).length
+    return {
+      total:   items.length,
+      unread:  items.filter(a => !a.read).length,
+      pinned:  items.filter(a => a.isPinned).length,
+      webinar: futureEvents + annEvents,
+    }
+  }, [items, events])
 
   // ── Lista filtrata ────────────────────────────────────────────────────
   // Quando filter === 'EVENTS' mostra solo eventi futuri come card evento.
@@ -207,7 +219,8 @@ export default function NewsroomPage() {
       const evs = events
         .filter(e => new Date(e.date) >= now)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      return { filteredItems: [], filteredEvents: evs }
+      const annEvs = items.filter(a => EVENT_SECTIONS.includes(a.section))
+      return { filteredItems: annEvs, filteredEvents: evs }
     }
 
     let out = items

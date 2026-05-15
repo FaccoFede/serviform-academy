@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
+import EventModal from '@/components/ui/EventModal'
 import { api } from '@/lib/api'
 import styles from './Newsroom.module.css'
 
@@ -85,13 +86,13 @@ function AnnCard({ item, onClick }: { item: any; onClick: () => void }) {
 }
 
 // ── Card singolo evento ───────────────────────────────────────────────────
-function EventCard({ ev }: { ev: any }) {
+function EventCard({ ev, onClick }: { ev: any; onClick: () => void }) {
   const meta = EVENT_TYPE_META[ev.eventType] || { label: ev.eventType, color: '#059669' }
   const bg   = meta.color + '18'
   const isPast = new Date(ev.date) < new Date()
 
   return (
-    <div className={[styles.annCard, styles.eventCardWrap].join(' ')}>
+    <button className={[styles.annCard, styles.eventCardWrap].join(' ')} onClick={onClick}>
       <div className={styles.annCardImg}>
         {ev.bannerUrl
           ? <img src={ev.bannerUrl} alt="" className={styles.annCardImgEl} />
@@ -136,7 +137,7 @@ function EventCard({ ev }: { ev: any }) {
           <span className={styles.annCardCta} style={{ color: meta.color }}>Evento →</span>
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 
@@ -150,7 +151,8 @@ export default function NewsroomPage() {
   const [filter,  setFilter]  = useState<FilterKey>('ALL')
   const [q,       setQ]       = useState('')
   const [sortBy,  setSortBy]  = useState<'date' | 'type'>('date')
-  const [selected, setSelected] = useState<any>(null)
+  const [selected,   setSelected]   = useState<any>(null)
+  const [selectedEv, setSelectedEv] = useState<any>(null)
 
   // ── Fetch comunicazioni ─────────────────────────────────────────────
   useEffect(() => {
@@ -423,16 +425,18 @@ export default function NewsroomPage() {
             ))}
             {/* Card evento */}
             {filteredEvents.map(ev => (
-              <EventCard key={`ev-${ev.id}`} ev={ev} />
+              <EventCard key={`ev-${ev.id}`} ev={ev} onClick={() => setSelectedEv(ev)} />
             ))}
           </div>
         )}
 
       </div>
 
-      {/* ── Modal comunicazione ──────────────────────────────────────── */}
       {selected && (
         <AnnouncementModal item={selected} onClose={() => setSelected(null)} />
+      )}
+      {selectedEv && (
+        <EventModal item={selectedEv} onClose={() => setSelectedEv(null)} />
       )}
     </div>
   )

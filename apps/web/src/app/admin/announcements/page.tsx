@@ -27,6 +27,13 @@ function fmtDate(d: string) {
   return d ? new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 }
 
+// Converte una stringa UTC ISO in formato YYYY-MM-DDTHH:mm locale (per datetime-local)
+function toLocalDatetime(iso: string): string {
+  const d = new Date(iso)
+  const off = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - off).toISOString().slice(0, 16)
+}
+
 // ── Tipi form ─────────────────────────────────────────────────────────────
 type Tab = 'announcements' | 'events'
 
@@ -80,7 +87,7 @@ export default function AdminNewsroomPage() {
     setFormAnn({
       title: r.title, body: r.body || '', section: r.section || 'COMUNICAZIONE',
       bannerUrl: r.bannerUrl || '', content: r.content || '',
-      expiresAt: r.expiresAt ? new Date(r.expiresAt).toISOString().slice(0, 16) : '',
+      expiresAt: r.expiresAt ? toLocalDatetime(r.expiresAt) : '',
     })
     setMsg(null); setShowAnn(true)
   }
@@ -88,7 +95,11 @@ export default function AdminNewsroomPage() {
     if (!formAnn.title?.trim()) { setMsg({ t: 'Il titolo è obbligatorio.', ok: false }); return }
     setSaving(true)
     try {
-      const payload = { ...formAnn, publish }
+      const payload = {
+        ...formAnn,
+        publish,
+        expiresAt: formAnn.expiresAt ? new Date(formAnn.expiresAt).toISOString() : '',
+      }
       if (editAnn) await api.announcements.update(editAnn.id, payload)
       else await api.announcements.create(payload)
       setMsg({ t: editAnn ? 'Aggiornato.' : 'Creato.', ok: true })
@@ -112,8 +123,8 @@ export default function AdminNewsroomPage() {
     setFormEv({
       title: r.title, description: r.description || '',
       eventType: r.eventType || 'WEBINAR',
-      date: r.date ? new Date(r.date).toISOString().slice(0, 16) : '',
-      endDate: r.endDate ? new Date(r.endDate).toISOString().slice(0, 16) : '',
+      date: r.date ? toLocalDatetime(r.date) : '',
+      endDate: r.endDate ? toLocalDatetime(r.endDate) : '',
       location: r.location || '', bannerUrl: r.bannerUrl || '',
       content: r.content || '', maxSeats: r.maxSeats ?? '',
     })
@@ -124,7 +135,12 @@ export default function AdminNewsroomPage() {
     if (!formEv.date)          { setMsg({ t: 'La data è obbligatoria.', ok: false }); return }
     setSaving(true)
     try {
-      const payload = { ...formEv, published: !!formEv.published }
+      const payload = {
+        ...formEv,
+        published: !!formEv.published,
+        date: formEv.date ? new Date(formEv.date).toISOString() : '',
+        endDate: formEv.endDate ? new Date(formEv.endDate).toISOString() : '',
+      }
       if (editEv) await api.events.update(editEv.id, payload)
       else await api.events.create(payload)
       setMsg({ t: editEv ? 'Aggiornato.' : 'Creato.', ok: true })
@@ -344,7 +360,7 @@ export default function AdminNewsroomPage() {
               <label className={t.lbl}>
                 Banner / Copertina
                 <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
-                  1200×400 px consigliati · JPEG, PNG o WebP · max 2 MB
+                  1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
                 </span>
               </label>
               <input
@@ -514,7 +530,7 @@ export default function AdminNewsroomPage() {
               <label className={t.lbl}>
                 Banner / Copertina
                 <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
-                  1200×400 px consigliati · JPEG, PNG o WebP · max 2 MB
+                  1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
                 </span>
               </label>
               <input

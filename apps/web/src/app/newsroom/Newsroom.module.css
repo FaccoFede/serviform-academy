@@ -255,13 +255,13 @@
 }
 .annCardImgEl {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1500 / 590;
   object-fit: cover;
   display: block;
 }
 .annCardImgPlaceholder {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1500 / 590;
   background: var(--border, #e5e5e0);
   display: block;
 }
@@ -606,10 +606,12 @@
 
 /* ── Card evento (riusa stili annCard, aggiunge elementi specifici) ─────── */
 .eventCardWrap {
-  cursor: default;
+  cursor: pointer;
+  width: 100%;
+  border: none;
 }
 .eventCardWrap:hover {
-  cursor: default;
+  cursor: pointer;
 }
 .eventImgPlaceholder {
   background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;

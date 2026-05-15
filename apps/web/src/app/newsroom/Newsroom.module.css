@@ -606,10 +606,12 @@
 
 /* ── Card evento (riusa stili annCard, aggiunge elementi specifici) ─────── */
 .eventCardWrap {
-  cursor: default;
+  cursor: pointer;
+  width: 100%;
+  border: none;
 }
 .eventCardWrap:hover {
-  cursor: default;
+  cursor: pointer;
 }
 .eventImgPlaceholder {
   background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;

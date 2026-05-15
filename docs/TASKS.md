@@ -903,7 +903,7 @@ Verificare che il filtro `filter === 'EVENTS'` e il KPI "Webinar e eventi" non d
 ## TASK-10 — Fix bug gestione primo piano (datetime e logica pin)
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-15
 
 ### Contesto
 

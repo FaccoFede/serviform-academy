@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import styles from './Login.module.css'
@@ -68,15 +69,16 @@ export default function LoginPage() {
         <div className={styles.brandContent}>
           {/* Logo */}
           <div className={styles.logo}>
-            <svg viewBox="0 0 32 32" fill="none" width={32} height={32}>
-              <circle cx="16" cy="16" r="15" stroke="#E63329" strokeWidth="2"/>
-              <path d="M10 11 C10 8 13 6 16 6 C19 6 21 8 21 11 C21 14 19 16 16 16 C13 16 11 18 11 21 C11 24 13 26 16 26 C19 26 22 24 22 21"
-                stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
-            </svg>
-            <div className={styles.logoText}>
-              <span className={styles.logoName}>Serviform</span>
-              <span className={styles.logoProduct}>Academy</span>
+            <div className={styles.logoImgWrap}>
+              <Image
+                src="/logo.svg"
+                alt="Serviform Academy"
+                fill
+                priority
+                className={styles.logoImg}
+              />
             </div>
+            <span className={styles.logoName}>Serviform Academy</span>
           </div>
 
           {/* Headline */}

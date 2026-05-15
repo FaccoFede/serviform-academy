@@ -967,7 +967,7 @@ Verificare i seguenti punti:
 ## TASK-11 — Revisione logo pagina Login
 
 **Priorità:** Bassa  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-15
 
 ### Contesto
 

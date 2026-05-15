@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
+import EventModal from '@/components/ui/EventModal'
 import { getBrand } from '@/lib/brands'
 import { api } from '@/lib/api'
 import styles from './DashboardPage.module.css'
@@ -65,6 +66,7 @@ export default function DashboardPage() {
   const [swMap,         setSwMap]         = useState<Map<string, any>>(new Map())
   const [portalCourses, setPortalCourses] = useState<any[]>([])
   const [selectedAnn,   setSelectedAnn]   = useState<any>(null)
+  const [selectedEv,    setSelectedEv]    = useState<any>(null)
 
   useEffect(() => {
     if (!token) return
@@ -312,7 +314,7 @@ export default function DashboardPage() {
                 </div>
                 <div className={styles.annList}>
                   {upcomingEvs.map((e: any) => (
-                    <div key={e.id} className={styles.evCard}>
+                    <button key={e.id} className={styles.evCard} onClick={() => setSelectedEv(e)}>
                       <div className={styles.evDateCol}>
                         <span className={styles.evDay}>
                           {new Date(e.date).toLocaleDateString('it-IT', { day: '2-digit' })}
@@ -332,7 +334,7 @@ export default function DashboardPage() {
                         </div>
                         <div className={styles.evTitle}>{e.title}</div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </section>
@@ -347,9 +349,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Modal comunicazione */}
       {selectedAnn && (
         <AnnouncementModal item={selectedAnn} onClose={() => setSelectedAnn(null)} />
+      )}
+      {selectedEv && (
+        <EventModal item={selectedEv} onClose={() => setSelectedEv(null)} />
       )}
     </div>
   )

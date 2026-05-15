@@ -156,10 +156,12 @@
 /* Event card */
 .evCard {
   display: flex; align-items: flex-start; gap: 14px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border, #e5e5e0);
+  padding: 12px 0; width: 100%; text-align: left;
+  background: transparent; border: none; border-bottom: 1px solid var(--border, #e5e5e0);
+  cursor: pointer; transition: background 150ms, padding-left 150ms;
 }
 .evCard:last-child { border-bottom: none; }
+.evCard:hover { background: var(--surface, #fafaf9); padding-left: 6px; }
 .evDateCol {
   flex-shrink: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center;

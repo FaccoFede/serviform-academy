@@ -255,13 +255,13 @@
 }
 .annCardImgEl {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1500 / 590;
   object-fit: cover;
   display: block;
 }
 .annCardImgPlaceholder {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1500 / 590;
   background: var(--border, #e5e5e0);
   display: block;
 }

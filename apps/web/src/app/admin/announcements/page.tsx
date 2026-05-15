@@ -360,7 +360,7 @@ export default function AdminNewsroomPage() {
               <label className={t.lbl}>
                 Banner / Copertina
                 <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
-                  1200×400 px consigliati · JPEG, PNG o WebP · max 2 MB
+                  1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
                 </span>
               </label>
               <input
@@ -530,7 +530,7 @@ export default function AdminNewsroomPage() {
               <label className={t.lbl}>
                 Banner / Copertina
                 <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
-                  1200×400 px consigliati · JPEG, PNG o WebP · max 2 MB
+                  1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
                 </span>
               </label>
               <input

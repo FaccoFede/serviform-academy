@@ -50,7 +50,7 @@
 }
 
 .bannerWrap { width: 100%; overflow: hidden; border-radius: 18px 18px 0 0; }
-.bannerImg  { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+.bannerImg  { width: 100%; aspect-ratio: 1500/590; object-fit: cover; display: block; }
 
 .content { padding: 26px 30px 34px; }
 

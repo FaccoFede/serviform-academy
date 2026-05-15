@@ -790,7 +790,7 @@ Nella tabella della lista comunicazioni, aggiungere un indicatore visivo di stat
 ## TASK-09 — Pulizia e revisione admin Comunicazioni ed Eventi
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-15
 
 ### Contesto
 

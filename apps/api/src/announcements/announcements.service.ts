@@ -69,9 +69,10 @@ export class AnnouncementsService {
         : undefined,
     } as any)
 
-    // Mappa: aggiunge campo read, rimuove array reads dal payload
+    // Mappa: aggiunge isPinned (expiresAt in futuro) e campo read, rimuove array reads
     return items.map((item: any) => ({
       ...item,
+      isPinned: !!(item.expiresAt && item.expiresAt > now),
       read: userId ? (item.reads?.length > 0) : false,
       reads: undefined,
     }))

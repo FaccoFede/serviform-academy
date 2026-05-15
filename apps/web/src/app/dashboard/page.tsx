@@ -7,14 +7,23 @@ import { getBrand } from '@/lib/brands'
 import { api } from '@/lib/api'
 import styles from './DashboardPage.module.css'
 
-const TYPE_LABELS: Record<string, string> = {
-  NEWS: 'Novità', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar',
-  MAINTENANCE: 'Manutenzione', EVENTS: 'Evento', PRESS: 'Comunicato', RULES: 'Regola',
+const SECTION_LABELS: Record<string, string> = {
+  COMUNICAZIONE: 'Comunicazione', NEW_COURSE: 'Nuovo corso', WEBINAR: 'Webinar',
+  MAINTENANCE: 'Manutenzione', EVENTO: 'Evento', WORKSHOP: 'Workshop',
+  // legacy
+  NEWS: 'Novità', EVENTS: 'Evento', PRESS: 'Comunicato', RULES: 'Regola',
 }
-const TYPE_COLORS: Record<string, string> = {
-  NEWS: '#067DB8', NEW_COURSE: '#E63329', WEBINAR: '#059669',
-  MAINTENANCE: '#D97706', EVENTS: '#059669', PRESS: '#7C3AED', RULES: '#D97706',
+const SECTION_COLORS: Record<string, string> = {
+  COMUNICAZIONE: '#067DB8', NEW_COURSE: '#E63329', WEBINAR: '#059669',
+  MAINTENANCE: '#D97706', EVENTO: '#059669', WORKSHOP: '#D97706',
+  // legacy
+  NEWS: '#067DB8', EVENTS: '#059669', PRESS: '#7C3AED', RULES: '#D97706',
 }
+
+const EV_TYPE_LABELS: Record<string, string> = {
+  WEBINAR: 'Webinar', WORKSHOP: 'Workshop', LIVE_SESSION: 'Sessione live', EVENTO: 'Evento',
+}
+const EV_TYPE_COLOR = '#059669'
 
 function formatDate(d: string) {
   if (!d) return ''
@@ -50,11 +59,11 @@ export default function DashboardPage() {
   const { user, token, isLoading } = useAuth()
   const [progress,      setProgress]      = useState<any[]>([])
   const [announcements, setAnnouncements] = useState<any[]>([])
+  const [events,        setEvents]        = useState<any[]>([])
   const [lastViewed,    setLastViewed]    = useState<any>(null)
   const [loadingData,   setLoadingData]   = useState(true)
   const [swMap,         setSwMap]         = useState<Map<string, any>>(new Map())
   const [portalCourses, setPortalCourses] = useState<any[]>([])
-  // STEP 4: apre AnnouncementModal direttamente al click
   const [selectedAnn,   setSelectedAnn]   = useState<any>(null)
 
   useEffect(() => {
@@ -66,12 +75,14 @@ export default function DashboardPage() {
       api.announcements.findPublished().catch(() => [] as any[]),
       api.software.findAll().catch(() => [] as any[]),
       api.courses.findForPortal().catch(() => [] as any[]),
+      api.events.findAll().catch(() => [] as any[]),
     ])
-      .then(([dashData, anns, softwares, portal]) => {
+      .then(([dashData, anns, softwares, portal, evs]) => {
         setProgress(dashData.courses || [])
         setLastViewed(dashData.lastViewed || null)
         setAnnouncements(Array.isArray(anns) ? anns : [])
         setPortalCourses(Array.isArray(portal) ? portal : [])
+        setEvents(Array.isArray(evs) ? evs : [])
         // Mappa slug (normalizzato in lowercase) → oggetto software DB
         const map = new Map<string, any>()
         if (Array.isArray(softwares)) {
@@ -101,6 +112,12 @@ export default function DashboardPage() {
 
   const h     = new Date().getHours()
   const greet = h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera'
+
+  const now30       = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  const pinnedAnns  = announcements.filter((a: any) => a.isPinned)
+  const upcomingEvs = events
+    .filter((e: any) => { const d = new Date(e.date); return d >= new Date() && d <= now30 })
+    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
   const inProgress  = progress.filter((c: any) => c.percent > 0 && c.percent < 100)
   const completed   = progress.filter((c: any) => c.percent >= 100)
@@ -245,38 +262,77 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Colonna destra: comunicazioni */}
+          {/* Colonna destra: primo piano + eventi + CTA */}
           <div className={styles.col}>
-            {announcements.length > 0 && (
+
+            {/* Sezione: comunicazioni in primo piano */}
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>In primo piano</h2>
+                <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
+              </div>
+              {pinnedAnns.length > 0 ? (
+                <div className={styles.annList}>
+                  {pinnedAnns.map((a: any) => {
+                    const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
+                    return (
+                      <button key={a.id} className={styles.annCard}
+                        onClick={() => setSelectedAnn(a)}>
+                        <div className={styles.annMeta}>
+                          <span className={styles.annType} style={{
+                            background: color + '18', color,
+                          }}>
+                            {SECTION_LABELS[a.section] || SECTION_LABELS[a.type] || a.section}
+                          </span>
+                          <span className={styles.annDate}>
+                            {formatDate(a.publishedAt || a.createdAt)}
+                          </span>
+                        </div>
+                        <div className={styles.annTitle}>{a.title}</div>
+                        {a.body && (
+                          <p className={styles.annBody}>
+                            {a.body.slice(0, 120)}{a.body.length > 120 ? '…' : ''}
+                          </p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className={styles.emptyInline}>Nessuna comunicazione in primo piano.</p>
+              )}
+            </section>
+
+            {/* Sezione: prossimi eventi (30 giorni) */}
+            {upcomingEvs.length > 0 && (
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>Comunicazioni</h2>
-                  {/* STEP 4: "Tutte" → /newsroom */}
-                  <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
+                  <h2 className={styles.sectionTitle}>Prossimi eventi</h2>
+                  <Link href="/newsroom" className={styles.sectionLink}>Vedi tutti →</Link>
                 </div>
                 <div className={styles.annList}>
-                  {announcements.slice(0, 4).map((a: any) => (
-                    // STEP 4: click apre direttamente AnnouncementModal
-                    <button key={a.id} className={styles.annCard}
-                      onClick={() => setSelectedAnn(a)}>
-                      <div className={styles.annMeta}>
-                        <span className={styles.annType} style={{
-                          background: (TYPE_COLORS[a.type] || '#888') + '18',
-                          color: TYPE_COLORS[a.type] || '#888',
-                        }}>
-                          {TYPE_LABELS[a.type] || a.type}
+                  {upcomingEvs.map((e: any) => (
+                    <div key={e.id} className={styles.evCard}>
+                      <div className={styles.evDateCol}>
+                        <span className={styles.evDay}>
+                          {new Date(e.date).toLocaleDateString('it-IT', { day: '2-digit' })}
                         </span>
-                        <span className={styles.annDate}>
-                          {formatDate(a.publishedAt || a.createdAt)}
+                        <span className={styles.evMonth}>
+                          {new Date(e.date).toLocaleDateString('it-IT', { month: 'short' })}
                         </span>
                       </div>
-                      <div className={styles.annTitle}>{a.title}</div>
-                      {a.body && (
-                        <p className={styles.annBody}>
-                          {a.body.slice(0, 120)}{a.body.length > 120 ? '…' : ''}
-                        </p>
-                      )}
-                    </button>
+                      <div className={styles.evBody}>
+                        <div className={styles.evMeta}>
+                          <span className={styles.evType}>
+                            {EV_TYPE_LABELS[e.eventType] || e.eventType}
+                          </span>
+                          {e.location && (
+                            <span className={styles.evLocation}>{e.location}</span>
+                          )}
+                        </div>
+                        <div className={styles.evTitle}>{e.title}</div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </section>

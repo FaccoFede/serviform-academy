@@ -38,7 +38,7 @@
 .bcSep{opacity:.3;flex-shrink:0}
 .bcCurrent{color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbarRight{display:flex;align-items:center;gap:12px;flex-shrink:0}
-.doneBadge{font-size:11px;font-weight:700;color:#059669;background:#ECFDF5;padding:3px 10px;border-radius:100px}
+.doneBadge{font-size:11px;font-weight:700;color:#059669;background:#ECFDF5;padding:3px 10px;border-radius:100px;display:inline-flex;align-items:center;gap:5px}
 .previewBadge{font-size:11px;font-weight:700;color:#067DB8;background:#E3F4FC;padding:3px 10px;border-radius:100px}
 .counter{font-size:12px;font-family:var(--font-mono);color:var(--muted)}
 .body{padding:48px 60px;max-width:100%;flex:1}
@@ -69,7 +69,7 @@
 .navBtn{display:flex;align-items:center;gap:6px;height:40px;padding:0 18px;border:1.5px solid var(--border);color:var(--ink);border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;transition:all var(--t-color);background:var(--white)}
 .navBtn:hover{border-color:var(--ink)}
 .navCenter{font-size:12px;font-family:var(--font-mono);color:var(--muted)}
-.navComplete{height:40px;padding:0 22px;background:var(--red);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all var(--t-color);box-shadow:0 2px 10px rgba(230,51,41,.2);text-decoration:none;display:flex;align-items:center}
+.navComplete{height:40px;padding:0 22px;background:var(--red);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all var(--t-color);box-shadow:0 2px 10px rgba(230,51,41,.2);text-decoration:none;display:flex;align-items:center;gap:6px}
 .navComplete:hover{background:var(--red-dark)}
 .navNext{display:flex;align-items:center;gap:6px;height:40px;padding:0 22px;background:var(--red);color:#fff;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none;transition:all var(--t-color);box-shadow:0 2px 10px rgba(230,51,41,.2)}
 .navNext:hover{background:var(--red-dark)}

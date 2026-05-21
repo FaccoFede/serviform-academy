@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useProgress } from '@/context/ProgressContext'
 import { getBrand, LEVEL_COLORS } from '@/lib/brands'
+import { Clock, BarChart2, BookOpen, User, HelpCircle, Award } from 'lucide-react'
 import { api } from '@/lib/api'
 import { countableUnits } from '@/lib/courseAccess'
 import styles from './CoursePage.module.css'
@@ -33,6 +34,7 @@ export default function CoursePageClient({ course }: { course: any }) {
   const localCompleted = lessonUnits.filter((u: any) => isCompleted(u.id)).length
   const progressPercent = serverProgress?.percent ?? (lessonUnits.length > 0 ? Math.round((localCompleted / lessonUnits.length) * 100) : 0)
   const resumeUnit = lessonUnits.find((u: any) => !isCompleted(u.id)) || lessonUnits[0]
+  const remainingUnits = lessonUnits.length - localCompleted
 
   return (
     <div className={styles.page}>
@@ -117,20 +119,58 @@ export default function CoursePageClient({ course }: { course: any }) {
         <div className={styles.right}>
           <div className={styles.sidebar}>
             <div className={styles.metaCard}>
-              {[
-                course.duration && { icon: '⏱', label: 'Durata', value: course.duration },
-                course.level && { icon: '📊', label: 'Livello', value: course.level, color: levelColor },
-                lessonUnits.length > 0 && { icon: '📋', label: 'Unità', value: `${lessonUnits.length} lezioni` },
-              ].filter(Boolean).map((m: any, i: number) => (
-                <div key={i} className={styles.metaRow}>
-                  <span className={styles.metaIcon}>{m.icon}</span>
+              {course.duration && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaIcon}><Clock size={15} /></span>
                   <div className={styles.metaContent}>
-                    <span className={styles.metaLabel}>{m.label}</span>
-                    <span className={styles.metaValue} style={m.color ? {color:m.color} : {}}>{m.value}</span>
+                    <span className={styles.metaLabel}>Durata</span>
+                    <span className={styles.metaValue}>{course.duration}</span>
                   </div>
                 </div>
-              ))}
+              )}
+              {course.level && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaIcon}><BarChart2 size={15} /></span>
+                  <div className={styles.metaContent}>
+                    <span className={styles.metaLabel}>Livello</span>
+                    <span className={styles.metaValue} style={{color:levelColor}}>{course.level}</span>
+                  </div>
+                </div>
+              )}
+              {lessonUnits.length > 0 && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaIcon}><BookOpen size={15} /></span>
+                  <div className={styles.metaContent}>
+                    <span className={styles.metaLabel}>Unità</span>
+                    <span className={styles.metaValue}>{lessonUnits.length} lezioni</span>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {course.issuesBadge && (
+              <div className={styles.badgeCard}>
+                <div className={styles.badgeCardHeader}>
+                  {course.badgeUrl
+                    ? <img src={course.badgeUrl} alt="Badge" className={styles.badgeImg} />
+                    : <Award size={28} className={styles.badgeAwardIcon} />
+                  }
+                  <div>
+                    <p className={styles.badgeTitle}>Badge del corso</p>
+                    <p className={styles.badgeDesc}>
+                      {remainingUnits > 0
+                        ? `Completa ${remainingUnits} unità per il certificato`
+                        : 'Tutte le unità completate!'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.badgeBar}>
+                  <div className={styles.badgeBarFill} style={{width:`${progressPercent}%`}} />
+                </div>
+                <span className={styles.badgeBarLabel}>{progressPercent}% · {localCompleted}/{lessonUnits.length} unità</span>
+              </div>
+            )}
 
             <div className={styles.ctaCard}>
               {user ? (
@@ -161,8 +201,12 @@ export default function CoursePageClient({ course }: { course: any }) {
                 </>
               )}
               <div className={styles.ctaSecondary}>
-                <a href="mailto:support@serviform.com?subject=Richiesta formatore" className={styles.ctaSecondaryBtn}>👤 Richiedi un formatore</a>
-                <a href="https://support.serviform.com" target="_blank" rel="noopener" className={styles.ctaSecondaryBtn}>❓ Guide Zendesk</a>
+                <a href="mailto:support@serviform.com?subject=Richiesta formatore" className={styles.ctaSecondaryBtn}>
+                  <User size={13} /> Richiedi un formatore
+                </a>
+                <a href="https://support.serviform.com" target="_blank" rel="noopener" className={styles.ctaSecondaryBtn}>
+                  <HelpCircle size={13} /> Guide Zendesk
+                </a>
               </div>
             </div>
           </div>

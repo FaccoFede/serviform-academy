@@ -115,11 +115,17 @@ export default function DashboardPage() {
   const h     = new Date().getHours()
   const greet = h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera'
 
-  const now30       = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  const pinnedAnns  = announcements.filter((a: any) => a.isPinned)
+  const now         = new Date()
+  // Primo piano: prima comunicazione con scadenza futura
+  const pinnedAnn   = announcements.find((a: any) => a.expiresAt && new Date(a.expiresAt) > now)
+  // Comunicazioni regolari: esclusa quella in primo piano, max 6
+  const regularAnns = announcements
+    .filter((a: any) => !pinnedAnn || a.id !== pinnedAnn.id)
+    .slice(0, 6)
   const upcomingEvs = events
-    .filter((e: any) => { const d = new Date(e.date); return d >= new Date() && d <= now30 })
+    .filter((e: any) => new Date(e.date) >= now)
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 6)
 
   const inProgress  = progress.filter((c: any) => c.percent > 0 && c.percent < 100)
   const completed   = progress.filter((c: any) => c.percent >= 100)
@@ -264,58 +270,42 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Colonna destra: primo piano + eventi + CTA */}
+          {/* Colonna destra: hero primo piano + carousel eventi + CTA */}
           <div className={styles.col}>
 
-            {/* Sezione: comunicazioni in primo piano */}
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>In primo piano</h2>
-                <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
-              </div>
-              {pinnedAnns.length > 0 ? (
-                <div className={styles.annList}>
-                  {pinnedAnns.map((a: any) => {
-                    const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
-                    return (
-                      <button key={a.id} className={styles.annCard}
-                        onClick={() => setSelectedAnn(a)}>
-                        <div className={styles.annMeta}>
-                          <span className={styles.annType} style={{
-                            background: color + '18', color,
-                          }}>
-                            {SECTION_LABELS[a.section] || SECTION_LABELS[a.type] || a.section}
-                          </span>
-                          <span className={styles.annDate}>
-                            {formatDate(a.publishedAt || a.createdAt)}
-                          </span>
-                        </div>
-                        <div className={styles.annTitle}>{a.title}</div>
-                        {a.body && (
-                          <p className={styles.annBody}>
-                            {a.body.slice(0, 120)}{a.body.length > 120 ? '…' : ''}
-                          </p>
-                        )}
-                      </button>
-                    )
-                  })}
+            {/* Hero: comunicazione in primo piano */}
+            {pinnedAnn ? (
+              <button
+                className={styles.heroBannerCard}
+                style={pinnedAnn.bannerUrl
+                  ? { backgroundImage: `url(${pinnedAnn.bannerUrl})` }
+                  : undefined}
+                onClick={() => setSelectedAnn(pinnedAnn)}
+              >
+                <div className={styles.heroBannerOverlay}>
+                  <div className={styles.heroBannerMeta}>
+                    <span className={styles.heroBannerBadge}>In primo piano</span>
+                    <span className={styles.heroBannerDate}>
+                      {formatDate(pinnedAnn.publishedAt || pinnedAnn.createdAt)}
+                    </span>
+                  </div>
+                  <h3 className={styles.heroBannerTitle}>{pinnedAnn.title}</h3>
+                  <span className={styles.heroBannerBtn}>Leggi →</span>
                 </div>
-              ) : (
-                <p className={styles.emptyInline}>Nessuna comunicazione in primo piano.</p>
-              )}
-            </section>
+              </button>
+            ) : null}
 
-            {/* Sezione: prossimi eventi (30 giorni) */}
+            {/* Carousel: prossimi eventi */}
             {upcomingEvs.length > 0 && (
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
                   <h2 className={styles.sectionTitle}>Prossimi eventi</h2>
                   <Link href="/newsroom" className={styles.sectionLink}>Vedi tutti →</Link>
                 </div>
-                <div className={styles.annList}>
+                <div className={styles.evCarousel}>
                   {upcomingEvs.map((e: any) => (
-                    <button key={e.id} className={styles.evCard} onClick={() => setSelectedEv(e)}>
-                      <div className={styles.evDateCol}>
+                    <button key={e.id} className={styles.evCarouselCard} onClick={() => setSelectedEv(e)}>
+                      <div className={styles.evCarouselDateBlock}>
                         <span className={styles.evDay}>
                           {new Date(e.date).toLocaleDateString('it-IT', { day: '2-digit' })}
                         </span>
@@ -323,17 +313,13 @@ export default function DashboardPage() {
                           {new Date(e.date).toLocaleDateString('it-IT', { month: 'short' })}
                         </span>
                       </div>
-                      <div className={styles.evBody}>
-                        <div className={styles.evMeta}>
-                          <span className={styles.evType}>
-                            {EV_TYPE_LABELS[e.eventType] || e.eventType}
-                          </span>
-                          {e.location && (
-                            <span className={styles.evLocation}>{e.location}</span>
-                          )}
-                        </div>
-                        <div className={styles.evTitle}>{e.title}</div>
-                      </div>
+                      <span className={styles.evCarouselType}>
+                        {EV_TYPE_LABELS[e.eventType] || e.eventType}
+                      </span>
+                      <div className={styles.evCarouselTitle}>{e.title}</div>
+                      {e.location && (
+                        <div className={styles.evCarouselLocation}>{e.location}</div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -347,6 +333,47 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Comunicazioni recenti — card grid full-width */}
+        {regularAnns.length > 0 && (
+          <section className={styles.commsSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Comunicazioni recenti</h2>
+              <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
+            </div>
+            <div className={styles.commsGrid}>
+              {regularAnns.map((a: any) => {
+                const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
+                return (
+                  <button key={a.id} className={styles.commCard} onClick={() => setSelectedAnn(a)}>
+                    {a.bannerUrl
+                      ? <img src={a.bannerUrl} alt="" className={styles.commCardImg} />
+                      : <div className={styles.commCardImgPlaceholder} />
+                    }
+                    <div className={styles.commCardBody}>
+                      <div className={styles.commCardMeta}>
+                        <span className={styles.commCardSection}
+                          style={{ background: color + '18', color }}>
+                          {SECTION_LABELS[a.section] || SECTION_LABELS[a.type] || a.section}
+                        </span>
+                        <span className={styles.commCardDate}>
+                          {formatDate(a.publishedAt || a.createdAt)}
+                        </span>
+                      </div>
+                      <h4 className={styles.commCardTitle}>{a.title}</h4>
+                      {a.body && (
+                        <p className={styles.commCardDesc}>
+                          {a.body.slice(0, 100)}{a.body.length > 100 ? '…' : ''}
+                        </p>
+                      )}
+                      <span className={styles.commCardCta}>Leggi →</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </div>
 
       {selectedAnn && (

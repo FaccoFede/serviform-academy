@@ -209,6 +209,125 @@
 }
 .ctaBtn:hover { opacity: .82; }
 
+/* ── Hero banner primo piano ──────────────────────────────────────────────── */
+.heroBannerCard {
+  display: block; width: 100%; text-align: left; cursor: pointer; border: none;
+  border-radius: 14px; overflow: hidden;
+  background: var(--ink, #111) center/cover no-repeat;
+  min-height: 220px; position: relative;
+  transition: transform 180ms, box-shadow 180ms;
+}
+.heroBannerCard:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+
+.heroBannerOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.82) 0%, rgba(0,0,0,.28) 60%, transparent 100%);
+  padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px;
+}
+.heroBannerMeta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.heroBannerBadge {
+  display: inline-block; padding: 3px 10px; border-radius: 100px;
+  background: var(--red, #E63329); color: #fff;
+  font-size: 10px; font-weight: 700; font-family: var(--font-mono, monospace);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.heroBannerDate {
+  font-size: 11px; color: rgba(255,255,255,.6);
+  font-family: var(--font-mono, monospace);
+}
+.heroBannerTitle {
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(15px, 2vw, 18px); font-weight: 700;
+  color: #fff; line-height: 1.3; margin: 0;
+}
+.heroBannerBtn {
+  display: inline-block; margin-top: 4px;
+  font-size: 12px; font-weight: 700; color: rgba(255,255,255,.8);
+  font-family: var(--font-mono, monospace);
+}
+
+/* ── Carousel eventi ─────────────────────────────────────────────────────── */
+.evCarousel {
+  display: flex; gap: 10px;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  /* nasconde la scrollbar mantenendo la funzionalità */
+  scrollbar-width: none;
+}
+.evCarousel::-webkit-scrollbar { display: none; }
+
+.evCarouselCard {
+  flex-shrink: 0; scroll-snap-align: start;
+  width: 148px; padding: 12px; border-radius: 10px;
+  background: var(--surface, #fafaf9); border: 1px solid var(--border, #e5e5e0);
+  text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: box-shadow 150ms, transform 150ms;
+}
+.evCarouselCard:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-1px); }
+
+.evCarouselDateBlock {
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.evCarouselType {
+  display: inline-block; padding: 2px 7px; border-radius: 100px;
+  font-size: 9px; font-weight: 700; font-family: var(--font-mono, monospace);
+  letter-spacing: .3px; background: #E6F7F2; color: #059669;
+  align-self: flex-start;
+}
+.evCarouselTitle {
+  font-size: 12px; font-weight: 700; color: var(--ink, #111); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.evCarouselLocation {
+  font-size: 10px; color: var(--muted, #888); font-family: var(--font-mono, monospace);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Card grid comunicazioni recenti ─────────────────────────────────────── */
+.commsSection {
+  background: var(--white, #fff); border: 1px solid var(--border, #e5e5e0);
+  border-radius: 14px; padding: 20px; margin-top: 0;
+}
+.commsGrid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+.commCard {
+  display: flex; flex-direction: column; text-align: left; cursor: pointer;
+  background: var(--surface, #fafaf9); border: 1px solid var(--border, #e5e5e0);
+  border-radius: 10px; overflow: hidden;
+  transition: box-shadow 150ms, transform 150ms;
+}
+.commCard:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); transform: translateY(-1px); }
+
+.commCardImg {
+  width: 100%; aspect-ratio: 16/7; object-fit: cover; display: block;
+}
+.commCardImgPlaceholder {
+  width: 100%; aspect-ratio: 16/7;
+  background: linear-gradient(135deg, var(--border, #e5e5e0) 0%, var(--surface, #fafaf9) 100%);
+}
+.commCardBody { padding: 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.commCardMeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.commCardSection {
+  display: inline-block; padding: 2px 8px; border-radius: 100px;
+  font-size: 9px; font-weight: 700; font-family: var(--font-mono, monospace); letter-spacing: .3px;
+}
+.commCardDate { font-size: 10px; color: var(--muted, #888); font-family: var(--font-mono, monospace); margin-left: auto; }
+.commCardTitle {
+  font-size: 13px; font-weight: 700; color: var(--ink, #111); line-height: 1.35; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.commCardDesc {
+  font-size: 11.5px; color: var(--muted, #888); line-height: 1.5; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.commCardCta {
+  margin-top: auto; padding-top: 6px;
+  font-size: 11px; font-weight: 700; color: var(--red, #E63329);
+  font-family: var(--font-mono, monospace);
+}
+
 @media (max-width: 1024px) {
   .heroInner, .body { padding-left: 32px; padding-right: 32px; }
   .grid { grid-template-columns: 1fr; }
@@ -219,4 +338,5 @@
   .resumeCard { max-width: 100%; }
   .kpiRow { gap: 8px; }
   .kpiCard { min-width: calc(50% - 4px); }
+  .commsGrid { grid-template-columns: 1fr; }
 }

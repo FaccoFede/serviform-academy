@@ -1096,7 +1096,7 @@ La funzione `handleComplete()` usava `window.location.href` per navigare all'uni
 ## TASK-13 — Dashboard utente: redesign card comunicazioni e primo piano
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-21
 
 ### Contesto
 
@@ -1229,12 +1229,12 @@ Aggiungere le classi: `heroBanner`, `heroOverlay`, `heroTitle`, `heroBtn`, `pinn
 
 ### Acceptance criteria
 
-- [ ] La comunicazione in primo piano (con `expiresAt` futuro) appare come hero banner con immagine, titolo e CTA
-- [ ] Se non esiste nessuna comunicazione in primo piano, la sezione hero è assente (nessun spazio vuoto)
-- [ ] Il carousel eventi futuri è scrollabile orizzontalmente e mostra tipo, data e titolo
-- [ ] Le comunicazioni ordinarie sono presentate come card con immagine, categoria, estratto e link
-- [ ] Il layout è responsivo (mobile: 1 colonna, desktop: 2 colonne per le card)
-- [ ] Nessuna regressione sulla sezione corsi assegnati nella dashboard
+- [x] La comunicazione in primo piano (con `expiresAt` futuro) appare come hero banner con immagine, titolo e CTA
+- [x] Se non esiste nessuna comunicazione in primo piano, la sezione hero è assente (nessun spazio vuoto)
+- [x] Il carousel eventi futuri è scrollabile orizzontalmente e mostra tipo, data e titolo
+- [x] Le comunicazioni ordinarie sono presentate come card con immagine, categoria, estratto e link
+- [x] Il layout è responsivo (mobile: 1 colonna, desktop: 2 colonne per le card)
+- [x] Nessuna regressione sulla sezione corsi assegnati nella dashboard
 
 ---
 

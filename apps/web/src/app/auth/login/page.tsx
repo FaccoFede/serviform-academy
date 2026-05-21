@@ -90,7 +90,7 @@ export default function LoginPage() {
 
           <p className={styles.brandDesc}>
             Percorsi strutturati per EngView, Sysform, ProjectO e
-            ServiformA. Impara, certifica, cresce.
+            ServiForma. Impara, certifica, cresce.
           </p>
 
           {/* Stats reali */}

@@ -58,7 +58,7 @@ export default async function PublicHomePage() {
             <span>Padroneggiato.</span>
           </h1>
           <p className={styles.heroSub}>
-            Percorsi strutturati per EngView, Sysform, ProjectO e ServiformA.
+            Percorsi strutturati per EngView, Sysform, ProjectO e ServiForma.
           </p>
           <div className={styles.heroCtas}>
             <Link href="/catalog" className={styles.ctaBlack}>Esplora i corsi →</Link>

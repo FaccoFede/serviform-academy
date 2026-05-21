@@ -1297,7 +1297,7 @@ Verificare che i seguenti punti usino `software.color` (o `category.color`) corr
 ## TASK-15 — Uniformità naming "ServiForma"
 
 **Priorità:** Media  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-21
 
 ### Contesto
 
@@ -1336,10 +1336,10 @@ grep -ri "serviforma\|Serviforma\|SERVIFORMA" apps/api/prisma --include="*.ts" -
 
 ### Acceptance criteria
 
-- [ ] Nessuna occorrenza di "Serviforma" (minuscola f) in label visibili all'utente
-- [ ] Il nome nel DB (campo `name` del record Software/Category) è `ServiForma`
-- [ ] Le pagine del portale (catalogo, dashboard, why, login) mostrano "ServiForma" con la capitalizzazione corretta
-- [ ] Nessuna variabile interna o chiave API è stata rinominata
+- [x] Nessuna occorrenza di "Serviforma" (minuscola f) in label visibili all'utente
+- [x] Il nome nel DB (campo `name` del record Software/Category) è `ServiForma`
+- [x] Le pagine del portale (catalogo, dashboard, why, login) mostrano "ServiForma" con la capitalizzazione corretta
+- [x] Nessuna variabile interna o chiave API è stata rinominata
 
 ---
 

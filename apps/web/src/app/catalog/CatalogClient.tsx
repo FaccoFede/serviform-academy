@@ -60,12 +60,13 @@ export default function CatalogClient({ courses: rawCourses }: { courses: any[] 
         (c?.description || '').toLowerCase().includes(ql)
       )
     }
-    // Filtro "disponibili": esclude corsi in corso e completati
+    // Filtro "disponibili": solo corsi pubblicati, non ancora iniziati
     if (statusFilter === 'available') {
       out = out.filter(c => {
+        if (c?.publishState !== 'PUBLISHED') return false  // escludi bloccati
         const prog = progressMap[c?.slug]
-        if (!prog) return true            // nessun progresso = disponibile
-        return prog.percent === 0         // non ancora iniziato = disponibile
+        if (!prog) return true                             // nessun progresso = disponibile
+        return prog.percent === 0                          // non ancora iniziato
       })
     }
     return out

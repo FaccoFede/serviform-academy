@@ -1004,3 +1004,544 @@ Esempio struttura:
 - [ ] Il logo nella pagina login è identico a quello della barra superiore
 - [ ] La dicitura "Serviform Academy" è visibile nella pagina login, accanto o sotto al logo
 - [ ] La resa grafica è coerente con il resto del portale (font, colori, dimensioni)
+
+---
+
+## TASK-12 — Bug: ricaricamento automatico inatteso delle pagine
+
+**Priorità:** Alta  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+Alcune pagine del portale si ricaricano automaticamente senza alcuna azione da parte dell'utente. Il comportamento peggiora la fluidità di navigazione e compromette la percezione qualitativa del prodotto. La causa non è ancora stata identificata; il task include sia la fase di analisi che la correzione.
+
+Le cause tipiche di un re-render/reload inatteso in Next.js + React sono:
+
+- **Loop di `useEffect`**: una dipendenza nell'array del `useEffect` viene ricreata ad ogni render (oggetto/array inline), scatenando un loop infinito di fetch che può forzare un reload se l'errore è fatale.
+- **Polling / `setInterval`**: un timer che chiama `router.refresh()` o `window.location.reload()`.
+- **WebSocket / SSE**: un evento di riconnessione che triggera un reload della pagina.
+- **Next.js Fast Refresh / hot reload in produzione**: configurazione errata che mantiene attivo il server di sviluppo.
+- **Redirect loop**: un middleware o `useRouter.push()` che produce un loop di redirect.
+
+### Obiettivo
+
+1. Identificare su quali pagine avviene il ricaricamento e la frequenza
+2. Individuare la causa tecnica (loop useEffect, polling, SSE, ecc.)
+3. Correggere il problema garantendo navigazione stabile
+
+### Fase 1 — Analisi
+
+**Istruzioni per la riproduzione:**
+
+1. Aprire la DevTools del browser (tab **Network** e **Console**)
+2. Navigare nelle pagine sospette e osservare:
+   - Presenza di chiamate API ripetute in loop (stessa URL chiamata ogni N secondi)
+   - Errori in console del tipo `Maximum update depth exceeded`
+   - Presenza di WebSocket / EventSource attivi
+3. Verificare nei file `.tsx` della pagina incriminata:
+   - `useEffect` con dipendenze che includono oggetti creati inline o funzioni non memoizzate
+   - Chiamate a `router.refresh()` o `window.location.reload()` condizionali
+
+**File da ispezionare prioritariamente:**
+
+| File | Cosa cercare |
+|---|---|
+| `apps/web/src/app/dashboard/page.tsx` | `useEffect` con fetch, `setInterval`, `router.refresh()` |
+| `apps/web/src/app/newsroom/page.tsx` | stesse verifiche |
+| `apps/web/src/app/catalog/CatalogClient.tsx` | loop di filtro/fetch |
+| `apps/web/src/middleware.ts` (se esiste) | redirect loop |
+| `apps/web/next.config.*` | configurazione hot reload / revalidation |
+
+### Fase 2 — Correzione
+
+Una volta identificata la causa, applicare il fix specifico. Pattern comuni:
+
+```typescript
+// ❌ Loop: oggetto inline nelle dipendenze
+useEffect(() => { fetchData(options) }, [{ page, limit }])  // nuovo oggetto ad ogni render
+
+// ✅ Fix: dipendenze primitive
+useEffect(() => { fetchData({ page, limit }) }, [page, limit])
+
+// ❌ Loop: funzione ricreata ad ogni render come dipendenza
+useEffect(() => { load() }, [load])  // se load è definita nel corpo del componente
+
+// ✅ Fix: useCallback o omissione dalla dep-array se stabile
+const load = useCallback(() => { ... }, [])
+```
+
+### Acceptance criteria
+
+- [ ] Identificate le pagine e la causa tecnica del ricaricamento (documentata in questo task come nota)
+- [ ] Il portale non presenta più ricaricamenti automatici inattesi
+- [ ] Nessun `useEffect` produce loop infiniti (verificabile in console: assenza di `Maximum update depth exceeded`)
+- [ ] Il fix non introduce regressioni sul caricamento dati (le pagine continuano ad aggiornare i dati quando necessario)
+
+---
+
+## TASK-13 — Dashboard utente: redesign card comunicazioni e primo piano
+
+**Priorità:** Alta  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+La dashboard (`/dashboard`) è la pagina principale del portale e quella maggiormente utilizzata dagli utenti. L'attuale layout presenta comunicazioni e corsi in un formato essenziale che non valorizza i contenuti in primo piano né offre un'esperienza visivamente moderna. Gli elementi con `expiresAt` futuro (in primo piano) devono emergere chiaramente rispetto ai contenuti ordinari.
+
+### Obiettivo
+
+Ridisegnare la sezione comunicazioni/eventi della dashboard con:
+1. **Hero banner** per la comunicazione in primo piano più recente (immagine full-width, titolo sovrapposto, CTA)
+2. **Card grid moderna** per le comunicazioni successive (immagine, categoria, data, estratto)
+3. **Carousel orizzontale** per gli eventi futuri
+4. Migliore gerarchia visiva: pinned → eventi prossimi → comunicazioni recenti
+
+### Layout proposto
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  HERO (comunicazione in primo piano con expiresAt futuro)       │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ [banner image full-width, h: ~280px]                    │   │
+│  │ ████████████ overlay scuro dal basso                    │   │
+│  │ Badge "In primo piano"  · Data · Categoria              │   │
+│  │ Titolo comunicazione (h2, bianco)                       │   │
+│  │ [Leggi →]                                               │   │
+│  └─────────────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────────────┤
+│  Prossimi eventi                              [Vedi tutti →]    │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                     │
+│  │EventCard │  │EventCard │  │EventCard │  ←→ scroll           │
+│  └──────────┘  └──────────┘  └──────────┘                     │
+├─────────────────────────────────────────────────────────────────┤
+│  Comunicazioni recenti                                          │
+│  ┌────────────────────┐  ┌────────────────────┐               │
+│  │ [img] Categoria    │  │ [img] Categoria    │               │
+│  │ Titolo             │  │ Titolo             │               │
+│  │ Estratto testo...  │  │ Estratto testo...  │               │
+│  │ Data · [Leggi →]   │  │ Data · [Leggi →]   │               │
+│  └────────────────────┘  └────────────────────┘               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### File coinvolti
+
+#### Frontend — Dashboard principale
+
+**File:** `apps/web/src/app/dashboard/page.tsx`
+
+**Hero banner (comunicazione in primo piano):**
+
+```tsx
+// Seleziona la comunicazione in primo piano più recente
+const pinned = announcements.find(a =>
+  a.expiresAt && new Date(a.expiresAt) > new Date()
+)
+
+{pinned && (
+  <div className={styles.heroBanner} style={{
+    backgroundImage: `url(${pinned.bannerUrl || '/placeholder-banner.jpg'})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    position: 'relative',
+    height: 280,
+    borderRadius: 12,
+    overflow: 'hidden',
+  }}>
+    <div className={styles.heroOverlay}>  {/* gradient overlay scuro */}
+      <span className={styles.pinnedBadge}>In primo piano</span>
+      <p className={styles.heroDate}>{formatDate(pinned.publishedAt)}</p>
+      <h2 className={styles.heroTitle}>{pinned.title}</h2>
+      <Link href={`/newsroom/${pinned.id}`} className={styles.heroBtn}>
+        Leggi →
+      </Link>
+    </div>
+  </div>
+)}
+```
+
+**Carousel eventi futuri:**
+
+```tsx
+const upcomingEvents = events
+  .filter(e => new Date(e.date) > new Date())
+  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  .slice(0, 6)
+
+<div className={styles.eventsCarousel}>
+  {upcomingEvents.map(e => (
+    <div key={e.id} className={styles.eventCard}>
+      {e.bannerUrl && <img src={e.bannerUrl} alt={e.title} />}
+      <span className={styles.eventType}>{e.type}</span>
+      <p className={styles.eventDate}>{formatDate(e.date)}</p>
+      <h4>{e.title}</h4>
+    </div>
+  ))}
+</div>
+```
+
+**Card grid comunicazioni:**
+
+```tsx
+const regularAnn = announcements
+  .filter(a => !pinned || a.id !== pinned.id)
+  .slice(0, 6)
+
+<div className={styles.annGrid}>
+  {regularAnn.map(a => (
+    <div key={a.id} className={styles.annCard}>
+      {a.bannerUrl && (
+        <img src={a.bannerUrl} alt={a.title} className={styles.annCardImg} />
+      )}
+      <div className={styles.annCardBody}>
+        <span className={styles.annSection}>{a.section}</span>
+        <h4>{a.title}</h4>
+        <p>{a.summary?.slice(0, 120)}…</p>
+        <footer>
+          <time>{formatDate(a.publishedAt)}</time>
+          <Link href={`/newsroom/${a.id}`}>Leggi →</Link>
+        </footer>
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+**File CSS:** `apps/web/src/app/dashboard/Dashboard.module.css` (o equivalente)
+
+Aggiungere le classi: `heroBanner`, `heroOverlay`, `heroTitle`, `heroBtn`, `pinnedBadge`, `heroDate`, `eventsCarousel`, `eventCard`, `eventType`, `eventDate`, `annGrid`, `annCard`, `annCardImg`, `annCardBody`, `annSection`.
+
+> **Nota layout responsivo:** su mobile il carousel eventi usa scroll orizzontale con `overflow-x: auto; display: flex; gap: 12px`. La card grid usa `grid-template-columns: 1fr` su mobile e `repeat(2, 1fr)` da 640px in su.
+
+### Acceptance criteria
+
+- [ ] La comunicazione in primo piano (con `expiresAt` futuro) appare come hero banner con immagine, titolo e CTA
+- [ ] Se non esiste nessuna comunicazione in primo piano, la sezione hero è assente (nessun spazio vuoto)
+- [ ] Il carousel eventi futuri è scrollabile orizzontalmente e mostra tipo, data e titolo
+- [ ] Le comunicazioni ordinarie sono presentate come card con immagine, categoria, estratto e link
+- [ ] Il layout è responsivo (mobile: 1 colonna, desktop: 2 colonne per le card)
+- [ ] Nessuna regressione sulla sezione corsi assegnati nella dashboard
+
+---
+
+## TASK-14 — Uniformità colori categorie (ServiForma → giallo)
+
+**Priorità:** Media  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+Le categorie (chiamate "Software" nel DB) hanno un campo colore usato per badge e filtri nel portale. EngView, Sysform e ProjectO hanno già i propri colori. La categoria **ServiForma** non ha un colore definito o usa un valore di default non coerente. Il colore ufficiale assegnato a ServiForma è il **giallo** (`#F59E0B` o equivalente nel sistema di design).
+
+### Obiettivo
+
+1. Aggiornare il record ServiForma nel database con il colore giallo
+2. Verificare che tutti i punti dell'UI che utilizzano il colore categoria lo rendano correttamente per ServiForma
+
+### Interventi
+
+#### Backend — Aggiornamento dato
+
+Eseguire la migrazione/seed per aggiornare il colore:
+
+```sql
+UPDATE "Software" SET color = '#F59E0B' WHERE name = 'ServiForma';
+```
+
+Oppure, se gestito via seed Prisma (`apps/api/prisma/seed.ts`), aggiornare il record corrispondente:
+
+```typescript
+await prisma.software.upsert({
+  where: { name: 'ServiForma' },
+  update: { color: '#F59E0B' },
+  create: { name: 'ServiForma', color: '#F59E0B' },
+})
+```
+
+#### Frontend — Verifica rendering
+
+Verificare che i seguenti punti usino `software.color` (o `category.color`) correttamente senza override hardcoded:
+
+| File | Componente | Verifica |
+|---|---|---|
+| `apps/web/src/app/catalog/CatalogClient.tsx` | Badge/chip categoria nel filtro | Usa `software.color` per background/border |
+| `apps/web/src/app/admin/assignments/page.tsx` | Badge categoria nella lista corsi | Usa `c.software?.color` |
+| `apps/web/src/app/dashboard/page.tsx` | Badge categoria nelle card | Usa `a.section` o `software.color` |
+| `apps/web/src/app/admin/courses/page.tsx` | Colonna categoria nella tabella | Nessun colore hardcoded |
+
+> **Nota:** se esiste un mapping colori hardcoded nel frontend (es. `{ EngView: '#...', Sysform: '#...' }`), valutare se eliminarlo a favore del valore proveniente dal DB, che è la fonte di verità.
+
+### Acceptance criteria
+
+- [ ] Il record ServiForma nel DB ha `color = '#F59E0B'`
+- [ ] I badge/chip della categoria ServiForma mostrano il colore giallo nel catalogo, nelle assegnazioni e nella dashboard
+- [ ] Le altre categorie (EngView, Sysform, ProjectO) mantengono invariati i propri colori
+- [ ] Nessun colore hardcoded nel frontend per le categorie (o, se presenti, aggiornati a includere ServiForma)
+
+---
+
+## TASK-15 — Uniformità naming "ServiForma"
+
+**Priorità:** Media  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+All'interno del portale la categoria/brand viene scritto in modi diversi: "Serviforma", "ServiForma", "SERVIFORMA", "serviforma", ecc. La dicitura ufficiale e corretta è **"ServiForma"** (S maiuscola, F maiuscola interna).
+
+> **Non modificare:** nomi di variabili interne, campi DB (`softwareId`, `software`, ecc.) o chiavi API — solo le label testuali visibili all'utente.
+
+### Interventi
+
+#### Ricerca occorrenze
+
+Prima dell'implementazione, eseguire una ricerca case-insensitive per trovare tutte le occorrenze:
+
+```bash
+# Cercare varianti da correggere
+grep -ri "serviforma\|Serviforma\|SERVIFORMA" apps/web/src --include="*.tsx" --include="*.ts" -l
+grep -ri "serviforma\|Serviforma\|SERVIFORMA" apps/api/prisma --include="*.ts" -l
+```
+
+#### File tipicamente coinvolti
+
+| File | Occorrenza tipica |
+|---|---|
+| `apps/api/prisma/seed.ts` | Nome della categoria nel seed |
+| `apps/web/src/app/*/page.tsx` | Label testuali, titoli, descrizioni |
+| `apps/web/src/components/**/*.tsx` | Componenti condivisi |
+| Qualsiasi file `.md` o `.json` di configurazione visibile | Descrizioni, placeholder |
+
+#### Regola di sostituzione
+
+| Testo attuale | Testo corretto |
+|---|---|
+| `Serviforma` | `ServiForma` |
+| `SERVIFORMA` | `ServiForma` |
+| `serviforma` (in label/testo visibile) | `ServiForma` |
+
+### Acceptance criteria
+
+- [ ] Nessuna occorrenza di "Serviforma" (minuscola f) in label visibili all'utente
+- [ ] Il nome nel DB (campo `name` del record Software/Category) è `ServiForma`
+- [ ] Le pagine del portale (catalogo, dashboard, why, login) mostrano "ServiForma" con la capitalizzazione corretta
+- [ ] Nessuna variabile interna o chiave API è stata rinominata
+
+---
+
+## TASK-16 — Revisione pagina Unità: icone professionali e valorizzazione badge
+
+**Priorità:** Media  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+La pagina che mostra le unità di un corso (e la relativa pagina di fruizione del contenuto) utilizza emoji come indicatori visivi di tipo/stato (es. 📹 per video, 📄 per documento, ✅ per completato). Questo approccio è informale e poco coerente con il design professionale del resto del portale. Inoltre, il sistema di badge e certificazioni non è sufficientemente evidenziato nella pagina unità.
+
+### Obiettivo
+
+1. Sostituire le emoji con icone SVG professionali (coerenti con il sistema di icone già in uso, es. Heroicons, Lucide, o icone custom già presenti nel progetto)
+2. Valorizzare la sezione badge/certificazione nella pagina unità: mostrare chiaramente se il corso rilascia un badge e quanto manca al completamento
+
+### Fase 1 — Ricognizione
+
+Prima dell'implementazione, identificare:
+- Quale libreria di icone è già usata nel progetto (`grep -r "from 'lucide-react'\|from '@heroicons" apps/web/src`)
+- Dove sono usate le emoji (cerca `\p{Emoji}` o pattern specifici come `📹`, `📄`, `✅`)
+- La struttura della pagina unità (tipicamente `apps/web/src/app/courses/[id]/units/` o simile)
+
+### Interventi
+
+#### Sostituzione emoji → icone
+
+Identificare il set di emoji in uso e sostituirle con le icone corrispondenti dalla libreria già presente:
+
+| Emoji tipica | Significato | Icona sostitutiva (Lucide) |
+|---|---|---|
+| 📹 / 🎬 | Video | `<Video />` |
+| 📄 / 📝 | Documento/PDF | `<FileText />` |
+| 🎯 / 📋 | Quiz/Test | `<ClipboardList />` |
+| ✅ | Completato | `<CheckCircle2 />` (colore verde) |
+| 🔒 | Bloccato | `<Lock />` |
+| ▶️ | In corso | `<PlayCircle />` |
+| 🏆 | Badge/Certificato | `<Award />` |
+
+> Se il progetto usa Heroicons, usare i corrispondenti di quella libreria. Mantenere coerenza con le icone già presenti negli altri componenti.
+
+#### Sezione badge nella pagina unità
+
+Aggiungere un banner/card nella pagina del corso che mostri lo stato verso il badge:
+
+```tsx
+{course.issuesBadge && (
+  <div className={styles.badgeProgress}>
+    <Award size={32} className={styles.badgeIcon} />
+    <div>
+      <h4>Ottieni il badge "{course.title}"</h4>
+      <p>
+        Completa {remainingUnits} {remainingUnits === 1 ? 'unità' : 'unità'} per
+        ottenere il certificato e il badge del corso.
+      </p>
+      {course.badgeUrl && (
+        <img src={course.badgeUrl} alt="Badge" className={styles.badgePreview} />
+      )}
+    </div>
+    <div className={styles.progressBar}>
+      <div style={{ width: `${progressPct}%` }} className={styles.progressFill} />
+    </div>
+  </div>
+)}
+```
+
+Dove `remainingUnits` = numero di unità non-OVERVIEW non ancora completate e `progressPct` = percentuale completamento.
+
+### Acceptance criteria
+
+- [ ] Nessuna emoji usata come icona funzionale nella pagina unità (sostituita con icona SVG)
+- [ ] Le icone sono coerenti con la libreria già usata nel progetto
+- [ ] Se il corso ha `issuesBadge = true`, è visibile un banner con il progresso verso il badge
+- [ ] Il banner badge mostra l'anteprima SVG del badge se `badgeUrl` è presente (introdotto in TASK-05)
+- [ ] La barra di progresso riflette accuratamente le unità completate / totali
+- [ ] Nessuna regressione nel tracciamento avanzamento unità
+
+---
+
+## TASK-17 — Redesign completo pannello amministrativo
+
+**Priorità:** Alta  
+**Stato:** `[ ]` — da fare
+
+### Contesto
+
+Il pannello admin (`/admin/*`) è cresciuto organicamente task dopo task e presenta ora una struttura complessa: voci di menu non raggruppate, form lunghi, tabelle dense, navigazione laterale piatta. L'obiettivo è un redesign completo dell'esperienza admin che migliori usabilità, leggibilità e velocità operativa senza alterare le funzionalità esistenti.
+
+> **Nota:** questo è il task più ampio e trasversale. Si consiglia di suddividerlo in sotto-task durante l'implementazione (es. TASK-17a navigazione, TASK-17b tabelle, TASK-17c form).
+
+### Obiettivo
+
+1. **Navigazione**: raggruppare le voci di menu in sezioni logiche, aggiungere icone, rendere il menu collassabile
+2. **Tabelle**: aggiungere paginazione, ricerca/filtro inline, colonne ordinabili, azioni rapide per riga
+3. **Form**: ridurre la lunghezza percepita con sezioni collassabili o step wizard per i form più lunghi
+4. **Layout generale**: header con breadcrumb, sezioni con card contenitore, spacing e tipografia uniformi
+
+### Layout navigazione proposto
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ← [Logo]  Serviform Academy Admin      [User] [Logout] │
+├──────────────────┬──────────────────────────────────────┤
+│  CONTENUTI       │                                      │
+│  📚 Corsi        │   [Area contenuto principale]        │
+│  🏷️  Categorie   │                                      │
+│  📢 Comunicaz.   │                                      │
+│  📅 Eventi       │                                      │
+│                  │                                      │
+│  AZIENDE         │                                      │
+│  🏢 Aziende      │                                      │
+│  🔗 Assegnazioni │                                      │
+│                  │                                      │
+│  SISTEMA         │                                      │
+│  👥 Utenti       │                                      │
+│  ⚙️  Impostazioni│                                      │
+└──────────────────┴──────────────────────────────────────┘
+```
+
+### Interventi
+
+#### 1 — Navigazione (`apps/web/src/app/admin/layout.tsx`)
+
+- Raggruppare le voci in sezioni: **Contenuti** (Corsi, Categorie, Comunicazioni, Eventi), **Aziende** (Aziende, Assegnazioni), **Sistema** (Utenti, eventuale Impostazioni)
+- Aggiungere icone da libreria già in uso (Lucide/Heroicons) a ogni voce
+- Aggiungere intestazioni di sezione (label non cliccabile sopra il gruppo)
+- Valutare menu collassabile su mobile (hamburger)
+
+#### 2 — Tabelle con paginazione e filtro
+
+Per ogni pagina admin con tabella lunga (Corsi, Aziende, Utenti, Comunicazioni):
+
+```tsx
+// Aggiungere stato locale di paginazione e ricerca
+const [search, setSearch] = useState('')
+const [page, setPage] = useState(1)
+const PAGE_SIZE = 20
+
+const filtered = items.filter(i =>
+  i.title?.toLowerCase().includes(search.toLowerCase()) ||
+  i.name?.toLowerCase().includes(search.toLowerCase())
+)
+const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+// Header tabella
+<div className={styles.tableHeader}>
+  <input
+    placeholder="Cerca..."
+    value={search}
+    onChange={e => { setSearch(e.target.value); setPage(1) }}
+  />
+  <span>{filtered.length} risultati</span>
+</div>
+
+// Footer tabella con paginazione
+<div className={styles.pagination}>
+  <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>←</button>
+  <span>Pagina {page} di {Math.ceil(filtered.length / PAGE_SIZE)}</span>
+  <button disabled={page * PAGE_SIZE >= filtered.length} onClick={() => setPage(p => p + 1)}>→</button>
+</div>
+```
+
+#### 3 — Azioni rapide per riga
+
+Aggiungere nella colonna azioni di ogni tabella icone di azione rapida al posto dei link testuali:
+
+```tsx
+<td className={styles.actionsCell}>
+  <button title="Modifica" onClick={() => openEdit(row)}><Pencil size={16} /></button>
+  <button title="Elimina" onClick={() => confirmDelete(row.id)}><Trash2 size={16} /></button>
+</td>
+```
+
+#### 4 — Layout generale e header con breadcrumb
+
+**File:** `apps/web/src/app/admin/layout.tsx`
+
+Aggiungere un header di pagina con breadcrumb automatico basato sul pathname corrente:
+
+```tsx
+const segments = pathname.split('/').filter(Boolean)
+// ['admin', 'courses'] → 'Admin > Corsi'
+```
+
+#### 5 — Uniformità form
+
+Per i form più lunghi (Corsi, Comunicazioni) valutare il raggruppamento in sezioni visive con separatori:
+
+- **Sezione "Informazioni base"**: titolo, categoria, livello
+- **Sezione "Contenuto"**: descrizione, contenuto HTML
+- **Sezione "Media"**: thumbnail, badge URL/upload
+- **Sezione "Pubblicazione"**: stato, date, accesso
+
+### File coinvolti
+
+| File | Intervento principale |
+|---|---|
+| `apps/web/src/app/admin/layout.tsx` | Navigazione raggruppata con icone e sezioni |
+| `apps/web/src/app/admin/courses/page.tsx` | Paginazione, ricerca, azioni icona, form a sezioni |
+| `apps/web/src/app/admin/companies/page.tsx` | Paginazione, ricerca, azioni icona |
+| `apps/web/src/app/admin/assignments/page.tsx` | Paginazione, ricerca |
+| `apps/web/src/app/admin/announcements/page.tsx` | Paginazione, ricerca, form a sezioni |
+| `apps/web/src/app/admin/events/page.tsx` | Paginazione, ricerca, form a sezioni |
+| `apps/web/src/app/admin/users/page.tsx` (se esiste) | Paginazione, ricerca, azioni icona |
+| `apps/web/src/app/admin/` (CSS modules) | Classi condivise: `tableHeader`, `pagination`, `actionsCell` |
+
+> Si consiglia di creare un file CSS condiviso `apps/web/src/app/admin/admin-shared.module.css` per le classi riutilizzate in tutte le pagine admin (tabelle, paginazione, form section), evitando duplicazione.
+
+### Acceptance criteria
+
+- [ ] Le voci del menu admin sono raggruppate in sezioni logiche (Contenuti, Aziende, Sistema) con icone
+- [ ] Ogni tabella admin con più di 20 record ha paginazione e campo di ricerca
+- [ ] Le azioni per riga usano icone con tooltip al posto di link testuali
+- [ ] L'header di ogni pagina admin mostra un breadcrumb corretto
+- [ ] I form lunghi (Corsi, Comunicazioni) sono organizzati in sezioni visive distinte
+- [ ] Il layout è responsivo: menu collassabile su mobile
+- [ ] Nessuna funzionalità esistente è rimossa o rotta dal redesign

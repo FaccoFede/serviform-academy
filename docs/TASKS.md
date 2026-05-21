@@ -1241,7 +1241,7 @@ Aggiungere le classi: `heroBanner`, `heroOverlay`, `heroTitle`, `heroBtn`, `pinn
 ## TASK-14 — Uniformità colori categorie (ServiForma → giallo)
 
 **Priorità:** Media  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-21
 
 ### Contesto
 
@@ -1287,10 +1287,10 @@ Verificare che i seguenti punti usino `software.color` (o `category.color`) corr
 
 ### Acceptance criteria
 
-- [ ] Il record ServiForma nel DB ha `color = '#F59E0B'`
-- [ ] I badge/chip della categoria ServiForma mostrano il colore giallo nel catalogo, nelle assegnazioni e nella dashboard
-- [ ] Le altre categorie (EngView, Sysform, ProjectO) mantengono invariati i propri colori
-- [ ] Nessun colore hardcoded nel frontend per le categorie (o, se presenti, aggiornati a includere ServiForma)
+- [x] Il record ServiForma nel DB ha `color = '#F59E0B'`
+- [x] I badge/chip della categoria ServiForma mostrano il colore giallo nel catalogo, nelle assegnazioni e nella dashboard
+- [x] Le altre categorie (EngView, Sysform, ProjectO) mantengono invariati i propri colori
+- [x] Nessun colore hardcoded nel frontend per le categorie (o, se presenti, aggiornati a includere ServiForma)
 
 ---
 

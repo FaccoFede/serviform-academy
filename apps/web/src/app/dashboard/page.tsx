@@ -259,7 +259,7 @@ export default function DashboardPage() {
                   <h2 className={styles.sectionTitle}>Prossimi eventi</h2>
                   <Link href="/newsroom" className={styles.sectionLink}>Tutti →</Link>
                 </div>
-                <div className={styles.bannerGrid}>
+                <div className={[styles.bannerGrid, upcomingEvs.length > 2 ? styles.bannerGridFull : ''].join(' ')}>
                   {upcomingEvs.map((e: any) => {
                     const { day, month } = formatShortDate(e.date)
                     const color = SECTION_COLORS[e.eventType] || '#059669'
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                   <h2 className={styles.sectionTitle}>Comunicazioni recenti</h2>
                   <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
                 </div>
-                <div className={styles.bannerGrid}>
+                <div className={[styles.bannerGrid, announcements.length > 2 ? styles.bannerGridFull : ''].join(' ')}>
                   {announcements.slice(0, 4).map((a: any) => {
                     const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
                     return (

@@ -179,9 +179,10 @@
 }
 /* le section figlie si allungano per occupare tutta l'altezza della riga */
 .evCommRow > .section { display: flex; flex-direction: column; }
-/* bannerGrid occupa lo spazio residuo e divide le 2 righe in parti uguali */
-.evCommRow > .section .bannerGrid {
-  flex: 1;
+/* bannerGrid dentro evCommRow cresce verticalmente */
+.evCommRow > .section .bannerGrid { flex: 1; align-content: start; }
+/* quando ci sono 3-4 card, divide le 2 righe in parti uguali */
+.evCommRow > .section .bannerGridFull {
   grid-template-rows: repeat(2, 1fr);
   align-content: stretch;
 }

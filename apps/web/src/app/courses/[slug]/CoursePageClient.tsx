@@ -16,7 +16,7 @@ export default function CoursePageClient({ course }: { course: any }) {
   const { isCompleted, loadCompletedUnitsFromServer } = useProgress()
   const [serverProgress, setServerProgress] = useState<{ total: number; completed: number; percent: number } | null>(null)
 
-  const brand = getBrand(course.software?.slug || '')
+  const brand = getBrand(course.software?.slug || '', course.software)
   const levelColor = LEVEL_COLORS[course.level || ''] || 'var(--muted)'
   const overviewUnit = course.units?.find((u: any) => u.unitType === 'OVERVIEW')
   const lessonUnits = countableUnits<any>(course.units)

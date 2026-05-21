@@ -41,8 +41,8 @@ async function main() {
   // ServiformA — quarta famiglia ufficiale
   const serviformA = await prisma.software.upsert({
     where: { slug: 'serviFormA' },
-    update: { tagline: 'Gestione amministrativa e documentale Serviform', color: '#2D6A4F', lightColor: '#EDFAF3' },
-    create: { name: 'ServiFormA', slug: 'serviFormA', tagline: 'Gestione amministrativa e documentale Serviform', color: '#2D6A4F', lightColor: '#EDFAF3' },
+    update: { tagline: 'Gestione amministrativa e documentale Serviform', color: '#F59E0B', lightColor: '#FFFBEB' },
+    create: { name: 'ServiFormA', slug: 'serviFormA', tagline: 'Gestione amministrativa e documentale Serviform', color: '#F59E0B', lightColor: '#FFFBEB' },
   })
   console.log('  ✓ Software: EngView, Sysform, ProjectO, ServiformA')
 

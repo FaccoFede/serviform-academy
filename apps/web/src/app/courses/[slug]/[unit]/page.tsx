@@ -55,7 +55,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   const currentIndex = units.findIndex((u: any) => u.slug === unitSlug)
   const prevUnit = currentIndex > 0 ? units[currentIndex - 1] : null
   const nextUnit = currentIndex < units.length - 1 ? units[currentIndex + 1] : null
-  const brand = getBrand(data.course?.software?.slug || '')
+  const brand = getBrand(data.course?.software?.slug || '', data.course?.software)
   const isCurrentDone = isCompleted(data.id)
   const isPreview = currentIndex < PREVIEW_UNITS
   const isLocked = !user && !isPreview

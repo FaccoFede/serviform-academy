@@ -1096,7 +1096,7 @@ La funzione `handleComplete()` usava `window.location.href` per navigare all'uni
 ## TASK-13 — Dashboard utente: redesign card comunicazioni e primo piano
 
 **Priorità:** Alta  
-**Stato:** `[x]` — completato 2026-05-21
+**Stato:** `[x]` — completato 2026-05-21 (redesign completo dell'intera pagina)
 
 ### Contesto
 

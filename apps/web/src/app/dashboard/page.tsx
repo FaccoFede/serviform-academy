@@ -26,7 +26,6 @@ function formatDate(d: string) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
-
 function formatShortDate(d: string) {
   if (!d) return { day: '--', month: '---' }
   const date = new Date(d)
@@ -35,6 +34,44 @@ function formatShortDate(d: string) {
     month: date.toLocaleDateString('it-IT', { month: 'short' }),
   }
 }
+
+const STAT_CONFIGS = [
+  {
+    key: 'disponibili', label: 'Disponibili', accent: '#0EA5E9',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
+        <path d="M4 4h8l4 4v8H4V4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M12 4v4h4M8 10h4M8 13h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'inCorso', label: 'In corso', accent: '#F59E0B',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
+        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M10 6.5v3.5l2.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'completati', label: 'Completati', accent: '#10B981',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
+        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'unitaDone', label: 'Unità completate', accent: '#E63329',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
+        <path d="M3 5h14M3 10h10M3 15h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+]
 
 export default function DashboardPage() {
   const { user, token, isLoading } = useAuth()
@@ -91,12 +128,10 @@ export default function DashboardPage() {
   const greet = h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera'
 
   const now         = new Date()
-  const pinnedAnn   = announcements.find((a: any) => a.expiresAt && new Date(a.expiresAt) > now)
-  const regularAnns = announcements.filter((a: any) => !pinnedAnn || a.id !== pinnedAnn.id).slice(0, 8)
   const upcomingEvs = events
     .filter((e: any) => new Date(e.date) >= now)
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5)
+    .slice(0, 6)
 
   const inProgress  = progress.filter((c: any) => c.percent > 0 && c.percent < 100)
   const completed   = progress.filter((c: any) => c.percent >= 100)
@@ -105,10 +140,17 @@ export default function DashboardPage() {
   const compIds     = new Set(completed.map((c: any) => c.courseId))
   const disponibili = portalCourses.filter((c: any) => !inProgIds.has(c.id) && !compIds.has(c.id))
 
+  const statValues: Record<string, number> = {
+    disponibili: disponibili.length,
+    inCorso:     inProgress.length,
+    completati:  completed.length,
+    unitaDone:   totalDone,
+  }
+
   return (
     <div className={styles.page}>
 
-      {/* ── Greeting ────────────────────────────────────────────────────── */}
+      {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div className={styles.greeting}>
         <div className={styles.greetingInner}>
           <div className={styles.greetingLeft}>
@@ -116,7 +158,7 @@ export default function DashboardPage() {
             <h1 className={styles.greetName}>{displayName}</h1>
             <p className={styles.greetSub}>
               {inProgress.length > 0
-                ? `${inProgress.length} corso${inProgress.length > 1 ? 'i' : ''} in corso — continua a formarti.`
+                ? `Hai ${inProgress.length} corso${inProgress.length > 1 ? 'i' : ''} in corso — continua a formarti.`
                 : progress.length > 0
                   ? 'Ottimo lavoro. Esplora i nuovi corsi disponibili.'
                   : 'Benvenuto in Serviform Academy. Inizia il tuo percorso.'}
@@ -126,9 +168,9 @@ export default function DashboardPage() {
           {lastViewed && (
             <Link href={`/courses/${lastViewed.courseSlug}/${lastViewed.unitSlug}`}
               className={styles.resumePill}>
-              <div className={styles.resumePillLabel}>Continua da dove eri</div>
-              <div className={styles.resumePillCourse}>{lastViewed.courseTitle}</div>
-              <div className={styles.resumePillUnit}>→ {lastViewed.unitTitle}</div>
+              <span className={styles.resumePillEyebrow}>▶ Continua da dove eri</span>
+              <span className={styles.resumePillCourse}>{lastViewed.courseTitle}</span>
+              <span className={styles.resumePillUnit}>{lastViewed.unitTitle}</span>
             </Link>
           )}
         </div>
@@ -136,103 +178,58 @@ export default function DashboardPage() {
 
       <div className={styles.body}>
 
-        {/* ── Pinned announcement ─────────────────────────────────────────── */}
-        {pinnedAnn && (
-          <button
-            className={[
-              styles.pinnedCard,
-              pinnedAnn.bannerUrl ? styles.pinnedCardWithImg : styles.pinnedCardPlain,
-            ].join(' ')}
-            onClick={() => setSelectedAnn(pinnedAnn)}
-          >
-            {pinnedAnn.bannerUrl && (
-              <div className={styles.pinnedImg}
-                style={{ backgroundImage: `url(${pinnedAnn.bannerUrl})` }} />
-            )}
-            <div className={styles.pinnedBody}>
-              <div className={styles.pinnedMeta}>
-                <span className={styles.pinnedBadge}>In primo piano</span>
-                <span className={styles.pinnedSection}
-                  style={{ color: SECTION_COLORS[pinnedAnn.section] || SECTION_COLORS[pinnedAnn.type] || '#888' }}>
-                  {SECTION_LABELS[pinnedAnn.section] || SECTION_LABELS[pinnedAnn.type] || pinnedAnn.section}
-                </span>
-                <span className={styles.pinnedDate}>{formatDate(pinnedAnn.publishedAt || pinnedAnn.createdAt)}</span>
-              </div>
-              <h2 className={styles.pinnedTitle}>{pinnedAnn.title}</h2>
-              {pinnedAnn.body && (
-                <p className={styles.pinnedExcerpt}>
-                  {pinnedAnn.body.slice(0, 140)}{pinnedAnn.body.length > 140 ? '…' : ''}
-                </p>
-              )}
-              <span className={styles.pinnedCta}>Leggi l&apos;articolo →</span>
-            </div>
-          </button>
-        )}
-
-        {/* ── Stat strip ──────────────────────────────────────────────────── */}
-        <div className={styles.statStrip}>
-          <Link href="/catalog?status=available" className={styles.statItem}>
-            <span className={styles.statValue}>{disponibili.length}</span>
-            <span className={styles.statLabel}>disponibili</span>
-          </Link>
-          <span className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{inProgress.length}</span>
-            <span className={styles.statLabel}>in corso</span>
-          </div>
-          <span className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{completed.length}</span>
-            <span className={styles.statLabel}>completati</span>
-          </div>
-          <span className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{totalDone}</span>
-            <span className={styles.statLabel}>unità completate</span>
-          </div>
-          <Link href="/catalog" className={styles.statCatalogLink}>
-            Esplora il catalogo →
-          </Link>
+        {/* ── Stats ────────────────────────────────────────────────────────── */}
+        <div className={styles.statRow}>
+          {STAT_CONFIGS.map((cfg) => {
+            const value = statValues[cfg.key]
+            const inner = (
+              <>
+                <div className={styles.statIconWrap} style={{ background: cfg.accent + '18', color: cfg.accent }}>
+                  {cfg.icon}
+                </div>
+                <div className={styles.statBody}>
+                  <span className={styles.statValue} style={{ color: cfg.accent }}>{value}</span>
+                  <span className={styles.statLabel}>{cfg.label}</span>
+                </div>
+                <div className={styles.statBar} style={{ background: cfg.accent }} />
+              </>
+            )
+            return cfg.key === 'disponibili'
+              ? <Link key={cfg.key} href="/catalog" className={[styles.statCard, styles.statCardLink].join(' ')}>{inner}</Link>
+              : <div key={cfg.key} className={styles.statCard}>{inner}</div>
+          })}
         </div>
 
-        {/* ── Main grid: corsi + eventi ────────────────────────────────────── */}
-        <div className={[styles.mainGrid, upcomingEvs.length === 0 ? styles.mainGridFull : ''].join(' ')}>
-
-          {/* Corsi */}
-          <div className={styles.coursesCol}>
+        {/* ── Corsi ────────────────────────────────────────────────────────── */}
+        {(inProgress.length > 0 || completed.length > 0) && (
+          <section className={styles.section}>
             {inProgress.length > 0 && (
               <>
-                <div className={styles.colHeader}>
-                  <h2 className={styles.colTitle}>In corso</h2>
-                  <Link href="/catalog" className={styles.colLink}>Catalogo →</Link>
+                <div className={styles.sectionHead}>
+                  <h2 className={styles.sectionTitle}>In corso</h2>
+                  <Link href="/catalog" className={styles.sectionLink}>Esplora il catalogo →</Link>
                 </div>
-                <div className={styles.courseList}>
+                <div className={styles.courseGrid}>
                   {inProgress.map((c: any) => {
                     const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
                     return (
                       <Link key={c.courseId || c.courseSlug}
                         href={`/courses/${c.courseSlug}`}
-                        className={styles.courseRow}
-                        style={{ '--brand-color': brand.color, '--brand-light': brand.light } as any}>
-                        <div className={styles.courseRowAccent} style={{ background: brand.color }} />
-                        <div className={styles.courseRowBody}>
-                          <div className={styles.courseRowTop}>
-                            <span className={styles.courseChip}
-                              style={{ background: brand.light, color: brand.color }}>
-                              {brand.name}
-                            </span>
-                            <span className={styles.coursePercent}
-                              style={{ color: brand.color }}>
-                              {c.percent}%
-                            </span>
-                          </div>
-                          <div className={styles.courseRowTitle}>{c.courseTitle}</div>
-                          <div className={styles.courseRowFoot}>
-                            <div className={styles.courseBar}>
-                              <div className={styles.courseBarFill}
+                        className={styles.courseCard}
+                        style={{ '--shadow-clr': brand.color + '30' } as any}>
+                        <div className={styles.courseCardBand}
+                          style={{ background: `linear-gradient(135deg, ${brand.color} 0%, ${brand.color}cc 100%)` }}>
+                          <span className={styles.courseCardBrandName}>{brand.name}</span>
+                          <span className={styles.courseCardPct}>{c.percent}%</span>
+                        </div>
+                        <div className={styles.courseCardBody}>
+                          <div className={styles.courseCardTitle}>{c.courseTitle}</div>
+                          <div className={styles.courseCardFoot}>
+                            <div className={styles.progressTrack}>
+                              <div className={styles.progressFill}
                                 style={{ width: `${c.percent}%`, background: brand.color }} />
                             </div>
-                            <span className={styles.courseUnits}>{c.completed}/{c.total} unità</span>
+                            <span className={styles.courseUnits}>{c.completed}/{c.total}</span>
                           </div>
                         </div>
                       </Link>
@@ -244,26 +241,24 @@ export default function DashboardPage() {
 
             {completed.length > 0 && (
               <>
-                <div className={styles.colHeader} style={{ marginTop: inProgress.length > 0 ? 28 : 0 }}>
-                  <h2 className={styles.colTitle}>Completati</h2>
+                <div className={[styles.sectionHead, inProgress.length > 0 ? styles.sectionHeadSpaced : ''].join(' ')}>
+                  <h2 className={styles.sectionTitle}>Completati</h2>
                 </div>
-                <div className={styles.courseList}>
+                <div className={styles.courseGrid}>
                   {completed.map((c: any) => {
                     const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
                     return (
                       <Link key={c.courseId || c.courseSlug}
                         href={`/courses/${c.courseSlug}`}
-                        className={[styles.courseRow, styles.courseRowDone].join(' ')}>
-                        <div className={styles.courseRowAccent} style={{ background: '#059669' }} />
-                        <div className={styles.courseRowBody}>
-                          <div className={styles.courseRowTop}>
-                            <span className={styles.courseChip}
-                              style={{ background: brand.light, color: brand.color }}>
-                              {brand.name}
-                            </span>
-                            <span className={styles.courseDoneBadge}>✓ Completato</span>
-                          </div>
-                          <div className={styles.courseRowTitle}>{c.courseTitle}</div>
+                        className={[styles.courseCard, styles.courseCardDone].join(' ')}
+                        style={{ '--shadow-clr': '#10B98130' } as any}>
+                        <div className={styles.courseCardBand}
+                          style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669cc 100%)' }}>
+                          <span className={styles.courseCardBrandName}>{brand.name}</span>
+                          <span className={styles.courseCardDoneMark}>✓ Completato</span>
+                        </div>
+                        <div className={styles.courseCardBody}>
+                          <div className={styles.courseCardTitle}>{c.courseTitle}</div>
                         </div>
                       </Link>
                     )
@@ -271,91 +266,106 @@ export default function DashboardPage() {
                 </div>
               </>
             )}
+          </section>
+        )}
 
-            {progress.length === 0 && (
-              <div className={styles.emptyBlock}>
-                <div className={styles.emptyBlockIcon}>
-                  <svg viewBox="0 0 24 24" fill="none" width={28} height={28}>
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3 className={styles.emptyBlockTitle}>Inizia il tuo percorso</h3>
-                <p className={styles.emptyBlockDesc}>
-                  Hai {disponibili.length} corso{disponibili.length !== 1 ? 'i' : ''} disponibile{disponibili.length !== 1 ? 'i' : 'e'} nel catalogo.
-                </p>
-                <Link href="/catalog" className={styles.emptyBlockBtn}>Esplora il catalogo →</Link>
-              </div>
-            )}
+        {progress.length === 0 && (
+          <div className={styles.emptyBlock}>
+            <div className={styles.emptyBlockIcon}>
+              <svg viewBox="0 0 32 32" fill="none" width={36} height={36}>
+                <path d="M16 3L3 10l13 7 13-7-13-7zM3 22l13 7 13-7M3 16l13 7 13-7"
+                  stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h3 className={styles.emptyBlockTitle}>Inizia il tuo percorso</h3>
+            <p className={styles.emptyBlockDesc}>
+              {disponibili.length} corso{disponibili.length !== 1 ? 'i' : ''} disponibile{disponibili.length !== 1 ? 'i' : 'e'} nel catalogo.
+            </p>
+            <Link href="/catalog" className={styles.emptyBlockBtn}>Esplora il catalogo →</Link>
           </div>
+        )}
 
-          {/* Prossimi eventi */}
-          {upcomingEvs.length > 0 && (
-            <div className={styles.eventsCol}>
-              <div className={styles.colHeader}>
-                <h2 className={styles.colTitle}>Prossimi eventi</h2>
-                <Link href="/newsroom" className={styles.colLink}>Tutti →</Link>
-              </div>
-              <div className={styles.eventList}>
-                {upcomingEvs.map((e: any) => {
-                  const { day, month } = formatShortDate(e.date)
-                  return (
-                    <button key={e.id} className={styles.eventRow} onClick={() => setSelectedEv(e)}>
-                      <div className={styles.eventDateChip}>
-                        <span className={styles.eventDay}>{day}</span>
-                        <span className={styles.eventMonth}>{month}</span>
-                      </div>
-                      <div className={styles.eventRowBody}>
-                        <span className={styles.eventType}>
-                          {EV_TYPE_LABELS[e.eventType] || e.eventType}
-                        </span>
-                        <div className={styles.eventTitle}>{e.title}</div>
-                        {e.location && (
-                          <div className={styles.eventLocation}>{e.location}</div>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
+        {/* ── Prossimi eventi ───────────────────────────────────────────────── */}
+        {upcomingEvs.length > 0 && (
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Prossimi eventi</h2>
+              <Link href="/newsroom" className={styles.sectionLink}>Tutti →</Link>
             </div>
-          )}
-        </div>
+            <div className={styles.bannerGrid}>
+              {upcomingEvs.map((e: any) => {
+                const { day, month } = formatShortDate(e.date)
+                const color = SECTION_COLORS[e.eventType] || '#059669'
+                return (
+                  <button key={e.id} className={styles.bannerCard} onClick={() => setSelectedEv(e)}>
+                    <div className={styles.bannerThumb}
+                      style={e.bannerUrl
+                        ? { backgroundImage: `url(${e.bannerUrl})` }
+                        : { background: `linear-gradient(135deg, ${color}28 0%, ${color}0e 100%)` }
+                      }>
+                      <div className={styles.dateBadge}>
+                        <span className={styles.dateDay}>{day}</span>
+                        <span className={styles.dateMonth}>{month}</span>
+                      </div>
+                      {!e.bannerUrl && (
+                        <div className={styles.bannerEmptyIcon} style={{ color }}>
+                          <svg viewBox="0 0 40 40" fill="none" width={40} height={40}>
+                            <path d="M12 8h16l8 8v16H4V8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                            <circle cx="20" cy="22" r="5" stroke="currentColor" strokeWidth="1.4"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.bannerBody}>
+                      <span className={styles.bannerTag} style={{ background: color + '18', color }}>
+                        {EV_TYPE_LABELS[e.eventType] || e.eventType}
+                      </span>
+                      <div className={styles.bannerTitle}>{e.title}</div>
+                      {e.location && <div className={styles.bannerSub}>{e.location}</div>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
-        {/* ── Comunicazioni recenti ─────────────────────────────────────────── */}
-        {regularAnns.length > 0 && (
-          <div className={styles.commsSection}>
-            <div className={styles.colHeader}>
-              <h2 className={styles.colTitle}>Comunicazioni recenti</h2>
-              <Link href="/newsroom" className={styles.colLink}>Tutte →</Link>
+        {/* ── Comunicazioni ─────────────────────────────────────────────────── */}
+        {announcements.length > 0 && (
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Comunicazioni recenti</h2>
+              <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
             </div>
-            <div className={styles.commsScroll}>
-              {regularAnns.map((a: any) => {
+            <div className={styles.bannerGrid}>
+              {announcements.slice(0, 6).map((a: any) => {
                 const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
                 return (
-                  <button key={a.id} className={styles.commCard} onClick={() => setSelectedAnn(a)}>
-                    <div className={styles.commCardThumb}>
-                      {a.bannerUrl
-                        ? <img src={a.bannerUrl} alt="" className={styles.commCardImg} />
-                        : <div className={styles.commCardPlaceholder}
-                            style={{ background: `linear-gradient(135deg, ${color}22 0%, ${color}08 100%)` }}>
-                            <div className={styles.commCardPlaceholderDot} style={{ background: color }} />
-                          </div>
-                      }
+                  <button key={a.id} className={styles.bannerCard} onClick={() => setSelectedAnn(a)}>
+                    <div className={styles.bannerThumb}
+                      style={a.bannerUrl
+                        ? { backgroundImage: `url(${a.bannerUrl})` }
+                        : { background: `linear-gradient(135deg, ${color}28 0%, ${color}0e 100%)` }
+                      }>
+                      {!a.bannerUrl && (
+                        <div className={styles.bannerEmptyIcon} style={{ color }}>
+                          <svg viewBox="0 0 40 40" fill="none" width={40} height={40}>
+                            <path d="M6 10h28v22H6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                            <path d="M6 15l14 8 14-8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      )}
                     </div>
-                    <div className={styles.commCardBody}>
-                      <div className={styles.commCardTop}>
-                        <span className={styles.commCardTag}
-                          style={{ background: color + '18', color }}>
+                    <div className={styles.bannerBody}>
+                      <div className={styles.bannerMeta}>
+                        <span className={styles.bannerTag} style={{ background: color + '18', color }}>
                           {SECTION_LABELS[a.section] || SECTION_LABELS[a.type] || a.section}
                         </span>
-                        <span className={styles.commCardDate}>
-                          {formatDate(a.publishedAt || a.createdAt)}
-                        </span>
+                        <span className={styles.bannerDate}>{formatDate(a.publishedAt || a.createdAt)}</span>
                       </div>
-                      <h4 className={styles.commCardTitle}>{a.title}</h4>
+                      <div className={styles.bannerTitle}>{a.title}</div>
                       {a.body && (
-                        <p className={styles.commCardDesc}>
+                        <p className={styles.bannerDesc}>
                           {a.body.slice(0, 90)}{a.body.length > 90 ? '…' : ''}
                         </p>
                       )}
@@ -364,7 +374,7 @@ export default function DashboardPage() {
                 )
               })}
             </div>
-          </div>
+          </section>
         )}
 
       </div>

@@ -284,9 +284,12 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <div className={styles.bannerBody}>
-                          <span className={styles.bannerTag} style={{ background: color + '18', color }}>
-                            {EV_TYPE_LABELS[e.eventType] || e.eventType}
-                          </span>
+                          <div className={styles.bannerMeta}>
+                            <span className={styles.bannerTag} style={{ background: color + '18', color }}>
+                              {EV_TYPE_LABELS[e.eventType] || e.eventType}
+                            </span>
+                            <span className={styles.bannerDate}>{formatDate(e.date)}</span>
+                          </div>
                           <div className={styles.bannerTitle}>{e.title}</div>
                           {e.location && <div className={styles.bannerSub}>{e.location}</div>}
                         </div>

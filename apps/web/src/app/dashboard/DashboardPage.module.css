@@ -179,7 +179,12 @@
 }
 /* le section figlie si allungano per occupare tutta l'altezza della riga */
 .evCommRow > .section { display: flex; flex-direction: column; }
-.evCommRow > .section .bannerGrid { flex: 1; align-content: start; }
+/* bannerGrid occupa lo spazio residuo e divide le 2 righe in parti uguali */
+.evCommRow > .section .bannerGrid {
+  flex: 1;
+  grid-template-rows: repeat(2, 1fr);
+  align-content: stretch;
+}
 
 /* ── Banner grid (2 colonne dentro ogni 50%) ────────────────────────────────── */
 .bannerGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }

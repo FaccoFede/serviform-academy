@@ -1010,7 +1010,7 @@ Esempio struttura:
 ## TASK-12 — Bug: ricaricamento automatico inatteso delle pagine
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-21
 
 ### Contesto
 
@@ -1073,10 +1073,23 @@ const load = useCallback(() => { ... }, [])
 
 ### Acceptance criteria
 
-- [ ] Identificate le pagine e la causa tecnica del ricaricamento (documentata in questo task come nota)
-- [ ] Il portale non presenta più ricaricamenti automatici inattesi
-- [ ] Nessun `useEffect` produce loop infiniti (verificabile in console: assenza di `Maximum update depth exceeded`)
-- [ ] Il fix non introduce regressioni sul caricamento dati (le pagine continuano ad aggiornare i dati quando necessario)
+- [x] Identificate le pagine e la causa tecnica del ricaricamento (documentata in questo task come nota)
+- [x] Il portale non presenta più ricaricamenti automatici inattesi
+- [x] Nessun `useEffect` produce loop infiniti (verificabile in console: assenza di `Maximum update depth exceeded`)
+- [x] Il fix non introduce regressioni sul caricamento dati (le pagine continuano ad aggiornare i dati quando necessario)
+
+### Note implementazione (2026-05-21)
+
+Trovati e corretti 3 bug:
+
+**Bug 1 — Causa principale** (`apps/web/src/app/courses/[slug]/[unit]/page.tsx` righe 66-67):
+La funzione `handleComplete()` usava `window.location.href` per navigare all'unità successiva dopo il completamento, causando un full browser reload invece di una navigazione soft Next.js. Sostituito con `router.push()` da `next/navigation`.
+
+**Bug 2 — ProgressContext instabile** (`apps/web/src/context/ProgressContext.tsx`):
+`loadedCourses` era uno state (`useState<Set<string>>`) usato come dipendenza di `useCallback` in `loadCompletedUnitsFromServer`. Ogni volta che un corso veniva marcato come caricato, lo state cambiava → nuova funzione → con `reactCompiler: true` attivo in `next.config.ts` potenziali re-esecuzioni a cascata degli `useEffect` dipendenti. Risolto convertendo `loadedCourses` da `useState` a `useRef`, eliminando la ricreazione della funzione.
+
+**Bug 3 — Redirect admin events** (`apps/web/src/app/admin/events/page.tsx`):
+`useEffect(() => { router.replace(...) }, [router])` usava `router` nelle deps invece di `[]`. Anche se `router` in Next.js App Router è stabile, il pattern è non-standard e potenzialmente problematico con React Compiler. Corretto con `[]`.
 
 ---
 

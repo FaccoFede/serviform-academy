@@ -4,6 +4,6 @@ import { useRouter } from 'next/navigation'
 
 export default function AdminEventsRedirect() {
   const router = useRouter()
-  useEffect(() => { router.replace('/admin/announcements') }, [router])
+  useEffect(() => { router.replace('/admin/announcements') }, [])
   return null
 }

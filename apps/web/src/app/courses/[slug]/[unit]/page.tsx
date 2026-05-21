@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useProgress } from '@/context/ProgressContext'
@@ -16,6 +17,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   // Next.js 16 / React 19: params è una Promise — usa React.use() per sbloccarla
   const { slug, unit: unitSlug } = use(params)
 
+  const router = useRouter()
   const { user } = useAuth()
   const { markCompleted, markViewed, isCompleted, loadCompletedUnitsFromServer } = useProgress()
   const [data, setData] = useState<any>(null)
@@ -63,8 +65,8 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
 
   async function handleComplete() {
     await markCompleted(data.id)
-    if (nextUnit) window.location.href = `/courses/${slug}/${nextUnit.slug}`
-    else window.location.href = `/courses/${slug}`
+    if (nextUnit) router.push(`/courses/${slug}/${nextUnit.slug}`)
+    else router.push(`/courses/${slug}`)
   }
 
   // Vista bloccata per non loggati dopo le prime PREVIEW_UNITS unità

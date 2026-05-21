@@ -108,7 +108,9 @@ export default function DashboardPage() {
   const totalDone   = progress.reduce((s: number, c: any) => s + c.completed, 0)
   const inProgIds   = new Set(inProgress.map((c: any) => c.courseId))
   const compIds     = new Set(completed.map((c: any) => c.courseId))
-  const disponibili = portalCourses.filter((c: any) => !inProgIds.has(c.id) && !compIds.has(c.id))
+  const disponibili = portalCourses.filter((c: any) =>
+    c?.publishState === 'PUBLISHED' && !inProgIds.has(c.id) && !compIds.has(c.id)
+  )
 
   const statValues: Record<string, number> = {
     disponibili: disponibili.length,

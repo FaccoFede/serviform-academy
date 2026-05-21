@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useProgress } from '@/context/ProgressContext'
 import { getBrand } from '@/lib/brands'
+import { Lock, CheckCircle2 } from 'lucide-react'
 import ProtectedVideo from '@/components/features/ProtectedVideo'
 import ExerciseCard from '@/components/features/ExerciseCard'
 import styles from './UnitPage.module.css'
@@ -114,7 +115,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
 
             <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(to bottom, rgba(250,250,250,0.5) 0%, rgba(250,250,250,0.97) 35%)'}}>
               <div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:'48px 44px',maxWidth:460,width:'100%',textAlign:'center',boxShadow:'var(--shadow-lg)'}}>
-                <div style={{fontSize:44,marginBottom:20}}>🔒</div>
+                <Lock size={44} style={{marginBottom:20,color:'var(--muted)',opacity:0.35}} />
                 <h2 style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:700,marginBottom:12,letterSpacing:'-0.5px'}}>Contenuto riservato</h2>
                 <p style={{fontSize:14,color:'var(--muted)',lineHeight:1.7,marginBottom:28}}>
                   Hai visualizzato le prime <strong>{PREVIEW_UNITS} unità</strong> gratuitamente.
@@ -193,7 +194,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
             <span className={styles.bcCurrent}>{data.title}</span>
           </div>
           <div className={styles.topbarRight}>
-            {isCurrentDone && <span className={styles.doneBadge}>✓ Completata</span>}
+            {isCurrentDone && <span className={styles.doneBadge}><CheckCircle2 size={12} />Completata</span>}
             {!user && isPreview && <span className={styles.previewBadge}>Anteprima gratuita</span>}
             <span className={styles.counter}>{currentIndex+1} / {units.length}</span>
           </div>
@@ -254,7 +255,8 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
           {user ? (
             !isCurrentDone ? (
               <button className={styles.navComplete} onClick={handleComplete}>
-                {nextUnit ? '✓ Completa e continua' : '✓ Completa il modulo'}
+                <CheckCircle2 size={14} />
+                {nextUnit ? 'Completa e continua' : 'Completa il modulo'}
               </button>
             ) : nextUnit ? (
               <Link href={`/courses/${slug}/${nextUnit.slug}`} className={styles.navNext}>Continua →</Link>

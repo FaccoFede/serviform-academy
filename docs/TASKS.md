@@ -1346,7 +1346,7 @@ grep -ri "serviforma\|Serviforma\|SERVIFORMA" apps/api/prisma --include="*.ts" -
 ## TASK-16 — Revisione pagina Unità: icone professionali e valorizzazione badge
 
 **Priorità:** Media  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-21
 
 ### Contesto
 
@@ -1411,12 +1411,12 @@ Dove `remainingUnits` = numero di unità non-OVERVIEW non ancora completate e `p
 
 ### Acceptance criteria
 
-- [ ] Nessuna emoji usata come icona funzionale nella pagina unità (sostituita con icona SVG)
-- [ ] Le icone sono coerenti con la libreria già usata nel progetto
-- [ ] Se il corso ha `issuesBadge = true`, è visibile un banner con il progresso verso il badge
-- [ ] Il banner badge mostra l'anteprima SVG del badge se `badgeUrl` è presente (introdotto in TASK-05)
-- [ ] La barra di progresso riflette accuratamente le unità completate / totali
-- [ ] Nessuna regressione nel tracciamento avanzamento unità
+- [x] Nessuna emoji usata come icona funzionale nella pagina unità (sostituita con icona SVG)
+- [x] Le icone sono coerenti con la libreria già usata nel progetto
+- [x] Se il corso ha `issuesBadge = true`, è visibile un banner con il progresso verso il badge
+- [x] Il banner badge mostra l'anteprima SVG del badge se `badgeUrl` è presente (introdotto in TASK-05)
+- [x] La barra di progresso riflette accuratamente le unità completate / totali
+- [x] Nessuna regressione nel tracciamento avanzamento unità
 
 ---
 

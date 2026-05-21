@@ -8,7 +8,7 @@ const SECTIONS = [
       { href: '/admin/courses', label: 'Corsi', desc: 'Crea, modifica e pubblica i moduli' },
       { href: '/admin/units', label: 'Unità didattiche', desc: 'Contenuto HTML, video e guide' },
       { href: '/admin/exercises', label: 'Esercitazioni', desc: 'File HTML 3D e .evd scaricabili' },
-      { href: '/admin/software', label: 'Prodotti Academy', desc: 'EngView, Sysform, ProjectO, ServiformA' },
+      { href: '/admin/software', label: 'Prodotti Academy', desc: 'EngView, Sysform, ProjectO, ServiForma' },
     ],
   },
   {

@@ -37,7 +37,7 @@ export const SOFTWARE_BRANDS: Record<string, SoftwareBrand> = {
     color: '#067DB8', light: '#E3F4FC', border: '#A8D8EE',
   },
   serviforma: {
-    key: 'serviforma', name: 'ServiformA',
+    key: 'serviforma', name: 'ServiForma',
     tagline: 'I nostri consigli per potenziare la tua produttività',
     color: '#F59E0B', light: '#FFFBEB', border: '#FDE68A',
   },

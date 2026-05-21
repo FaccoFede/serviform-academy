@@ -36,7 +36,7 @@ function formatShortDate(d: string) {
 }
 
 const STAT_CONFIGS = [
-  { key: 'disponibili', label: 'Disponibili',       accent: '#0f0e0d', href: '/catalog' },
+  { key: 'disponibili', label: 'Disponibili',       accent: '#0f0e0d', href: '/catalog?status=available' },
   { key: 'inCorso',     label: 'In corso',           accent: '#F59E0B', href: null },
   { key: 'completati',  label: 'Completati',         accent: '#10B981', href: null },
   { key: 'unitaDone',   label: 'Unità completate',   accent: '#E63329', href: null },

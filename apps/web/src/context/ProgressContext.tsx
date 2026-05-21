@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
 import { api } from '@/lib/api'
 
@@ -17,19 +17,22 @@ const ProgressContext = createContext<ProgressContextType | undefined>(undefined
 export function ProgressProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth()
   const [completedUnits, setCompletedUnits] = useState<Set<string>>(new Set())
-  const [loadedCourses, setLoadedCourses] = useState<Set<string>>(new Set())
+  // useRef invece di useState: non serve ri-renderizzare quando si aggiunge un corso alla cache.
+  // Evita anche che loadCompletedUnitsFromServer venga ricreata ad ogni corso caricato,
+  // il che con reactCompiler:true scatenava re-esecuzioni a cascata negli useEffect dipendenti.
+  const loadedCoursesRef = useRef<Set<string>>(new Set())
 
   const loadCompletedUnitsFromServer = useCallback(async (courseSlug: string) => {
-    if (!token || loadedCourses.has(courseSlug)) return
+    if (!token || loadedCoursesRef.current.has(courseSlug)) return
+    loadedCoursesRef.current.add(courseSlug)
     try {
       const ids = await api.progress.getCompletedUnits(courseSlug)
       if (ids.length) setCompletedUnits(prev => new Set([...prev, ...ids]))
-      setLoadedCourses(prev => new Set([...prev, courseSlug]))
     } catch {
-      // Errore di rete / token scaduto: api.ts gestisce già il 401 (logout+redirect).
-      // Qui ci limitiamo a non aggiornare lo stato.
+      // Errore di rete / token scaduto: rimuove dalla cache per permettere il retry.
+      loadedCoursesRef.current.delete(courseSlug)
     }
-  }, [token, loadedCourses])
+  }, [token])
 
   const markCompleted = useCallback(async (unitId: string) => {
     if (!token) return

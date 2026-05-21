@@ -36,41 +36,10 @@ function formatShortDate(d: string) {
 }
 
 const STAT_CONFIGS = [
-  {
-    key: 'disponibili', label: 'Disponibili', accent: '#0EA5E9',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
-        <path d="M4 4h8l4 4v8H4V4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-        <path d="M12 4v4h4M8 10h4M8 13h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    key: 'inCorso', label: 'In corso', accent: '#F59E0B',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
-        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M10 6.5v3.5l2.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    key: 'completati', label: 'Completati', accent: '#10B981',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
-        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    key: 'unitaDone', label: 'Unità completate', accent: '#E63329',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" width={20} height={20}>
-        <path d="M3 5h14M3 10h10M3 15h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
+  { key: 'disponibili', label: 'Disponibili',       accent: '#0EA5E9', href: '/catalog' },
+  { key: 'inCorso',     label: 'In corso',           accent: '#F59E0B', href: null },
+  { key: 'completati',  label: 'Completati',         accent: '#10B981', href: null },
+  { key: 'unitaDone',   label: 'Unità completate',   accent: '#E63329', href: null },
 ]
 
 export default function DashboardPage() {
@@ -178,94 +147,88 @@ export default function DashboardPage() {
 
       <div className={styles.body}>
 
-        {/* ── Stats ────────────────────────────────────────────────────────── */}
+        {/* ── Statistiche ─────────────────────────────────────────────────── */}
         <div className={styles.statRow}>
           {STAT_CONFIGS.map((cfg) => {
             const value = statValues[cfg.key]
             const inner = (
               <>
-                <div className={styles.statIconWrap} style={{ background: cfg.accent + '18', color: cfg.accent }}>
-                  {cfg.icon}
-                </div>
-                <div className={styles.statBody}>
-                  <span className={styles.statValue} style={{ color: cfg.accent }}>{value}</span>
-                  <span className={styles.statLabel}>{cfg.label}</span>
-                </div>
-                <div className={styles.statBar} style={{ background: cfg.accent }} />
+                <span className={styles.statValue} style={{ color: cfg.accent }}>{value}</span>
+                <span className={styles.statLabel}>{cfg.label}</span>
               </>
             )
-            return cfg.key === 'disponibili'
-              ? <Link key={cfg.key} href="/catalog" className={[styles.statCard, styles.statCardLink].join(' ')}>{inner}</Link>
-              : <div key={cfg.key} className={styles.statCard}>{inner}</div>
+            return cfg.href
+              ? <Link key={cfg.key} href={cfg.href}
+                  className={[styles.statCard, styles.statCardLink].join(' ')}
+                  style={{ '--accent': cfg.accent } as any}>{inner}</Link>
+              : <div key={cfg.key} className={styles.statCard}
+                  style={{ '--accent': cfg.accent } as any}>{inner}</div>
           })}
         </div>
 
-        {/* ── Corsi ────────────────────────────────────────────────────────── */}
-        {(inProgress.length > 0 || completed.length > 0) && (
+        {/* ── Corsi in corso ───────────────────────────────────────────────── */}
+        {inProgress.length > 0 && (
           <section className={styles.section}>
-            {inProgress.length > 0 && (
-              <>
-                <div className={styles.sectionHead}>
-                  <h2 className={styles.sectionTitle}>In corso</h2>
-                  <Link href="/catalog" className={styles.sectionLink}>Esplora il catalogo →</Link>
-                </div>
-                <div className={styles.courseGrid}>
-                  {inProgress.map((c: any) => {
-                    const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
-                    return (
-                      <Link key={c.courseId || c.courseSlug}
-                        href={`/courses/${c.courseSlug}`}
-                        className={styles.courseCard}
-                        style={{ '--shadow-clr': brand.color + '30' } as any}>
-                        <div className={styles.courseCardBand}
-                          style={{ background: `linear-gradient(135deg, ${brand.color} 0%, ${brand.color}cc 100%)` }}>
-                          <span className={styles.courseCardBrandName}>{brand.name}</span>
-                          <span className={styles.courseCardPct}>{c.percent}%</span>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>In corso</h2>
+              <Link href="/catalog" className={styles.sectionLink}>Esplora il catalogo →</Link>
+            </div>
+            <div className={styles.courseGrid}>
+              {inProgress.map((c: any) => {
+                const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
+                return (
+                  <Link key={c.courseId || c.courseSlug}
+                    href={`/courses/${c.courseSlug}`}
+                    className={styles.courseCard}
+                    style={{ '--shadow-clr': brand.color + '28' } as any}>
+                    <div className={styles.courseCardBand}
+                      style={{ background: `linear-gradient(135deg, ${brand.color} 0%, ${brand.color}bb 100%)` }}>
+                      <span className={styles.courseCardBrandName}>{brand.name}</span>
+                      <span className={styles.courseCardPct}>{c.percent}%</span>
+                    </div>
+                    <div className={styles.courseCardBody}>
+                      <div className={styles.courseCardTitle}>{c.courseTitle}</div>
+                      <div className={styles.courseCardFoot}>
+                        <div className={styles.progressTrack}>
+                          <div className={styles.progressFill}
+                            style={{ width: `${c.percent}%`, background: brand.color }} />
                         </div>
-                        <div className={styles.courseCardBody}>
-                          <div className={styles.courseCardTitle}>{c.courseTitle}</div>
-                          <div className={styles.courseCardFoot}>
-                            <div className={styles.progressTrack}>
-                              <div className={styles.progressFill}
-                                style={{ width: `${c.percent}%`, background: brand.color }} />
-                            </div>
-                            <span className={styles.courseUnits}>{c.completed}/{c.total}</span>
-                          </div>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </>
-            )}
+                        <span className={styles.courseUnits}>{c.completed}/{c.total}</span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
-            {completed.length > 0 && (
-              <>
-                <div className={[styles.sectionHead, inProgress.length > 0 ? styles.sectionHeadSpaced : ''].join(' ')}>
-                  <h2 className={styles.sectionTitle}>Completati</h2>
-                </div>
-                <div className={styles.courseGrid}>
-                  {completed.map((c: any) => {
-                    const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
-                    return (
-                      <Link key={c.courseId || c.courseSlug}
-                        href={`/courses/${c.courseSlug}`}
-                        className={[styles.courseCard, styles.courseCardDone].join(' ')}
-                        style={{ '--shadow-clr': '#10B98130' } as any}>
-                        <div className={styles.courseCardBand}
-                          style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669cc 100%)' }}>
-                          <span className={styles.courseCardBrandName}>{brand.name}</span>
-                          <span className={styles.courseCardDoneMark}>✓ Completato</span>
-                        </div>
-                        <div className={styles.courseCardBody}>
-                          <div className={styles.courseCardTitle}>{c.courseTitle}</div>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </>
-            )}
+        {/* ── Corsi completati ─────────────────────────────────────────────── */}
+        {completed.length > 0 && (
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Completati</h2>
+            </div>
+            <div className={styles.courseGrid}>
+              {completed.map((c: any) => {
+                const brand = getBrand(c.softwareSlug, swMap.get((c.softwareSlug || '').toLowerCase()))
+                return (
+                  <Link key={c.courseId || c.courseSlug}
+                    href={`/courses/${c.courseSlug}`}
+                    className={[styles.courseCard, styles.courseCardDone].join(' ')}
+                    style={{ '--shadow-clr': '#10B98128' } as any}>
+                    <div className={styles.courseCardBand}
+                      style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669bb 100%)' }}>
+                      <span className={styles.courseCardBrandName}>{brand.name}</span>
+                      <span className={styles.courseCardDoneMark}>✓ Completato</span>
+                    </div>
+                    <div className={styles.courseCardBody}>
+                      <div className={styles.courseCardTitle}>{c.courseTitle}</div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
           </section>
         )}
 
@@ -285,96 +248,101 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Prossimi eventi ───────────────────────────────────────────────── */}
-        {upcomingEvs.length > 0 && (
-          <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>Prossimi eventi</h2>
-              <Link href="/newsroom" className={styles.sectionLink}>Tutti →</Link>
-            </div>
-            <div className={styles.bannerGrid}>
-              {upcomingEvs.map((e: any) => {
-                const { day, month } = formatShortDate(e.date)
-                const color = SECTION_COLORS[e.eventType] || '#059669'
-                return (
-                  <button key={e.id} className={styles.bannerCard} onClick={() => setSelectedEv(e)}>
-                    <div className={styles.bannerThumb}
-                      style={e.bannerUrl
-                        ? { backgroundImage: `url(${e.bannerUrl})` }
-                        : { background: `linear-gradient(135deg, ${color}28 0%, ${color}0e 100%)` }
-                      }>
-                      <div className={styles.dateBadge}>
-                        <span className={styles.dateDay}>{day}</span>
-                        <span className={styles.dateMonth}>{month}</span>
-                      </div>
-                      {!e.bannerUrl && (
-                        <div className={styles.bannerEmptyIcon} style={{ color }}>
-                          <svg viewBox="0 0 40 40" fill="none" width={40} height={40}>
-                            <path d="M12 8h16l8 8v16H4V8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                            <circle cx="20" cy="22" r="5" stroke="currentColor" strokeWidth="1.4"/>
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className={styles.bannerBody}>
-                      <span className={styles.bannerTag} style={{ background: color + '18', color }}>
-                        {EV_TYPE_LABELS[e.eventType] || e.eventType}
-                      </span>
-                      <div className={styles.bannerTitle}>{e.title}</div>
-                      {e.location && <div className={styles.bannerSub}>{e.location}</div>}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        )}
+        {/* ── Riga eventi + comunicazioni ─────────────────────────────────── */}
+        {(upcomingEvs.length > 0 || announcements.length > 0) && (
+          <div className={styles.evCommRow}>
 
-        {/* ── Comunicazioni ─────────────────────────────────────────────────── */}
-        {announcements.length > 0 && (
-          <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>Comunicazioni recenti</h2>
-              <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
-            </div>
-            <div className={styles.bannerGrid}>
-              {announcements.slice(0, 6).map((a: any) => {
-                const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
-                return (
-                  <button key={a.id} className={styles.bannerCard} onClick={() => setSelectedAnn(a)}>
-                    <div className={styles.bannerThumb}
-                      style={a.bannerUrl
-                        ? { backgroundImage: `url(${a.bannerUrl})` }
-                        : { background: `linear-gradient(135deg, ${color}28 0%, ${color}0e 100%)` }
-                      }>
-                      {!a.bannerUrl && (
-                        <div className={styles.bannerEmptyIcon} style={{ color }}>
-                          <svg viewBox="0 0 40 40" fill="none" width={40} height={40}>
-                            <path d="M6 10h28v22H6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                            <path d="M6 15l14 8 14-8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                          </svg>
+            {upcomingEvs.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHead}>
+                  <h2 className={styles.sectionTitle}>Prossimi eventi</h2>
+                  <Link href="/newsroom" className={styles.sectionLink}>Tutti →</Link>
+                </div>
+                <div className={styles.bannerGrid}>
+                  {upcomingEvs.map((e: any) => {
+                    const { day, month } = formatShortDate(e.date)
+                    const color = SECTION_COLORS[e.eventType] || '#059669'
+                    return (
+                      <button key={e.id} className={styles.bannerCard} onClick={() => setSelectedEv(e)}>
+                        <div className={styles.bannerThumb}
+                          style={e.bannerUrl
+                            ? { backgroundImage: `url(${e.bannerUrl})` }
+                            : { background: `linear-gradient(135deg, ${color}28 0%, ${color}0e 100%)` }
+                          }>
+                          <div className={styles.dateBadge}>
+                            <span className={styles.dateDay}>{day}</span>
+                            <span className={styles.dateMonth}>{month}</span>
+                          </div>
+                          {!e.bannerUrl && (
+                            <div className={styles.bannerEmptyIcon} style={{ color }}>
+                              <svg viewBox="0 0 40 40" fill="none" width={36} height={36}>
+                                <path d="M12 8h16l8 8v16H4V8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                                <circle cx="20" cy="22" r="5" stroke="currentColor" strokeWidth="1.4"/>
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className={styles.bannerBody}>
-                      <div className={styles.bannerMeta}>
-                        <span className={styles.bannerTag} style={{ background: color + '18', color }}>
-                          {SECTION_LABELS[a.section] || SECTION_LABELS[a.type] || a.section}
-                        </span>
-                        <span className={styles.bannerDate}>{formatDate(a.publishedAt || a.createdAt)}</span>
-                      </div>
-                      <div className={styles.bannerTitle}>{a.title}</div>
-                      {a.body && (
-                        <p className={styles.bannerDesc}>
-                          {a.body.slice(0, 90)}{a.body.length > 90 ? '…' : ''}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
+                        <div className={styles.bannerBody}>
+                          <span className={styles.bannerTag} style={{ background: color + '18', color }}>
+                            {EV_TYPE_LABELS[e.eventType] || e.eventType}
+                          </span>
+                          <div className={styles.bannerTitle}>{e.title}</div>
+                          {e.location && <div className={styles.bannerSub}>{e.location}</div>}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
+            {announcements.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHead}>
+                  <h2 className={styles.sectionTitle}>Comunicazioni recenti</h2>
+                  <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
+                </div>
+                <div className={styles.bannerGrid}>
+                  {announcements.slice(0, 6).map((a: any) => {
+                    const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
+                    return (
+                      <button key={a.id} className={styles.bannerCard} onClick={() => setSelectedAnn(a)}>
+                        <div className={styles.bannerThumb}
+                          style={a.bannerUrl
+                            ? { backgroundImage: `url(${a.bannerUrl})` }
+                            : { background: `linear-gradient(135deg, ${color}28 0%, ${color}0e 100%)` }
+                          }>
+                          {!a.bannerUrl && (
+                            <div className={styles.bannerEmptyIcon} style={{ color }}>
+                              <svg viewBox="0 0 40 40" fill="none" width={36} height={36}>
+                                <path d="M6 10h28v22H6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                                <path d="M6 15l14 8 14-8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.bannerBody}>
+                          <div className={styles.bannerMeta}>
+                            <span className={styles.bannerTag} style={{ background: color + '18', color }}>
+                              {SECTION_LABELS[a.section] || SECTION_LABELS[a.type] || a.section}
+                            </span>
+                            <span className={styles.bannerDate}>{formatDate(a.publishedAt || a.createdAt)}</span>
+                          </div>
+                          <div className={styles.bannerTitle}>{a.title}</div>
+                          {a.body && (
+                            <p className={styles.bannerDesc}>
+                              {a.body.slice(0, 80)}{a.body.length > 80 ? '…' : ''}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
+          </div>
         )}
 
       </div>

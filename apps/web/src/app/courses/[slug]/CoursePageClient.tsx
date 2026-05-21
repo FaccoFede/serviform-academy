@@ -150,25 +150,33 @@ export default function CoursePageClient({ course }: { course: any }) {
 
             {course.issuesBadge && (
               <div className={styles.badgeCard}>
-                <div className={styles.badgeCardHeader}>
+                <div className={styles.badgePreviewWrap}>
                   {course.badgeUrl
-                    ? <img src={course.badgeUrl} alt="Badge" className={styles.badgeImg} />
-                    : <Award size={28} className={styles.badgeAwardIcon} />
+                    ? <img
+                        src={course.badgeUrl}
+                        alt="Badge"
+                        className={styles.badgeImg}
+                        style={{opacity: remainingUnits > 0 ? 0.4 : 1}}
+                      />
+                    : <Award size={52} className={styles.badgeAwardIcon} style={{opacity: remainingUnits > 0 ? 0.25 : 1}} />
                   }
-                  <div>
-                    <p className={styles.badgeTitle}>Badge del corso</p>
-                    <p className={styles.badgeDesc}>
-                      {remainingUnits > 0
-                        ? `Completa ${remainingUnits} unità per il certificato`
-                        : 'Tutte le unità completate!'
-                      }
-                    </p>
-                  </div>
                 </div>
+                <p className={styles.badgeTitle}>Badge del corso</p>
+                <p className={styles.badgeDesc}>
+                  {remainingUnits > 0
+                    ? `Completa ${remainingUnits} unità per ottenere il certificato`
+                    : 'Hai ottenuto il badge!'
+                  }
+                </p>
                 <div className={styles.badgeBar}>
                   <div className={styles.badgeBarFill} style={{width:`${progressPercent}%`}} />
                 </div>
                 <span className={styles.badgeBarLabel}>{progressPercent}% · {localCompleted}/{lessonUnits.length} unità</span>
+                {user && (
+                  <Link href="/profile/certificates" className={styles.badgeLink}>
+                    I miei certificati →
+                  </Link>
+                )}
               </div>
             )}
 

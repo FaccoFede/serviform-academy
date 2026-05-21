@@ -175,8 +175,11 @@
   display: grid;
   /* auto-fit: se esiste solo una sezione occupa tutta la larghezza */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
-  gap: 20px; align-items: start;
+  gap: 20px; align-items: stretch;
 }
+/* le section figlie si allungano per occupare tutta l'altezza della riga */
+.evCommRow > .section { display: flex; flex-direction: column; }
+.evCommRow > .section .bannerGrid { flex: 1; align-content: start; }
 
 /* ── Banner grid (2 colonne dentro ogni 50%) ────────────────────────────────── */
 .bannerGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }

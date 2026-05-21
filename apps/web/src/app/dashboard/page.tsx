@@ -36,7 +36,7 @@ function formatShortDate(d: string) {
 }
 
 const STAT_CONFIGS = [
-  { key: 'disponibili', label: 'Disponibili',       accent: '#0EA5E9', href: '/catalog' },
+  { key: 'disponibili', label: 'Disponibili',       accent: '#0f0e0d', href: '/catalog' },
   { key: 'inCorso',     label: 'In corso',           accent: '#F59E0B', href: null },
   { key: 'completati',  label: 'Completati',         accent: '#10B981', href: null },
   { key: 'unitaDone',   label: 'Unità completate',   accent: '#E63329', href: null },
@@ -100,7 +100,7 @@ export default function DashboardPage() {
   const upcomingEvs = events
     .filter((e: any) => new Date(e.date) >= now)
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 6)
+    .slice(0, 4)
 
   const inProgress  = progress.filter((c: any) => c.percent > 0 && c.percent < 100)
   const completed   = progress.filter((c: any) => c.percent >= 100)
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                   <Link href="/newsroom" className={styles.sectionLink}>Tutte →</Link>
                 </div>
                 <div className={styles.bannerGrid}>
-                  {announcements.slice(0, 6).map((a: any) => {
+                  {announcements.slice(0, 4).map((a: any) => {
                     const color = SECTION_COLORS[a.section] || SECTION_COLORS[a.type] || '#888'
                     return (
                       <button key={a.id} className={styles.bannerCard} onClick={() => setSelectedAnn(a)}>

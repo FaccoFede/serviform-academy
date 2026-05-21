@@ -97,8 +97,9 @@ export default function DashboardPage() {
   const greet = h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera'
 
   const now         = new Date()
+  const today       = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const upcomingEvs = events
-    .filter((e: any) => new Date(e.date) >= now)
+    .filter((e: any) => new Date(e.date) >= today)
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 4)
 

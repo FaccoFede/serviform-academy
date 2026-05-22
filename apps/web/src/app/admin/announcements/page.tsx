@@ -1,10 +1,13 @@
 'use client'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useMemo } from 'react'
+import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
+
+const PAGE_SIZE = 20
 
 // ── Dati statici ──────────────────────────────────────────────────────────
 const ANN_SECTIONS = [
@@ -44,6 +47,22 @@ const EV_EMPTY  = { title: '', description: '', eventType: 'WEBINAR', date: '', 
 export default function AdminNewsroomPage() {
   const { token } = useAuth()
   const [tab, setTab] = useState<Tab>('announcements')
+  const [annQ, setAnnQ] = useState('')
+  const [evQ, setEvQ] = useState('')
+  const [annPage, setAnnPage] = useState(1)
+  const [evPage, setEvPage] = useState(1)
+
+  // ── Hash-based tab selection (#events / #announcements) ──────────────
+  useEffect(() => {
+    function applyHash() {
+      const h = (window.location.hash || '').replace('#', '')
+      if (h === 'events') setTab('events')
+      else if (h === 'announcements') setTab('announcements')
+    }
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [])
 
   // ── Stato comunicazioni ──────────────────────────────────────────────
   const [annRows,    setAnnRows]    = useState<any[]>([])
@@ -157,26 +176,50 @@ export default function AdminNewsroomPage() {
 
   const isLoading = tab === 'announcements' ? annLoading : evLoading
 
+  const annFiltered = useMemo(() => {
+    const q = annQ.trim().toLowerCase()
+    if (!q) return annRows
+    return annRows.filter(r =>
+      (r.title || '').toLowerCase().includes(q) ||
+      (r.body || '').toLowerCase().includes(q),
+    )
+  }, [annRows, annQ])
+  const annTotalPages = Math.max(1, Math.ceil(annFiltered.length / PAGE_SIZE))
+  const annCurrentPage = Math.min(annPage, annTotalPages)
+  const annPaginated = annFiltered.slice((annCurrentPage - 1) * PAGE_SIZE, annCurrentPage * PAGE_SIZE)
+
+  const evFiltered = useMemo(() => {
+    const q = evQ.trim().toLowerCase()
+    if (!q) return evRows
+    return evRows.filter(r =>
+      (r.title || '').toLowerCase().includes(q) ||
+      (r.location || '').toLowerCase().includes(q),
+    )
+  }, [evRows, evQ])
+  const evTotalPages = Math.max(1, Math.ceil(evFiltered.length / PAGE_SIZE))
+  const evCurrentPage = Math.min(evPage, evTotalPages)
+  const evPaginated = evFiltered.slice((evCurrentPage - 1) * PAGE_SIZE, evCurrentPage * PAGE_SIZE)
+
+  useEffect(() => { setAnnPage(1) }, [annQ])
+  useEffect(() => { setEvPage(1) }, [evQ])
+
   return (
     <main className={styles.main}>
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className={t.hdr}>
-        <div>
-          <Link href="/admin" className={t.back}>← Admin</Link>
-          <h1 className={styles.title}>Comunicazione &amp; Eventi</h1>
-          <p className={styles.desc}>
-            {tab === 'announcements'
-              ? `${annRows.length} comunicazioni`
-              : `${evRows.length} eventi`}
-          </p>
-        </div>
-        <button
-          className={t.btnP}
-          onClick={tab === 'announcements' ? openNewAnn : openNewEv}
-        >
-          + {tab === 'announcements' ? 'Nuova comunicazione' : 'Nuovo evento'}
-        </button>
-      </div>
+      <PageHeader
+        title="Comunicazioni & Eventi"
+        description={tab === 'announcements'
+          ? `${annFiltered.length} ${annFiltered.length === 1 ? 'comunicazione' : 'comunicazioni'}${annQ ? ` (filtrate su ${annRows.length})` : ''}`
+          : `${evFiltered.length} ${evFiltered.length === 1 ? 'evento' : 'eventi'}${evQ ? ` (filtrati su ${evRows.length})` : ''}`}
+        action={
+          <button
+            className={t.btnP}
+            onClick={tab === 'announcements' ? openNewAnn : openNewEv}
+          >
+            <Plus size={14} />
+            {tab === 'announcements' ? 'Nuova comunicazione' : 'Nuovo evento'}
+          </button>
+        }
+      />
 
       {/* ── Messaggi ────────────────────────────────────────────────── */}
       {msg && (
@@ -191,7 +234,13 @@ export default function AdminNewsroomPage() {
         {(['announcements', 'events'] as Tab[]).map(k => (
           <button
             key={k}
-            onClick={() => { setTab(k); setMsg(null) }}
+            onClick={() => {
+              setTab(k)
+              setMsg(null)
+              if (typeof window !== 'undefined') {
+                history.replaceState(null, '', `#${k}`)
+              }
+            }}
             style={{
               padding: '8px 18px',
               fontSize: 13,
@@ -218,48 +267,75 @@ export default function AdminNewsroomPage() {
         annLoading ? (
           <p style={{ color: 'var(--muted)', fontSize: 14 }}>Caricamento...</p>
         ) : (
-          <div className={t.tableWrap}>
-            <table className={t.table}>
-              <thead>
-                <tr>
-                  <th>Titolo</th>
-                  <th>Sezione</th>
-                  <th>Stato</th>
-                  <th>Banner</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {annRows.map(r => (
-                  <tr key={r.id}>
-                    <td className={t.tdBold}>{r.title}</td>
-                    <td>
-                      <span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                        {ANN_SECTIONS.find(s => s.v === r.section)?.l || r.section || 'COMUNICAZIONE'}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ padding: '3px 10px', borderRadius: 6, display: 'inline-block', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}>
-                        {r.published ? '● Pubblicata' : '○ Bozza'}
-                      </span>
-                    </td>
-                    <td>
-                      {r.bannerUrl
-                        ? <span style={{ color: '#059669', fontSize: 12, fontWeight: 700 }}>✓ Sì</span>
-                        : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>}
-                    </td>
-                    <td className={t.actions}>
-                      <button className={t.btnE} onClick={() => openEditAnn(r)}>Modifica</button>
-                      <button className={t.btnD} onClick={() => delAnn(r.id)}>Elimina</button>
-                    </td>
+          <>
+            <div className={t.searchBar}>
+              <input
+                className={t.search}
+                placeholder="Cerca comunicazione…"
+                value={annQ}
+                onChange={e => setAnnQ(e.target.value)}
+              />
+            </div>
+            <div className={t.tableWrap}>
+              <table className={t.table}>
+                <thead>
+                  <tr>
+                    <th>Titolo</th>
+                    <th>Sezione</th>
+                    <th>Stato</th>
+                    <th>Banner</th>
+                    <th></th>
                   </tr>
-                ))}
-                {!annRows.length && (
-                  <tr><td colSpan={5} className={t.empty}>Nessuna comunicazione.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {annPaginated.map(r => (
+                    <tr key={r.id}>
+                      <td className={t.tdBold}>{r.title}</td>
+                      <td>
+                        <span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                          {ANN_SECTIONS.find(s => s.v === r.section)?.l || r.section || 'COMUNICAZIONE'}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ padding: '3px 10px', borderRadius: 6, display: 'inline-block', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}>
+                          {r.published ? '● Pubblicata' : '○ Bozza'}
+                        </span>
+                      </td>
+                      <td>
+                        {r.bannerUrl
+                          ? <span style={{ color: '#059669', fontSize: 12, fontWeight: 700 }}>✓ Sì</span>
+                          : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td className={t.actionsCell}>
+                        <button className={t.iconBtn} title="Modifica" aria-label="Modifica" onClick={() => openEditAnn(r)}>
+                          <Pencil size={14} />
+                        </button>
+                        <button className={t.iconBtn} data-variant="danger" title="Elimina" aria-label="Elimina" onClick={() => delAnn(r.id)}>
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!annFiltered.length && (
+                    <tr><td colSpan={5} className={t.empty}>Nessuna comunicazione.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {annTotalPages > 1 && (
+              <div className={t.pagination}>
+                <span className={t.paginationInfo}>Pagina {annCurrentPage} di {annTotalPages}</span>
+                <div className={t.paginationCtrls}>
+                  <button type="button" className={t.pageBtn} disabled={annCurrentPage === 1} onClick={() => setAnnPage(p => Math.max(1, p - 1))} aria-label="Pagina precedente">
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button type="button" className={t.pageBtn} disabled={annCurrentPage >= annTotalPages} onClick={() => setAnnPage(p => Math.min(annTotalPages, p + 1))} aria-label="Pagina successiva">
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )
       )}
 
@@ -270,51 +346,78 @@ export default function AdminNewsroomPage() {
         evLoading ? (
           <p style={{ color: 'var(--muted)', fontSize: 14 }}>Caricamento...</p>
         ) : (
-          <div className={t.tableWrap}>
-            <table className={t.table}>
-              <thead>
-                <tr>
-                  <th>Titolo</th>
-                  <th>Tipo</th>
-                  <th>Data</th>
-                  <th>Luogo</th>
-                  <th>Stato</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {evRows.map(r => (
-                  <tr key={r.id}>
-                    <td className={t.tdBold}>{r.title}</td>
-                    <td>
-                      <span style={{ padding: '2px 8px', borderRadius: 4, background: '#ECFDF5', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#059669' }}>
-                        {EVENT_TYPES.find(e => e.v === r.eventType)?.l || r.eventType}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                      {fmtDate(r.date)}
-                    </td>
-                    <td style={{ fontSize: 12, color: 'var(--muted)' }}>{r.location || '—'}</td>
-                    <td>
-                      <button
-                        onClick={() => togglePublishEv(r)}
-                        style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}
-                      >
-                        {r.published ? '● Pubbl.' : '○ Bozza'}
-                      </button>
-                    </td>
-                    <td className={t.actions}>
-                      <button className={t.btnE} onClick={() => openEditEv(r)}>Modifica</button>
-                      <button className={t.btnD} onClick={() => delEv(r.id)}>Elimina</button>
-                    </td>
+          <>
+            <div className={t.searchBar}>
+              <input
+                className={t.search}
+                placeholder="Cerca evento (titolo o luogo)…"
+                value={evQ}
+                onChange={e => setEvQ(e.target.value)}
+              />
+            </div>
+            <div className={t.tableWrap}>
+              <table className={t.table}>
+                <thead>
+                  <tr>
+                    <th>Titolo</th>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Luogo</th>
+                    <th>Stato</th>
+                    <th></th>
                   </tr>
-                ))}
-                {!evRows.length && (
-                  <tr><td colSpan={6} className={t.empty}>Nessun evento.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {evPaginated.map(r => (
+                    <tr key={r.id}>
+                      <td className={t.tdBold}>{r.title}</td>
+                      <td>
+                        <span style={{ padding: '2px 8px', borderRadius: 4, background: '#ECFDF5', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#059669' }}>
+                          {EVENT_TYPES.find(e => e.v === r.eventType)?.l || r.eventType}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+                        {fmtDate(r.date)}
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{r.location || '—'}</td>
+                      <td>
+                        <button
+                          onClick={() => togglePublishEv(r)}
+                          style={{ padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', background: r.published ? '#ECFDF5' : 'var(--surface)', color: r.published ? '#059669' : 'var(--muted)' }}
+                        >
+                          {r.published ? '● Pubbl.' : '○ Bozza'}
+                        </button>
+                      </td>
+                      <td className={t.actionsCell}>
+                        <button className={t.iconBtn} title="Modifica" aria-label="Modifica" onClick={() => openEditEv(r)}>
+                          <Pencil size={14} />
+                        </button>
+                        <button className={t.iconBtn} data-variant="danger" title="Elimina" aria-label="Elimina" onClick={() => delEv(r.id)}>
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!evFiltered.length && (
+                    <tr><td colSpan={6} className={t.empty}>Nessun evento.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {evTotalPages > 1 && (
+              <div className={t.pagination}>
+                <span className={t.paginationInfo}>Pagina {evCurrentPage} di {evTotalPages}</span>
+                <div className={t.paginationCtrls}>
+                  <button type="button" className={t.pageBtn} disabled={evCurrentPage === 1} onClick={() => setEvPage(p => Math.max(1, p - 1))} aria-label="Pagina precedente">
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button type="button" className={t.pageBtn} disabled={evCurrentPage >= evTotalPages} onClick={() => setEvPage(p => Math.min(evTotalPages, p + 1))} aria-label="Pagina successiva">
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )
       )}
 
@@ -331,38 +434,45 @@ export default function AdminNewsroomPage() {
             <div className={t.mbody}>
               {msg && <div className={msg.ok ? t.ok : t.err}>{msg.t}</div>}
 
-              <label className={t.lbl}>Titolo *</label>
-              <input
-                className={t.inp}
-                value={formAnn.title || ''}
-                onChange={e => setFormAnn({ ...formAnn, title: e.target.value })}
-                placeholder="Titolo comunicazione..."
-              />
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Informazioni base</div>
 
-              <label className={t.lbl}>Testo breve (estratto visibile in lista)</label>
-              <textarea
-                className={t.ta}
-                rows={2}
-                value={formAnn.body || ''}
-                onChange={e => setFormAnn({ ...formAnn, body: e.target.value })}
-                placeholder="Breve descrizione mostrata nelle card..."
-              />
+                <label className={t.lbl}>Titolo *</label>
+                <input
+                  className={t.inp}
+                  value={formAnn.title || ''}
+                  onChange={e => setFormAnn({ ...formAnn, title: e.target.value })}
+                  placeholder="Titolo comunicazione..."
+                />
 
-              <label className={t.lbl}>Sezione</label>
-              <select
-                className={t.inp}
-                value={formAnn.section}
-                onChange={e => setFormAnn({ ...formAnn, section: e.target.value })}
-              >
-                {ANN_SECTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
-              </select>
+                <label className={t.lbl}>Testo breve (estratto visibile in lista)</label>
+                <textarea
+                  className={t.ta}
+                  rows={2}
+                  value={formAnn.body || ''}
+                  onChange={e => setFormAnn({ ...formAnn, body: e.target.value })}
+                  placeholder="Breve descrizione mostrata nelle card..."
+                />
 
-              <label className={t.lbl}>
-                Banner / Copertina
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
-                  1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
-                </span>
-              </label>
+                <label className={t.lbl}>Sezione</label>
+                <select
+                  className={t.inp}
+                  value={formAnn.section}
+                  onChange={e => setFormAnn({ ...formAnn, section: e.target.value })}
+                >
+                  {ANN_SECTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+                </select>
+              </div>
+
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Media</div>
+
+                <label className={t.lbl}>
+                  Banner / Copertina
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
+                    1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
+                  </span>
+                </label>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -403,34 +513,43 @@ export default function AdminNewsroomPage() {
                   </button>
                 </div>
               )}
+              </div>
 
-              <label className={t.lbl}>Contenuto articolo (HTML)</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <textarea
-                  value={formAnn.content || ''}
-                  onChange={e => setFormAnn({ ...formAnn, content: e.target.value })}
-                  placeholder={'<h3>Titolo</h3>\n<p>Testo...</p>'}
-                  style={{ minHeight: 160, padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, outline: 'none', resize: 'vertical' }}
-                />
-                <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', overflow: 'auto', background: 'var(--surface)', minHeight: 160, fontSize: 13, lineHeight: 1.7 }}>
-                  {formAnn.content
-                    ? <div dangerouslySetInnerHTML={{ __html: formAnn.content }} style={{ color: 'var(--muted-dark)' }}/>
-                    : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Contenuto</div>
+
+                <label className={t.lbl}>Contenuto articolo (HTML)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <textarea
+                    value={formAnn.content || ''}
+                    onChange={e => setFormAnn({ ...formAnn, content: e.target.value })}
+                    placeholder={'<h3>Titolo</h3>\n<p>Testo...</p>'}
+                    style={{ minHeight: 160, padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, outline: 'none', resize: 'vertical' }}
+                  />
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', overflow: 'auto', background: 'var(--surface)', minHeight: 160, fontSize: 13, lineHeight: 1.7 }}>
+                    {formAnn.content
+                      ? <div dangerouslySetInnerHTML={{ __html: formAnn.content }} style={{ color: 'var(--muted-dark)' }}/>
+                      : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
+                  </div>
                 </div>
               </div>
 
-              <label className={t.lbl}>
-                Data e ora di scadenza primo piano
-                <small style={{ display: 'block', color: 'var(--muted)', fontWeight: 400, marginTop: 2 }}>
-                  Lascia vuoto per non mettere in primo piano. Se compilato, la comunicazione appare in primo piano fino a questa data e ora.
-                </small>
-              </label>
-              <input
-                className={t.inp}
-                type="datetime-local"
-                value={formAnn.expiresAt || ''}
-                onChange={e => setFormAnn({ ...formAnn, expiresAt: e.target.value || '' })}
-              />
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Pubblicazione</div>
+
+                <label className={t.lbl}>
+                  Data e ora di scadenza primo piano
+                  <small style={{ display: 'block', color: 'var(--muted)', fontWeight: 400, marginTop: 2 }}>
+                    Lascia vuoto per non mettere in primo piano. Se compilato, la comunicazione appare in primo piano fino a questa data e ora.
+                  </small>
+                </label>
+                <input
+                  className={t.inp}
+                  type="datetime-local"
+                  value={formAnn.expiresAt || ''}
+                  onChange={e => setFormAnn({ ...formAnn, expiresAt: e.target.value || '' })}
+                />
+              </div>
             </div>
             <div className={t.mftr}>
               <button className={t.btnS} onClick={() => setShowAnn(false)}>Annulla</button>
@@ -458,81 +577,92 @@ export default function AdminNewsroomPage() {
             <div className={t.mbody}>
               {msg && <div className={msg.ok ? t.ok : t.err}>{msg.t}</div>}
 
-              <label className={t.lbl}>Titolo *</label>
-              <input
-                className={t.inp}
-                value={formEv.title || ''}
-                onChange={e => setFormEv({ ...formEv, title: e.target.value })}
-                placeholder="Titolo evento..."
-              />
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Informazioni base</div>
 
-              <label className={t.lbl}>Descrizione</label>
-              <textarea
-                className={t.ta}
-                rows={3}
-                value={formEv.description || ''}
-                onChange={e => setFormEv({ ...formEv, description: e.target.value })}
-                placeholder="Descrizione dell'evento..."
-              />
+                <label className={t.lbl}>Titolo *</label>
+                <input
+                  className={t.inp}
+                  value={formEv.title || ''}
+                  onChange={e => setFormEv({ ...formEv, title: e.target.value })}
+                  placeholder="Titolo evento..."
+                />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label className={t.lbl}>Tipo *</label>
-                  <select
-                    className={t.inp}
-                    value={formEv.eventType}
-                    onChange={e => setFormEv({ ...formEv, eventType: e.target.value })}
-                  >
-                    {EVENT_TYPES.map(et => <option key={et.v} value={et.v}>{et.l}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className={t.lbl}>Posti massimi</label>
-                  <input
-                    className={t.inp}
-                    type="number"
-                    value={formEv.maxSeats || ''}
-                    onChange={e => setFormEv({ ...formEv, maxSeats: e.target.value })}
-                    placeholder="es. 50"
-                  />
-                </div>
-              </div>
+                <label className={t.lbl}>Descrizione</label>
+                <textarea
+                  className={t.ta}
+                  rows={3}
+                  value={formEv.description || ''}
+                  onChange={e => setFormEv({ ...formEv, description: e.target.value })}
+                  placeholder="Descrizione dell'evento..."
+                />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label className={t.lbl}>Data inizio * (es. 2026-06-15T09:00)</label>
-                  <input
-                    className={t.inp}
-                    type="datetime-local"
-                    value={formEv.date || ''}
-                    onChange={e => setFormEv({ ...formEv, date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className={t.lbl}>Data fine (opzionale)</label>
-                  <input
-                    className={t.inp}
-                    type="datetime-local"
-                    value={formEv.endDate || ''}
-                    onChange={e => setFormEv({ ...formEv, endDate: e.target.value })}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className={t.lbl}>Tipo *</label>
+                    <select
+                      className={t.inp}
+                      value={formEv.eventType}
+                      onChange={e => setFormEv({ ...formEv, eventType: e.target.value })}
+                    >
+                      {EVENT_TYPES.map(et => <option key={et.v} value={et.v}>{et.l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={t.lbl}>Posti massimi</label>
+                    <input
+                      className={t.inp}
+                      type="number"
+                      value={formEv.maxSeats || ''}
+                      onChange={e => setFormEv({ ...formEv, maxSeats: e.target.value })}
+                      placeholder="es. 50"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <label className={t.lbl}>Luogo</label>
-              <input
-                className={t.inp}
-                value={formEv.location || ''}
-                onChange={e => setFormEv({ ...formEv, location: e.target.value })}
-                placeholder="Online (Zoom), Milano..."
-              />
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Quando e dove</div>
 
-              <label className={t.lbl}>
-                Banner / Copertina
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
-                  1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
-                </span>
-              </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className={t.lbl}>Data inizio * (es. 2026-06-15T09:00)</label>
+                    <input
+                      className={t.inp}
+                      type="datetime-local"
+                      value={formEv.date || ''}
+                      onChange={e => setFormEv({ ...formEv, date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className={t.lbl}>Data fine (opzionale)</label>
+                    <input
+                      className={t.inp}
+                      type="datetime-local"
+                      value={formEv.endDate || ''}
+                      onChange={e => setFormEv({ ...formEv, endDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <label className={t.lbl}>Luogo</label>
+                <input
+                  className={t.inp}
+                  value={formEv.location || ''}
+                  onChange={e => setFormEv({ ...formEv, location: e.target.value })}
+                  placeholder="Online (Zoom), Milano..."
+                />
+              </div>
+
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Media</div>
+
+                <label className={t.lbl}>
+                  Banner / Copertina
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginLeft: 8, fontWeight: 400 }}>
+                    1500×590 px consigliati · JPEG, PNG o WebP · max 2 MB
+                  </span>
+                </label>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -573,19 +703,24 @@ export default function AdminNewsroomPage() {
                   </button>
                 </div>
               )}
+              </div>
 
-              <label className={t.lbl}>Contenuto articolo (HTML)</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <textarea
-                  value={formEv.content || ''}
-                  onChange={e => setFormEv({ ...formEv, content: e.target.value })}
-                  placeholder={'<h3>Titolo</h3>\n<p>Testo...</p>'}
-                  style={{ minHeight: 140, padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, outline: 'none', resize: 'vertical' }}
-                />
-                <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', overflow: 'auto', background: 'var(--surface)', minHeight: 140, fontSize: 13, lineHeight: 1.7 }}>
-                  {formEv.content
-                    ? <div dangerouslySetInnerHTML={{ __html: formEv.content }} style={{ color: 'var(--muted-dark)' }}/>
-                    : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
+              <div className={t.formSection}>
+                <div className={t.formSectionTitle}>Contenuto</div>
+
+                <label className={t.lbl}>Contenuto articolo (HTML)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <textarea
+                    value={formEv.content || ''}
+                    onChange={e => setFormEv({ ...formEv, content: e.target.value })}
+                    placeholder={'<h3>Titolo</h3>\n<p>Testo...</p>'}
+                    style={{ minHeight: 140, padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, outline: 'none', resize: 'vertical' }}
+                  />
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', overflow: 'auto', background: 'var(--surface)', minHeight: 140, fontSize: 13, lineHeight: 1.7 }}>
+                    {formEv.content
+                      ? <div dangerouslySetInnerHTML={{ __html: formEv.content }} style={{ color: 'var(--muted-dark)' }}/>
+                      : <span style={{ color: 'var(--muted)', fontSize: 12 }}>Anteprima...</span>}
+                  </div>
                 </div>
               </div>
             </div>

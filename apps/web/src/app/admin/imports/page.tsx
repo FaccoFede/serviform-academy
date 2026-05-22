@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import tableStyles from '../companies/CompaniesAdmin.module.css'
 import importStyles from './ImportsAdmin.module.css'
@@ -95,13 +95,10 @@ export default function AdminImportsPage() {
 
   return (
     <main className={styles.main}>
-      <div className={tableStyles.pageHeader}>
-        <div>
-          <Link href="/admin" className={tableStyles.back}>← Admin</Link>
-          <h1 className={styles.title}>Import CSV</h1>
-          <p className={styles.desc}>Importa aziende e utenti in blocco tramite file CSV</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Import CSV"
+        description="Importa aziende e utenti in blocco tramite file CSV."
+      />
 
       {msg && (
         <div className={`${tableStyles.msg} ${msg.type === 'error' ? tableStyles.msgError : tableStyles.msgSuccess}`}>

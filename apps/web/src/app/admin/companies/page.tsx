@@ -1,14 +1,18 @@
 'use client'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useMemo } from 'react'
+import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
+
+const PAGE_SIZE = 20
 
 export default function AdminCompaniesPage() {
   const [rows, setRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
   const [show, setShow] = useState(false)
   const [edit, setEdit] = useState<any>(null)
   const [form, setForm] = useState<any>({})
@@ -21,6 +25,7 @@ export default function AdminCompaniesPage() {
   }
 
   useEffect(() => { load() }, [])
+  useEffect(() => { setPage(1) }, [q])
 
   const openNew = () => { setEdit(null); setForm({}); setMsg(null); setShow(true) }
   const openEdit = (r: any) => {
@@ -54,18 +59,26 @@ export default function AdminCompaniesPage() {
     try { await api.companies.remove(id); load() } catch (e: any) { setMsg({ t: e.message, ok: false }) }
   }
 
-  const filtered = rows.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()))
+  const filtered = useMemo(
+    () => rows.filter(r => r.name.toLowerCase().includes(q.toLowerCase())),
+    [rows, q],
+  )
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <main className={styles.main}>
-      <div className={t.hdr}>
-        <div>
-          <Link href="/admin" className={t.back}>← Admin</Link>
-          <h1 className={styles.title}>Aziende</h1>
-          <p className={styles.desc}>{rows.length} aziende</p>
-        </div>
-        <button className={t.btnP} onClick={openNew}>+ Nuova azienda</button>
-      </div>
+      <PageHeader
+        title="Aziende"
+        description={`${filtered.length} ${filtered.length === 1 ? 'azienda' : 'aziende'}${q ? ` (filtrate su ${rows.length})` : ''}`}
+        action={
+          <button className={t.btnP} onClick={openNew}>
+            <Plus size={14} />
+            Nuova azienda
+          </button>
+        }
+      />
 
       {msg && (
         <div className={msg.ok ? t.ok : t.err}>
@@ -74,29 +87,31 @@ export default function AdminCompaniesPage() {
         </div>
       )}
 
-      <input
-        className={t.search}
-        placeholder="Cerca azienda…"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-      />
+      <div className={t.searchBar}>
+        <input
+          className={t.search}
+          placeholder="Cerca azienda…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
 
       {loading ? (
         <p style={{ color: 'var(--muted)', fontSize: 14, padding: '40px 0' }}>Caricamento…</p>
       ) : (
-        <div className={t.tableWrap}>
-          <table className={t.table}>
-            <thead>
-              <tr>
-                <th>Azienda</th>
-                <th>Utenti</th>
-                <th>Corsi assegnati</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r) => {
-                return (
+        <>
+          <div className={t.tableWrap}>
+            <table className={t.table}>
+              <thead>
+                <tr>
+                  <th>Azienda</th>
+                  <th>Utenti</th>
+                  <th>Corsi assegnati</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((r) => (
                   <tr key={r.id}>
                     <td className={t.tdBold}>{r.name}</td>
                     <td>
@@ -109,21 +124,64 @@ export default function AdminCompaniesPage() {
                         {r._count?.courseAssignments ?? '—'}
                       </span>
                     </td>
-                    <td className={t.actions}>
-                      <button className={t.btnE} onClick={() => openEdit(r)}>Modifica</button>
-                      <button className={t.btnD} onClick={() => del(r.id, r.name)}>Elimina</button>
+                    <td className={t.actionsCell}>
+                      <button
+                        className={t.iconBtn}
+                        title="Modifica"
+                        aria-label="Modifica"
+                        onClick={() => openEdit(r)}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        className={t.iconBtn}
+                        data-variant="danger"
+                        title="Elimina"
+                        aria-label="Elimina"
+                        onClick={() => del(r.id, r.name)}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
-                )
-              })}
-              {!filtered.length && (
-                <tr>
-                  <td colSpan={4} className={t.empty}>Nessuna azienda trovata.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+                {!filtered.length && (
+                  <tr>
+                    <td colSpan={4} className={t.empty}>Nessuna azienda trovata.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className={t.pagination}>
+              <span className={t.paginationInfo}>
+                Pagina {currentPage} di {totalPages}
+              </span>
+              <div className={t.paginationCtrls}>
+                <button
+                  type="button"
+                  className={t.pageBtn}
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  aria-label="Pagina precedente"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  type="button"
+                  className={t.pageBtn}
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  aria-label="Pagina successiva"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {show && (

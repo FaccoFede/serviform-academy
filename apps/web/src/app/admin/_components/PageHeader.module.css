@@ -1,0 +1,96 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.crumbLink {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--t-color);
+}
+
+.crumbLink:hover {
+  color: var(--red);
+}
+
+.crumbCurrent {
+  color: var(--ink);
+}
+
+.crumbSep {
+  color: var(--border);
+  font-weight: 400;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.titleBlock {
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.6px;
+  color: var(--ink);
+  margin: 0 0 4px;
+  line-height: 1.15;
+}
+
+.description {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.meta {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 700px) {
+  .title {
+    font-size: 22px;
+  }
+}

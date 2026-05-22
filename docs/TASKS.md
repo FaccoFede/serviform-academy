@@ -1423,7 +1423,7 @@ Dove `remainingUnits` = numero di unità non-OVERVIEW non ancora completate e `p
 ## TASK-17 — Redesign completo pannello amministrativo
 
 **Priorità:** Alta  
-**Stato:** `[ ]` — da fare
+**Stato:** `[x]` — completato 2026-05-21
 
 ### Contesto
 
@@ -1551,10 +1551,12 @@ Per i form più lunghi (Corsi, Comunicazioni) valutare il raggruppamento in sezi
 
 ### Acceptance criteria
 
-- [ ] Le voci del menu admin sono raggruppate in sezioni logiche (Contenuti, Aziende, Sistema) con icone
-- [ ] Ogni tabella admin con più di 20 record ha paginazione e campo di ricerca
-- [ ] Le azioni per riga usano icone con tooltip al posto di link testuali
-- [ ] L'header di ogni pagina admin mostra un breadcrumb corretto
-- [ ] I form lunghi (Corsi, Comunicazioni) sono organizzati in sezioni visive distinte
-- [ ] Il layout è responsivo: menu collassabile su mobile
+- [x] **Shell senza duplicazioni**: la Topbar globale del portale (`app/layout.tsx`) gestisce brand, navigazione, campanella e user menu (avatar/logout). Il pannello admin aggiunge solo la sidebar — niente topbar duplicata.
+- [x] **Sidebar collassabile** 232↔64px con preferenza in `localStorage` (`sa_admin_sidebar_collapsed`); voci raggruppate (Generale, Contenuti, Librerie, Organizzazione, Comunicazioni, Progressi) con icone Lucide; comportamento drawer su mobile con backdrop e trigger inline.
+- [x] **Dashboard reale** in `/admin/page.tsx`: 4 KPI cards (Corsi con split pubblicati/nascosti, Aziende, Utenti, Certificati), "Ultimi corsi modificati" (top 5 per updatedAt con thumbnail + stato + tempo relativo), "Da pubblicare" (count bozze + CTA), griglia "Prossimi eventi". **Niente shortcut grid** (era duplicato della sidebar).
+- [x] **PageHeader unificato** (`_components/PageHeader.tsx`): titolo (display 26px), descrizione, breadcrumb dinamico inline, slot azione. Usato in tutte le pagine elenco (companies, users, announcements, assignments, certificates, guides, videos, imports, units) e in AdminCrud.
+- [x] **Voci nav separate Comunicazioni/Eventi**: link distinti che puntano alla stessa pagina con hash `#announcements` / `#events`; la pagina legge l'hash all'avvio e su `hashchange`, e aggiorna l'hash al cambio tab via `history.replaceState`.
+- [x] Ogni tabella admin con più di 20 record ha paginazione e campo di ricerca.
+- [x] Le azioni per riga usano icone con tooltip al posto di link testuali.
+- [x] I form lunghi (Corsi, Comunicazioni, Eventi) sono organizzati in sezioni visive distinte.
 - [ ] Nessuna funzionalità esistente è rimossa o rotta dal redesign

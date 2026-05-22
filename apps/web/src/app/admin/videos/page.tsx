@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import { api, API_BASE_URL, resolveVideoUrl } from '@/lib/api'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
@@ -156,15 +156,10 @@ export default function AdminVideosPage() {
 
   return (
     <main className={styles.main}>
-      <div className={t.hdr}>
-        <div>
-          <Link href="/admin" className={t.back}>← Admin</Link>
-          <h1 className={styles.title}>Catalogo Video</h1>
-          <p className={styles.desc}>
-            {videos.length} video · upload diretto o URL esterni
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Catalogo Video"
+        description={`${videos.length} video · upload diretto sul server o URL esterni (YouTube, Vimeo, Bunny…).`}
+      />
 
       {msg && (
         <div className={msg.ok ? t.ok : t.err}>

@@ -1,16 +1,14 @@
 'use client'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useMemo } from 'react'
+import { Pencil, Trash2, KeyRound, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
 import { API_URL } from '@/lib/config'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
 const ROLE: Record<string, string> = { USER: 'Utente', ADMIN: 'Admin', TEAM_ADMIN: 'Team Admin' }
-
-function Icon({ d, size = 13 }: { d: string; size?: number }) {
-  return <svg viewBox="0 0 24 24" fill="none" width={size} height={size}><path d={d} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-}
+const PAGE_SIZE = 20
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
@@ -18,6 +16,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [companiesError, setCompaniesError] = useState(false)
   const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
   const [show, setShow] = useState(false)
   const [edit, setEdit] = useState<any>(null)
   const [form, setForm] = useState<any>({ role: 'USER', companyId: '', mustChangePassword: true })
@@ -36,6 +35,7 @@ export default function AdminUsersPage() {
     setLoading(false)
   }
   useEffect(() => { load() }, [])
+  useEffect(() => { setPage(1) }, [q])
 
   const openNew = () => { setEdit(null); setForm({ role: 'USER', companyId: '', mustChangePassword: true }); setMsg(null); setShow(true) }
   const openEdit = (r: any) => { setEdit(r); setForm({ email: r.email, name: r.name || '', role: r.role, companyId: r.membership?.company?.id || '' }); setMsg(null); setShow(true) }
@@ -73,42 +73,79 @@ export default function AdminUsersPage() {
     finally { setResetSaving(false) }
   }
 
-  const filtered = users.filter(u => u.email.toLowerCase().includes(q.toLowerCase()) || (u.name || '').toLowerCase().includes(q.toLowerCase()))
+  const filtered = useMemo(
+    () => users.filter(u =>
+      u.email.toLowerCase().includes(q.toLowerCase()) ||
+      (u.name || '').toLowerCase().includes(q.toLowerCase()),
+    ),
+    [users, q],
+  )
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <main className={styles.main}>
-      <div className={t.hdr}>
-        <div><Link href="/admin" className={t.back}>← Admin</Link><h1 className={styles.title}>Utenti</h1><p className={styles.desc}>{users.length} utenti</p></div>
-        <button className={t.btnP} onClick={openNew}>+ Nuovo utente</button>
-      </div>
+      <PageHeader
+        title="Utenti"
+        description={`${filtered.length} ${filtered.length === 1 ? 'utente' : 'utenti'}${q ? ` (filtrati su ${users.length})` : ''}`}
+        action={
+          <button className={t.btnP} onClick={openNew}>
+            <Plus size={14} />
+            Nuovo utente
+          </button>
+        }
+      />
       {msg && <div className={msg.ok ? t.ok : t.err}>{msg.t}<button onClick={() => setMsg(null)}>×</button></div>}
       {companiesError && <div style={{ padding: '10px 14px', background: '#FFFBEB', border: '1px solid #F6CD4D', borderRadius: 8, fontSize: 13, marginBottom: 16, color: '#92400E' }}>⚠ Tabella aziende non disponibile. Esegui prima la migrazione B2B.</div>}
-      <input className={t.search} placeholder="Cerca email o nome..." value={q} onChange={e => setQ(e.target.value)}/>
+      <div className={t.searchBar}>
+        <input className={t.search} placeholder="Cerca email o nome..." value={q} onChange={e => setQ(e.target.value)}/>
+      </div>
       {loading ? <p>Caricamento...</p> : (
-        <div className={t.tableWrap}>
-          <table className={t.table}>
-            <thead><tr><th>Email</th><th>Nome</th><th>Ruolo</th><th>Azienda</th><th>Cambio pwd</th><th></th></tr></thead>
-            <tbody>
-              {filtered.map(r => (
-                <tr key={r.id}>
-                  <td className={t.tdBold}>{r.email}</td>
-                  <td>{r.name || '—'}</td>
-                  <td><span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{ROLE[r.role] || r.role}</span></td>
-                  <td>{r.membership?.company?.name || '—'}</td>
-                  <td>{r.mustChangePassword ? <span style={{ fontSize: 11, color: '#D97706', fontWeight: 700 }}>⚠ Richiesto</span> : <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>✓ OK</span>}</td>
-                  <td className={t.actions}>
-                    <button className={t.btnE} onClick={() => openEdit(r)}>Modifica</button>
-                    <button className={t.btnE} title="Reset password" onClick={() => { setResetTarget(r); setResetPwd(''); setResetForce(true) }}>
-                      <Icon d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </button>
-                    <button className={t.btnD} onClick={() => del(r.id, r.email)}>Elimina</button>
-                  </td>
-                </tr>
-              ))}
-              {!filtered.length && <tr><td colSpan={6} className={t.empty}>Nessun utente trovato.</td></tr>}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className={t.tableWrap}>
+            <table className={t.table}>
+              <thead><tr><th>Email</th><th>Nome</th><th>Ruolo</th><th>Azienda</th><th>Cambio pwd</th><th></th></tr></thead>
+              <tbody>
+                {paginated.map(r => (
+                  <tr key={r.id}>
+                    <td className={t.tdBold}>{r.email}</td>
+                    <td>{r.name || '—'}</td>
+                    <td><span style={{ padding: '2px 8px', borderRadius: 4, background: 'var(--surface)', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{ROLE[r.role] || r.role}</span></td>
+                    <td>{r.membership?.company?.name || '—'}</td>
+                    <td>{r.mustChangePassword ? <span style={{ fontSize: 11, color: '#D97706', fontWeight: 700 }}>⚠ Richiesto</span> : <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>✓ OK</span>}</td>
+                    <td className={t.actionsCell}>
+                      <button className={t.iconBtn} title="Modifica" aria-label="Modifica" onClick={() => openEdit(r)}>
+                        <Pencil size={14} />
+                      </button>
+                      <button className={t.iconBtn} title="Reset password" aria-label="Reset password" onClick={() => { setResetTarget(r); setResetPwd(''); setResetForce(true) }}>
+                        <KeyRound size={14} />
+                      </button>
+                      <button className={t.iconBtn} data-variant="danger" title="Elimina" aria-label="Elimina" onClick={() => del(r.id, r.email)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!filtered.length && <tr><td colSpan={6} className={t.empty}>Nessun utente trovato.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className={t.pagination}>
+              <span className={t.paginationInfo}>Pagina {currentPage} di {totalPages}</span>
+              <div className={t.paginationCtrls}>
+                <button type="button" className={t.pageBtn} disabled={currentPage === 1} onClick={() => setPage(p => Math.max(1, p - 1))} aria-label="Pagina precedente">
+                  <ChevronLeft size={14} />
+                </button>
+                <button type="button" className={t.pageBtn} disabled={currentPage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} aria-label="Pagina successiva">
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Modal crea/modifica utente */}

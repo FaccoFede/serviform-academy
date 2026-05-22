@@ -86,11 +86,10 @@ export default function AdminCoursesPage() {
         </Link>
       )}
       formFields={[
-        { key: 'title', label: 'Titolo modulo', type: 'text', required: true, placeholder: 'Es. Modulo 3D' },
-        { key: 'slug', label: 'Slug (URL)', type: 'text', required: true, placeholder: 'Es. engview-3d' },
-        { key: 'description', label: 'Descrizione', type: 'textarea', placeholder: 'Descrizione del modulo...' },
-        { key: 'objective', label: 'Obiettivo pratico', type: 'textarea', placeholder: 'Cosa saprà fare l\'utente al termine...' },
+        { section: 'Informazioni base', key: 'title', label: 'Titolo modulo', type: 'text', required: true, placeholder: 'Es. Modulo 3D' },
+        { section: 'Informazioni base', key: 'slug', label: 'Slug (URL)', type: 'text', required: true, placeholder: 'Es. engview-3d' },
         {
+          section: 'Informazioni base',
           key: 'softwareId',
           label: 'Categoria',
           type: 'select',
@@ -101,6 +100,7 @@ export default function AdminCoursesPage() {
           },
         },
         {
+          section: 'Informazioni base',
           key: 'level',
           label: 'Livello',
           type: 'select',
@@ -110,23 +110,17 @@ export default function AdminCoursesPage() {
             { value: 'Avanzato', label: 'Avanzato' },
           ],
         },
+        { section: 'Contenuto', key: 'description', label: 'Descrizione', type: 'textarea', placeholder: 'Descrizione del modulo...' },
+        { section: 'Contenuto', key: 'objective', label: 'Obiettivo pratico', type: 'textarea', placeholder: 'Cosa saprà fare l\'utente al termine...' },
         {
-          key: 'publishState',
-          label: 'Stato pubblicazione',
-          type: 'select',
-          options: [
-            { value: 'PUBLISHED', label: '✅ Pubblicato — visibile e fruibile se assegnato' },
-            { value: 'VISIBLE_LOCKED', label: '🔒 Visibile bloccato — compare nel catalogo ma non è fruibile' },
-            { value: 'HIDDEN', label: '⚫ Nascosto — non compare nel catalogo' },
-          ],
-        },
-        {
+          section: 'Media',
           key: 'thumbnailUrl',
           label: 'Anteprima immagine (URL opzionale)',
           type: 'text',
           placeholder: 'https://example.com/immagine.jpg — lascia vuoto per usare il placeholder automatico',
         },
         {
+          section: 'Media',
           key: 'badgeUrl',
           label: 'Badge SVG — caricato al completamento del corso (viewBox quadrato, min 200×200)',
           type: 'file-upload',
@@ -136,6 +130,17 @@ export default function AdminCoursesPage() {
             const res = await api.uploads.badge(file, token)
             return res.url
           },
+        },
+        {
+          section: 'Pubblicazione',
+          key: 'publishState',
+          label: 'Stato pubblicazione',
+          type: 'select',
+          options: [
+            { value: 'PUBLISHED', label: '✅ Pubblicato — visibile e fruibile se assegnato' },
+            { value: 'VISIBLE_LOCKED', label: '🔒 Visibile bloccato — compare nel catalogo ma non è fruibile' },
+            { value: 'HIDDEN', label: '⚫ Nascosto — non compare nel catalogo' },
+          ],
         },
       ]}
     />

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { api } from '@/lib/api'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
@@ -96,13 +96,10 @@ export default function AdminGuidesCatalogPage() {
 
   return (
     <main className={styles.main}>
-      <div className={t.hdr}>
-        <div>
-          <Link href="/admin" className={t.back}>← Admin</Link>
-          <h1 className={styles.title}>Catalogo Guide</h1>
-          <p className={styles.desc}>{rows.length} guide registrate · titolo recuperato automaticamente</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Catalogo Guide"
+        description={`${rows.length} guide registrate · titolo recuperato automaticamente da Zendesk.`}
+      />
 
       {msg && (
         <div className={msg.ok ? t.ok : t.err}>

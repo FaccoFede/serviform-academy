@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { Trash2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 import t from '../table.module.css'
 
@@ -105,9 +106,10 @@ export default function AdminAssignmentsPage() {
 
   return (
     <main className={styles.main}>
-      <div className={t.hdr} style={{marginBottom:20}}>
-        <div><Link href="/admin" className={t.back}>← Admin</Link><h1 className={styles.title}>Assegnazioni corsi</h1></div>
-      </div>
+      <PageHeader
+        title="Assegnazioni corsi"
+        description="Seleziona un'azienda dalla lista per gestirne i corsi assegnati."
+      />
       {msg && !showBulk && <div className={msg.ok ? t.ok : t.err}>{msg.t}<button onClick={() => setMsg(null)}>×</button></div>}
       <div style={{display:'grid',gridTemplateColumns:'240px 1fr',gap:24,alignItems:'start'}}>
         {/* Sidebar aziende */}
@@ -150,7 +152,11 @@ export default function AdminAssignmentsPage() {
                             </select>
                           </td>
                           <td>{a.expiresAt ? new Date(a.expiresAt).toLocaleDateString('it-IT') : '∞'}</td>
-                          <td><button className={t.btnD} onClick={() => remove(a.id)}>Rimuovi</button></td>
+                          <td className={t.actionsCell}>
+                            <button className={t.iconBtn} data-variant="danger" title="Rimuovi assegnazione" aria-label="Rimuovi" onClick={() => remove(a.id)}>
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                       {!asgn.length && <tr><td colSpan={5} className={t.empty}>Nessun corso assegnato.</td></tr>}

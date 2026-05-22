@@ -1,13 +1,496 @@
-.main { padding: 44px 56px; max-width: 960px; }
-.title { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -0.6px; color: var(--ink); margin-bottom: 8px; }
-.desc { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.card {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--r);
-  background: var(--white); text-decoration: none; color: inherit;
-  transition: all var(--t-elevation); box-shadow: var(--shadow-sm);
+.page {
+  padding: 28px 32px 48px;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
-.card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: transparent; }
-.cardTitle { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--ink); }
-.cardDesc { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+/* ── Wrapper standard usato dalle pagine elenco "fatte a mano" ───── */
+.main {
+  padding: 28px 32px 48px;
+  max-width: 1400px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 22px;
+}
+
+/* ── KPI grid ───────────────────────────────────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.kpi {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--t-elevation);
+  overflow: hidden;
+}
+
+.kpi::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ink);
+}
+
+.kpiAccent_ink::before { background: var(--ink); }
+.kpiAccent_blue::before { background: #067DB8; }
+.kpiAccent_violet::before { background: #7C3AED; }
+.kpiAccent_green::before { background: #059669; }
+
+.kpi:hover {
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.kpiIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.kpiAccent_blue .kpiIcon { background: #E6F3FA; color: #067DB8; }
+.kpiAccent_violet .kpiIcon { background: #F3EBFE; color: #7C3AED; }
+.kpiAccent_green .kpiIcon { background: #E6FBF1; color: #059669; }
+
+.kpiBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.kpiLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+
+.kpiValue {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+
+.kpiHint {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+.kpiArrow {
+  color: var(--muted);
+  transition: color var(--t-color), transform var(--t-color);
+}
+
+.kpi:hover .kpiArrow {
+  color: var(--ink);
+  transform: translate(2px, -2px);
+}
+
+/* ── Card generic ──────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.2px;
+  margin: 0 0 4px;
+}
+
+.cardSubtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.cardLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  transition: color var(--t-color);
+  white-space: nowrap;
+}
+
+.cardLink:hover {
+  color: var(--red);
+}
+
+.cardEmpty {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardEmpty svg {
+  color: var(--border);
+}
+
+.emptyAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--white);
+  transition: all var(--t-color);
+}
+
+.emptyAction:hover {
+  border-color: var(--ink);
+}
+
+/* ── Two-col ──────────────────────────────────────────────────── */
+.twoCol {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+
+/* ── List items (ultimi corsi) ───────────────────────────────── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.list li {
+  border-bottom: 1px solid var(--border);
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 6px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+  transition: background var(--t-color);
+}
+
+.listItem:hover {
+  background: var(--surface);
+}
+
+.thumb {
+  width: 44px;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.listBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.listTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  flex-wrap: wrap;
+}
+
+.statePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.listArrow {
+  color: var(--border);
+  transition: color var(--t-color), transform var(--t-color);
+  flex-shrink: 0;
+}
+
+.listItem:hover .listArrow {
+  color: var(--ink);
+  transform: translate(2px, -2px);
+}
+
+/* ── Draft box ────────────────────────────────────────────────── */
+.draftBox {
+  text-align: center;
+  padding: 18px 12px;
+  background: linear-gradient(135deg, var(--red-light) 0%, #FFF8F8 100%);
+  border-radius: 10px;
+  border: 1px solid #FBD5D5;
+}
+
+.draftValue {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--red);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.draftLabel {
+  font-size: 11px;
+  color: var(--muted-dark);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .7px;
+}
+
+.draftAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--white);
+  transition: all var(--t-color);
+}
+
+.draftAction:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.draftAction svg {
+  color: var(--red);
+}
+
+/* ── Event grid (eventi futuri full-width) ───────────────────── */
+.eventGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.eventCard {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color var(--t-color);
+}
+
+.eventCard:hover {
+  border-color: var(--ink);
+}
+
+.eventDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.eventDay {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.eventMonth {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: .8px;
+  margin-top: 3px;
+}
+
+.eventBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.eventTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  flex-wrap: wrap;
+}
+
+.eventMeta svg {
+  color: var(--muted);
+}
+
+.draftPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #FFFBEB;
+  color: #92400E;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .page,
+  .main {
+    padding: 22px 18px 40px;
+  }
+}
+
+@media (max-width: 540px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+}

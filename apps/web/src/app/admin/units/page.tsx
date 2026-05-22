@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import AdminCrud from '@/components/features/AdminCrud'
+import PageHeader from '../_components/PageHeader'
 import styles from '../AdminPage.module.css'
 
 /**
@@ -610,19 +611,10 @@ export default function AdminUnitsPage() {
 
   return (
     <main className={styles.main}>
-      <div style={{ marginBottom: 24 }}>
-        <Link
-          href="/admin"
-          style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)', textDecoration: 'none' }}
-        >
-          ← Admin
-        </Link>
-        <h1 className={styles.title}>Unità didattiche</h1>
-        <p className={styles.desc}>
-          Seleziona il corso, gestisci le unità. L'ordine è automatico
-          (Overview = 0, lezioni 1, 2, 3…).
-        </p>
-      </div>
+      <PageHeader
+        title="Unità didattiche"
+        description="Seleziona il corso, gestisci le unità. L'ordine è automatico (Overview = 0, lezioni 1, 2, 3…)."
+      />
 
       {/* Selezione corso */}
       <div style={{ marginBottom: 28 }}>

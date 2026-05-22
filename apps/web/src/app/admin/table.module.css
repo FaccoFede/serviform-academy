@@ -13,7 +13,7 @@
 .tdBold{font-weight:700;color:var(--ink)!important}
 .empty{text-align:center;color:var(--muted);padding:44px 0!important;font-size:14px}
 .actions{display:flex;gap:8px;white-space:nowrap}
-.btnP{height:36px;padding:0 18px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:background var(--t-color);white-space:nowrap}
+.btnP{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 16px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:background var(--t-color);white-space:nowrap}
 .btnP:hover{background:var(--red)}
 .btnP:disabled{opacity:.4;cursor:not-allowed}
 .btnS{height:36px;padding:0 18px;background:var(--white);color:var(--ink);border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all var(--t-color)}
@@ -39,3 +39,38 @@
 .inp:disabled{background:var(--surface);color:var(--muted);cursor:not-allowed}
 .ta{padding:9px 13px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:var(--font-body);font-weight:600;color:var(--ink);background:var(--white);outline:none;width:100%;resize:vertical;line-height:1.6;transition:border-color var(--t-color)}
 .ta:focus{border-color:var(--ink)}
+
+/* ── Search bar + risultati ── */
+.searchBar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.searchBar .search{margin-bottom:0;flex:1;min-width:240px;max-width:380px}
+.resultsCount{font-size:11px;font-weight:700;color:var(--muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+
+/* ── Paginazione ── */
+.pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 4px;border-top:1px solid var(--border);margin-top:0;flex-wrap:wrap}
+.paginationInfo{font-size:12px;color:var(--muted);font-family:var(--font-mono);font-weight:600}
+.paginationCtrls{display:flex;align-items:center;gap:6px}
+.pageBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border);border-radius:7px;background:var(--white);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--t-color);font-family:var(--font-body)}
+.pageBtn:hover:not(:disabled){border-color:var(--ink);background:var(--surface)}
+.pageBtn:disabled{opacity:.35;cursor:not-allowed}
+.pageBtn[data-active="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ── Azioni icona ── */
+.iconBtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid var(--border);border-radius:7px;background:var(--white);color:var(--ink);cursor:pointer;transition:all var(--t-color);padding:0}
+.iconBtn:hover{border-color:var(--ink);background:var(--surface)}
+.iconBtn[data-variant="danger"]{color:var(--muted);border-color:transparent;background:transparent}
+.iconBtn[data-variant="danger"]:hover{color:var(--red);border-color:var(--red);background:var(--red-light)}
+.iconBtn[data-variant="primary"]:hover{color:var(--red);border-color:var(--red);background:var(--red-light)}
+.actionsCell{display:flex;gap:6px;align-items:center;justify-content:flex-end;white-space:nowrap}
+
+/* ── Sezioni form ── */
+.formSection{padding:16px 0;border-top:1px solid var(--border)}
+.formSection:first-of-type{padding-top:4px;border-top:none}
+.formSectionTitle{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink);margin-bottom:12px}
+.formSectionTitle::before{content:"";width:3px;height:14px;background:var(--red);border-radius:2px}
+
+/* ── Breadcrumb ── */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);font-family:var(--font-mono);margin-bottom:12px;flex-wrap:wrap}
+.breadcrumb a{color:var(--muted);text-decoration:none;transition:color var(--t-color)}
+.breadcrumb a:hover{color:var(--red)}
+.breadcrumb .sep{color:var(--border);font-weight:400}
+.breadcrumb .current{color:var(--ink)}

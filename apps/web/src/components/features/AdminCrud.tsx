@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Pencil, Trash2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import PageHeader from '@/app/admin/_components/PageHeader'
 import styles from './AdminCrud.module.css'
 
 interface Column {
   key: string
   label: string
   render?: (value: any, row: any) => React.ReactNode
+  /** Se true, i valori di questa colonna sono usati per la ricerca testuale */
+  searchable?: boolean
 }
 
 interface FormField {
@@ -24,6 +27,8 @@ interface FormField {
   onUpload?: (file: File) => Promise<string>
   /** Filtro file accettati per l'input, es. '.svg,image/svg+xml' */
   accept?: string
+  /** Sezione del form a cui appartiene il campo (per raggruppamento visivo) */
+  section?: string
 }
 
 interface AdminCrudProps {
@@ -41,11 +46,27 @@ interface AdminCrudProps {
   onEdit?: (item: any) => void | Promise<void>
   /** Azioni aggiuntive per riga (es. link a sezione collegata) */
   extraActions?: (item: any) => React.ReactNode
+  /** Dimensione di pagina (default 20). Imposta 0 per disattivare la paginazione */
+  pageSize?: number
+  /** Placeholder del campo ricerca */
+  searchPlaceholder?: string
+}
+
+const DEFAULT_SEARCH_KEYS = ['title', 'name', 'slug', 'label']
+
+function getSearchableValue(item: any, key: string): string {
+  const v = item[key]
+  if (v == null) return ''
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (typeof v === 'object' && 'name' in v) return String((v as any).name ?? '')
+  return ''
 }
 
 export default function AdminCrud({
   title, columns, fetchItems, onDelete, onSave, onUpdate,
   formFields, emptyMessage, onEdit, extraActions,
+  pageSize = 20, searchPlaceholder = 'Cerca…',
 }: AdminCrudProps) {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,6 +77,8 @@ export default function AdminCrud({
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [dynamicOptions, setDynamicOptions] = useState<Record<string, { value: string; label: string }[]>>({})
   const [fieldUploading, setFieldUploading] = useState<Record<string, boolean>>({})
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -136,26 +159,63 @@ export default function AdminCrud({
     return field.options || []
   }
 
+  // ─── Ricerca e paginazione ──────────────────────────────────────────────
+  const searchKeys = useMemo(() => {
+    const flagged = columns.filter(c => c.searchable).map(c => c.key)
+    if (flagged.length > 0) return flagged
+    // fallback: chiavi comuni presenti negli items
+    const sample = items[0]
+    if (!sample) return DEFAULT_SEARCH_KEYS
+    return DEFAULT_SEARCH_KEYS.filter(k => k in sample)
+  }, [columns, items])
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return items
+    return items.filter(it =>
+      searchKeys.some(k => getSearchableValue(it, k).toLowerCase().includes(q))
+    )
+  }, [items, search, searchKeys])
+
+  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(filtered.length / pageSize)) : 1
+  const currentPage = Math.min(page, totalPages)
+  const paginated = pageSize > 0
+    ? filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    : filtered
+
+  useEffect(() => { setPage(1) }, [search])
+
+  // ─── Sezioni form ────────────────────────────────────────────────────────
+  const formSections = useMemo(() => {
+    const groups: { title: string | null; fields: FormField[] }[] = []
+    const map = new Map<string, FormField[]>()
+    const order: (string | null)[] = []
+    formFields.forEach(f => {
+      const section = f.section || null
+      if (!map.has(section ?? '__none__')) {
+        map.set(section ?? '__none__', [])
+        order.push(section)
+      }
+      map.get(section ?? '__none__')!.push(f)
+    })
+    order.forEach(s => groups.push({ title: s, fields: map.get(s ?? '__none__')! }))
+    return groups
+  }, [formFields])
+
+  const hasSections = formSections.some(g => g.title)
+
   return (
     <main className={styles.main}>
-      <Link href="/admin" className={styles.back}>
-        <svg viewBox="0 0 14 14" fill="none" width={14} height={14}>
-          <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        Admin
-      </Link>
-
-      <div className={styles.header}>
-        <h1>{title}</h1>
-        {onSave && (
+      <PageHeader
+        title={title}
+        description={`${filtered.length} ${filtered.length === 1 ? 'elemento' : 'elementi'}${search ? ` (filtrati su ${items.length})` : ''}`}
+        action={onSave ? (
           <button className={styles.createBtn} onClick={openCreate}>
-            <svg viewBox="0 0 16 16" fill="none" width={14} height={14}>
-              <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+            <Plus size={14} />
             Nuovo
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {msg && (
         <div className={msg.type === 'success' ? styles.msgSuccess : styles.msgError}>
@@ -170,96 +230,104 @@ export default function AdminCrud({
             <div className={styles.formHeader}>
               <h2>{editItem ? 'Modifica' : 'Nuovo elemento'}</h2>
               <button type="button" className={styles.formClose} onClick={() => setShowForm(false)}>
-                <svg viewBox="0 0 14 14" fill="none" width={14} height={14}>
-                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                <X size={14} />
               </button>
             </div>
 
-            {formFields.map(f => (
-              <div key={f.key} className={styles.field}>
-                <label>{f.label}{f.required && ' *'}</label>
+            {formSections.map((group, gi) => (
+              <div
+                key={group.title ?? `__group-${gi}`}
+                className={hasSections ? styles.formSection : undefined}
+              >
+                {group.title && hasSections && (
+                  <div className={styles.formSectionTitle}>{group.title}</div>
+                )}
+                {group.fields.map(f => (
+                  <div key={f.key} className={styles.field}>
+                    <label>{f.label}{f.required && ' *'}</label>
 
-                {/* ── CUSTOM render (VideoSelector, GuidesEditor, ecc.) ── */}
-                {f.type === 'custom' && f.customRender ? (
-                  f.customRender()
-                ) : f.type === 'file-upload' ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {formData[f.key] && (
-                      <img
-                        src={formData[f.key]}
-                        alt="badge preview"
-                        style={{ width: 64, height: 64, objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 8, padding: 4, background: '#fafafa' }}
+                    {/* ── CUSTOM render (VideoSelector, GuidesEditor, ecc.) ── */}
+                    {f.type === 'custom' && f.customRender ? (
+                      f.customRender()
+                    ) : f.type === 'file-upload' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {formData[f.key] && (
+                          <img
+                            src={formData[f.key]}
+                            alt="badge preview"
+                            style={{ width: 64, height: 64, objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 8, padding: 4, background: '#fafafa' }}
+                          />
+                        )}
+                        <input
+                          type="file"
+                          accept={f.accept || '*/*'}
+                          disabled={fieldUploading[f.key]}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file || !f.onUpload) return
+                            setFieldUploading(prev => ({ ...prev, [f.key]: true }))
+                            try {
+                              const url = await f.onUpload(file)
+                              setFormData(prev => ({ ...prev, [f.key]: url }))
+                            } catch (err) {
+                              setMsg({ text: 'Upload fallito: ' + (err instanceof Error ? err.message : 'errore sconosciuto'), type: 'error' })
+                            } finally {
+                              setFieldUploading(prev => ({ ...prev, [f.key]: false }))
+                              e.target.value = ''
+                            }
+                          }}
+                        />
+                        {fieldUploading[f.key] && (
+                          <span style={{ fontSize: 12, color: 'var(--muted)' }}>Caricamento…</span>
+                        )}
+                        {formData[f.key] && (
+                          <button
+                            type="button"
+                            style={{ fontSize: 11, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+                            onClick={() => setFormData(prev => ({ ...prev, [f.key]: '' }))}
+                          >
+                            Rimuovi badge
+                          </button>
+                        )}
+                      </div>
+                    ) : f.type === 'select' ? (
+                      <select
+                        value={formData[f.key] || ''}
+                        onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                        required={f.required}
+                      >
+                        <option value="">— Seleziona —</option>
+                        {getFieldOptions(f).map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    ) : f.type === 'textarea' || f.type === 'richtext' ? (
+                      <textarea
+                        value={formData[f.key] || ''}
+                        onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                        placeholder={f.placeholder}
+                        required={f.required}
+                        rows={f.type === 'richtext' ? 14 : 4}
+                      />
+                    ) : f.type === 'number' ? (
+                      <input
+                        type="number"
+                        value={formData[f.key] || ''}
+                        onChange={e => setFormData({ ...formData, [f.key]: Number(e.target.value) })}
+                        placeholder={f.placeholder}
+                        required={f.required}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData[f.key] || ''}
+                        onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                        placeholder={f.placeholder}
+                        required={f.required}
                       />
                     )}
-                    <input
-                      type="file"
-                      accept={f.accept || '*/*'}
-                      disabled={fieldUploading[f.key]}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0]
-                        if (!file || !f.onUpload) return
-                        setFieldUploading(prev => ({ ...prev, [f.key]: true }))
-                        try {
-                          const url = await f.onUpload(file)
-                          setFormData(prev => ({ ...prev, [f.key]: url }))
-                        } catch (err) {
-                          setMsg({ text: 'Upload fallito: ' + (err instanceof Error ? err.message : 'errore sconosciuto'), type: 'error' })
-                        } finally {
-                          setFieldUploading(prev => ({ ...prev, [f.key]: false }))
-                          e.target.value = ''
-                        }
-                      }}
-                    />
-                    {fieldUploading[f.key] && (
-                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>Caricamento…</span>
-                    )}
-                    {formData[f.key] && (
-                      <button
-                        type="button"
-                        style={{ fontSize: 11, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
-                        onClick={() => setFormData(prev => ({ ...prev, [f.key]: '' }))}
-                      >
-                        Rimuovi badge
-                      </button>
-                    )}
                   </div>
-                ) : f.type === 'select' ? (
-                  <select
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    required={f.required}
-                  >
-                    <option value="">— Seleziona —</option>
-                    {getFieldOptions(f).map(o => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                ) : f.type === 'textarea' || f.type === 'richtext' ? (
-                  <textarea
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    placeholder={f.placeholder}
-                    required={f.required}
-                    rows={f.type === 'richtext' ? 14 : 4}
-                  />
-                ) : f.type === 'number' ? (
-                  <input
-                    type="number"
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: Number(e.target.value) })}
-                    placeholder={f.placeholder}
-                    required={f.required}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    placeholder={f.placeholder}
-                    required={f.required}
-                  />
-                )}
+                ))}
               </div>
             ))}
 
@@ -270,6 +338,29 @@ export default function AdminCrud({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Search bar */}
+      {!loading && items.length > 0 && (
+        <div className={styles.searchBar}>
+          <input
+            type="text"
+            className={styles.search}
+            placeholder={searchPlaceholder}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button
+              type="button"
+              className={styles.clearSearch}
+              onClick={() => setSearch('')}
+              aria-label="Cancella ricerca"
+            >
+              <X size={12} />
+            </button>
+          )}
         </div>
       )}
 
@@ -284,37 +375,85 @@ export default function AdminCrud({
           </svg>
           <p>{emptyMessage || 'Nessun elemento. Clicca "Nuovo" per iniziare.'}</p>
         </div>
-      ) : (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                {columns.map(c => <th key={c.key}>{c.label}</th>)}
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  {columns.map(c => (
-                    <td key={c.key}>
-                      {c.render ? c.render(item[c.key], item) : (item[c.key] ?? '—')}
-                    </td>
-                  ))}
-                  <td className={styles.actions}>
-                    {extraActions && extraActions(item)}
-                    {onUpdate && (
-                      <button className={styles.editBtn} onClick={() => openEdit(item)}>Modifica</button>
-                    )}
-                    {onDelete && (
-                      <button className={styles.deleteBtn} onClick={() => handleDelete(item.id)}>Elimina</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      ) : filtered.length === 0 ? (
+        <div className={styles.empty}>
+          <p>Nessun risultato per &laquo;{search}&raquo;.</p>
         </div>
+      ) : (
+        <>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  {columns.map(c => <th key={c.key}>{c.label}</th>)}
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(item => (
+                  <tr key={item.id}>
+                    {columns.map(c => (
+                      <td key={c.key}>
+                        {c.render ? c.render(item[c.key], item) : (item[c.key] ?? '—')}
+                      </td>
+                    ))}
+                    <td className={styles.actions}>
+                      {extraActions && extraActions(item)}
+                      {onUpdate && (
+                        <button
+                          className={styles.iconBtn}
+                          title="Modifica"
+                          aria-label="Modifica"
+                          onClick={() => openEdit(item)}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                          title="Elimina"
+                          aria-label="Elimina"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {pageSize > 0 && totalPages > 1 && (
+            <div className={styles.pagination}>
+              <span className={styles.pageInfo}>
+                Pagina {currentPage} di {totalPages} · {filtered.length} risultati
+              </span>
+              <div className={styles.pageCtrls}>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  aria-label="Pagina precedente"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  aria-label="Pagina successiva"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </main>
   )
